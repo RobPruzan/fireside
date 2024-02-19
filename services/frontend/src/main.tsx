@@ -6,6 +6,7 @@ import "./index.css";
 import { z } from "zod";
 import type { App } from "@malevolent/backend";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
+import { test } from "@malevolent/utils";
 import {
   createRootRouteWithContext,
   createRoute,
@@ -37,12 +38,15 @@ declare global {
 }
 
 const client = edenTreaty<App>(import.meta.env.VITE_API_URL);
-
+type GetType = ReturnType<typeof client.test.get> extends Promise<infer R>
+  ? R
+  : never;
 function RootComponent() {
   const [result, setResult] = useState<string | null>(null);
+  const [users, setUsers] = useState<NonNullable<GetType["data"]>["users"]>([]);
   const { theme, setTheme } = useTheme();
   return (
-    <div className="h-screen min-w-screen flex items-start">
+    <div className="min-h-screen  flex flex-col items-start w-screen">
       <div className="w-full flex">
         <Link to="/">Home</Link>
         <Link to="/random">random</Link>
@@ -56,13 +60,28 @@ function RootComponent() {
       </div>
       <Button
         onClick={async () => {
-          setResult((await client.test.get()).data);
+          const res = (await client.test.get()).data;
+          setResult(res?.msg ?? null);
+          setUsers(res?.users ?? []);
         }}
       >
         Get data
       </Button>
-      Data: {result}
       <Button onClick={() => setResult(null)}>Clear data</Button>
+      <Button
+        onClick={async () => {
+          await client.create.post();
+          const res = (await client.test.get()).data;
+          setUsers(res?.users ?? []);
+        }}
+      >
+        Make fake user
+      </Button>
+      Data: {result}
+      ----- Users:{" "}
+      {users.map((user) => (
+        <div>{JSON.stringify(user)}</div>
+      ))}
       <Outlet />
       <ReactQueryDevtools buttonPosition="bottom-left" />
     </div>
