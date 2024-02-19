@@ -70,7 +70,9 @@ function RootComponent() {
       <Button onClick={() => setResult(null)}>Clear data</Button>
       <Button
         onClick={async () => {
-          await client.create.post();
+          await client.user.create.post({
+            name: "random ahh name",
+          });
           const res = (await client.test.get()).data;
           setUsers(res?.users ?? []);
         }}
