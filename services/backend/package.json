@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "bun --watch src/index.ts",
-    "build": "bun build src/index.ts",
+    "build": "bun build --target=bun src/index.ts --outdir ./dist",
     "start": "NODE_ENV=production bun src/index.ts",
     "test": "bun test"
   },
