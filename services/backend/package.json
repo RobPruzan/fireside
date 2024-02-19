@@ -1,0 +1,23 @@
+{
+  "name": "@malevolent/backend",
+  "module": "src/index.ts",
+  "main": "src/index.ts",
+  "type": "module",
+  "scripts": {
+    "dev": "bun --watch src/index.ts",
+    "build": "bun build src/index.ts",
+    "start": "NODE_ENV=production bun src/index.ts",
+    "test": "bun test"
+  },
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "@elysiajs/cors": "^0.8.0",
+    "@sinclair/typebox": "^0.32.14",
+    "elysia": "^0.8.17"
+  }
+}
