@@ -1,3 +1,4 @@
+import { InferSelectModel } from "drizzle-orm";
 import { serial, text, timestamp, pgTable, uuid } from "drizzle-orm/pg-core";
 export const user = pgTable("user", {
   id: uuid("id").defaultRandom().primaryKey(),
@@ -8,3 +9,7 @@ export const user = pgTable("user", {
   createdAt: timestamp("created_at"),
   updatedAt: timestamp("updated_at"),
 });
+
+
+
+export type User = InferSelectModel<typeof user>
