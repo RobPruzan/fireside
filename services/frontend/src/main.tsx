@@ -1,12 +1,12 @@
 import React, { useState } from "react";
 import ReactDOM from "react-dom/client";
-// import { logMe } from "@malevolent/backend";
+// import { logMe } from "@fireside/backend";
 import { edenTreaty } from "@elysiajs/eden";
 import "./index.css";
 import { z } from "zod";
-import type { App } from "@malevolent/backend";
+import type { App } from "@fireside/backend";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
-import { test } from "@malevolent/utils";
+import { test } from "@fireside/utils";
 import {
   createRootRouteWithContext,
   createRoute,

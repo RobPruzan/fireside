@@ -1,5 +1,5 @@
 {
-  "name": "@malevolent/frontend",
+  "name": "@fireside/frontend",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -24,8 +24,8 @@
     "tailwind-merge": "^2.2.1",
     "tailwindcss-animate": "^1.0.7",
     "zod": "^3.22.4",
-    "@malevolent/backend": "*",
-    "@malevolent/utils": "*"
+    "@fireside/backend": "*",
+    "@fireside/utils": "*"
   },
   "devDependencies": {
     "@types/node": "^20.11.19",

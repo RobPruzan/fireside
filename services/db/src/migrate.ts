@@ -1,5 +1,5 @@
 import { migrate } from "drizzle-orm/postgres-js/migrator";
-import { db, sql } from ".";
+import { db, sql } from "./index";
 import { user } from "./schema";
 import path from "path";
 

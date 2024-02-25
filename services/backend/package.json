@@ -1,5 +1,5 @@
 {
-  "name": "@malevolent/backend",
+  "name": "@fireside/backend",
   "module": "src/index.ts",
   "main": "src/index.ts",
   "type": "module",
@@ -19,7 +19,7 @@
     "@elysiajs/cors": "^0.8.0",
     "@sinclair/typebox": "^0.32.14",
     "elysia": "^0.8.17",
-    "@malevolent/utils": "*",
-    "@malevolent/db": "*"
+    "@fireside/utils": "*",
+    "@fireside/db": "*"
   }
 }
