@@ -8,6 +8,20 @@
       "when": 1708891199659,
       "tag": "0000_smart_cammi",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "5",
+      "when": 1708892124430,
+      "tag": "0001_red_kang",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1708893033760,
+      "tag": "0002_futuristic_fenris",
+      "breakpoints": true
     }
   ]
 }

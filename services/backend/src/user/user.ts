@@ -7,12 +7,22 @@ export const userRoute = new Elysia({
 }).post(
   "/create",
   async (ctx) => {
-    await db.insert(user).values({ name: ctx.body.name, email: "dont matta" });
-    console.log('hi')
+    const newUserRes = await db
+      .insert(user)
+      .values({
+        displayName: ctx.body.displayName,
+        email: "dont matta",
+        password: "what?",
+        token: "beboop",
+        role: "student",
+      })
+      .returning();
+
+    return newUserRes[0];
   },
   {
     body: t.Object({
-      name: t.String(),
+      displayName: t.String(),
     }),
   }
 );

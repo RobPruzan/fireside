@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import ReactDOM from "react-dom/client";
 // import { logMe } from "@fireside/backend";
 import { edenTreaty } from "@elysiajs/eden";
@@ -6,7 +6,7 @@ import "./index.css";
 import { z } from "zod";
 import type { App } from "@fireside/backend";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
-import { test } from "@fireside/utils";
+import { run, test } from "@fireside/utils";
 import {
   createRootRouteWithContext,
   createRoute,
@@ -15,9 +15,10 @@ import {
   Outlet,
   RouterProvider,
 } from "@tanstack/react-router";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryClient, QueryClientProvider, useMutation, useQuery, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { Button } from "./components/ui/button";
 import { ThemeProvider, useTheme } from "./hooks/useTheme";
+import { User } from "../../db/src/schema";
 const envSchema = z.object(
   {
     VITE_API_URL: z.string(),
@@ -38,13 +39,19 @@ declare global {
 }
 
 const client = edenTreaty<App>(import.meta.env.VITE_API_URL);
-type GetType = ReturnType<typeof client.test.get> extends Promise<infer R>
-  ? R
-  : never;
+const userQueryOptions = {
+  queryKey: ['users'],
+  queryFn: async () =>( await client.test.get()).data?.users ?? []
+}
 function RootComponent() {
-  const [result, setResult] = useState<string | null>(null);
-  const [users, setUsers] = useState<NonNullable<GetType["data"]>["users"]>([]);
   const { theme, setTheme } = useTheme();
+  const userQuery = useSuspenseQuery(userQueryOptions)
+  const queryClient = useQueryClient()
+  const createUserMutation = useMutation({
+    mutationFn: (userInfo:{displayName: string}) => client.user.create.post(userInfo)
+  })
+  
+  
   return (
     <div className="min-h-screen  flex flex-col items-start w-screen">
       <div className="w-full flex">
@@ -58,42 +65,38 @@ function RootComponent() {
           {theme.value === "dark" ? "light" : "dark"}
         </Button>
       </div>
+
+
       <Button
         onClick={async () => {
-          const res = (await client.test.get()).data;
-          setResult(res?.msg ?? null);
-          setUsers(res?.users ?? []);
-        }}
-      >
-        Get data
-      </Button>
-      <Button onClick={() => setResult(null)}>Clear data</Button>
-      <Button
-        onClick={async () => {
-          await client.user.create.post({
-            name: "random ahh name",
-          });
-          const res = (await client.test.get()).data;
-          setUsers(res?.users ?? []);
+          const res = await createUserMutation.mutateAsync({displayName:'jimmy john'})
+          if (res.error) {
+            return
+          }
+          queryClient.setQueriesData<Array<User>>(userQueryOptions, (prev) =>prev ? [...prev, res.data] : [res.data])
         }}
       >
         Make fake user
       </Button>
-      Data: {result}
-      ----- Users:{" "}
-      {users.map((user) => (
+
+      {userQuery.data.map((user) => (
         <div>{JSON.stringify(user)}</div>
       ))}
+      {createUserMutation.isPending && 'Creating...' }
       <Outlet />
       <ReactQueryDevtools buttonPosition="bottom-left" />
     </div>
   );
 }
 
+
+
 const rootRoute = createRootRouteWithContext<{
   queryClient: QueryClient;
 }>()({
   component: RootComponent,
+  loader: () => queryClient.ensureQueryData(userQueryOptions),
+  pendingComponent: () => <div>Im loading, pretty sick</div>
 });
 
 const indexRoute = createRoute({
