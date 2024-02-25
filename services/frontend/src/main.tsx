@@ -15,10 +15,18 @@ import {
   Outlet,
   RouterProvider,
 } from "@tanstack/react-router";
-import { QueryClient, QueryClientProvider, useMutation, useQuery, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
+import {
+  QueryClient,
+  QueryClientProvider,
+  useMutation,
+  useQuery,
+  useQueryClient,
+  useSuspenseQuery,
+} from "@tanstack/react-query";
 import { Button } from "./components/ui/button";
 import { ThemeProvider, useTheme } from "./hooks/useTheme";
 import { User } from "../../db/src/schema";
+import { useToast } from "./components/ui/use-toast";
 const envSchema = z.object(
   {
     VITE_API_URL: z.string(),
@@ -40,18 +48,32 @@ declare global {
 
 const client = edenTreaty<App>(import.meta.env.VITE_API_URL);
 const userQueryOptions = {
-  queryKey: ['users'],
-  queryFn: async () =>( await client.test.get()).data?.users ?? []
-}
+  queryKey: ["users"],
+  queryFn: async () => (await client.test.get()).data?.users ?? [],
+};
 function RootComponent() {
   const { theme, setTheme } = useTheme();
-  const userQuery = useSuspenseQuery(userQueryOptions)
-  const queryClient = useQueryClient()
+  const userQuery = useSuspenseQuery(userQueryOptions);
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
   const createUserMutation = useMutation({
-    mutationFn: (userInfo:{displayName: string}) => client.user.create.post(userInfo)
-  })
-  
-  
+    mutationFn: (userInfo: { displayName: string }) =>
+      client.user.create.post(userInfo),
+    onSuccess: (res) => {
+      if (res.error) {
+        toast({
+          variant: "destructive",
+          title: "Failed to create user",
+          description: res.error.message,
+        });
+        return;
+      }
+      queryClient.setQueriesData<Array<User>>(userQueryOptions, (prev) =>
+        prev ? [...prev, res.data] : [res.data]
+      );
+    },
+  });
+
   return (
     <div className="min-h-screen  flex flex-col items-start w-screen">
       <div className="w-full flex">
@@ -66,14 +88,9 @@ function RootComponent() {
         </Button>
       </div>
 
-
       <Button
-        onClick={async () => {
-          const res = await createUserMutation.mutateAsync({displayName:'jimmy john'})
-          if (res.error) {
-            return
-          }
-          queryClient.setQueriesData<Array<User>>(userQueryOptions, (prev) =>prev ? [...prev, res.data] : [res.data])
+        onClick={() => {
+          createUserMutation.mutate({ displayName: "jimmy john" });
         }}
       >
         Make fake user
@@ -82,21 +99,19 @@ function RootComponent() {
       {userQuery.data.map((user) => (
         <div>{JSON.stringify(user)}</div>
       ))}
-      {createUserMutation.isPending && 'Creating...' }
+      {createUserMutation.isPending && "Creating..."}
       <Outlet />
       <ReactQueryDevtools buttonPosition="bottom-left" />
     </div>
   );
 }
 
-
-
 const rootRoute = createRootRouteWithContext<{
   queryClient: QueryClient;
 }>()({
   component: RootComponent,
   loader: () => queryClient.ensureQueryData(userQueryOptions),
-  pendingComponent: () => <div>Im loading, pretty sick</div>
+  pendingComponent: () => <div>Im loading, pretty sick</div>,
 });
 
 const indexRoute = createRoute({
