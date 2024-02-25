@@ -49,7 +49,16 @@ declare global {
 const client = edenTreaty<App>(import.meta.env.VITE_API_URL);
 const userQueryOptions = {
   queryKey: ["users"],
-  queryFn: async () => (await client.test.get()).data?.users ?? [],
+  queryFn: async () => {
+    // artificial timeout
+    await new Promise((res) => {
+      setTimeout(() => {
+        res(null);
+      }, 1000);
+    });
+
+    return (await client.test.get()).data?.users ?? [];
+  },
 };
 function RootComponent() {
   const { theme, setTheme } = useTheme();
@@ -112,6 +121,7 @@ const rootRoute = createRootRouteWithContext<{
   component: RootComponent,
   loader: () => queryClient.ensureQueryData(userQueryOptions),
   pendingComponent: () => <div>Im loading, pretty sick</div>,
+  errorComponent: () => <div>error nooo</div>,
 });
 
 const indexRoute = createRoute({
