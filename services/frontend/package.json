@@ -13,6 +13,7 @@
     "@elysiajs/eden": "^0.8.1",
     "@fireside/backend": "*",
     "@fireside/utils": "*",
+    "@radix-ui/react-label": "^2.0.2",
     "@radix-ui/react-slot": "^1.0.2",
     "@radix-ui/react-toast": "^1.1.5",
     "@tanstack/react-query": "^5.22.2",

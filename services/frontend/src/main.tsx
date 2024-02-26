@@ -23,9 +23,11 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ThemeProvider, useTheme } from "./hooks/useTheme";
 import Landing from "./components/Landing";
 import Login from "./components/Login";
-import Register from "./components/Register";
+
 import { Button } from "./components/ui/button";
 import { useRouteContext } from "./context/RouteContext";
+import Register from "./components/Register";
+import { Toaster } from "./components/ui/toaster";
 
 const envSchema = z.object(
   {
@@ -46,7 +48,7 @@ declare global {
   interface ImportMetaEnv extends z.infer<typeof envSchema> {}
 }
 
-const client = edenTreaty<App>(import.meta.env.VITE_API_URL);
+export const client = edenTreaty<App>(import.meta.env.VITE_API_URL);
 
 function RootComponent() {
   const { theme, setTheme } = useTheme();
@@ -100,6 +102,7 @@ function RootComponent() {
           </div>
         )}
       </div>
+      <Toaster />
       <Outlet />
       <ReactQueryDevtools buttonPosition="bottom-left" />
     </div>
