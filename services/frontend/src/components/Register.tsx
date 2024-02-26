@@ -1,13 +1,16 @@
-import { useNavigate } from "@tanstack/react-router";
+import { useNavigate, useRouter } from "@tanstack/react-router";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import React, { useEffect } from "react";
 import { useRouteContext } from "../context/RouteContext";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { client } from "@/main";
 import { useToast } from "./ui/use-toast";
 import { useState } from "react";
 import { Label } from "./ui/label";
+import { User } from "../../../db/src";
+import { FiresideUser, userQueryOptions } from "@/lib/user";
+import { LoadingSpinner } from "./ui/loading";
 
 type CreateUserInfo = {
   email: string;
@@ -17,6 +20,8 @@ type CreateUserInfo = {
 
 function Register() {
   const { toast } = useToast();
+  // const navigate = useNavigate()
+  const queryClient = useQueryClient();
   const createUserMutation = useMutation({
     mutationFn: async (createOpts: CreateUserInfo) => {
       const res = await client.user.create.post(createOpts, {
@@ -26,23 +31,27 @@ function Register() {
       });
 
       if (res.error) {
-        throw res.error;
+        throw new Error(res.error.value);
       }
       return res;
     },
     onError: (e) => {
-      console.log("bruh");
       toast({
         variant: "destructive",
         title: "Failed to register",
         description: e.message,
       });
     },
-    onSuccess: () => {
+    onSuccess: ({ data }) => {
+      queryClient.setQueryData<FiresideUser>(
+        userQueryOptions.queryKey,
+        () => data
+      );
       navigate({ to: "/" });
     },
   });
   const navigate = useNavigate({ from: "/register" });
+
   const [userInfo, setUserInfo] = useState<CreateUserInfo>({
     confirmedPassword: "",
     email: "",
@@ -112,11 +121,18 @@ function Register() {
           </div>
           <Button
             onClick={async () => {
-              createUserMutation.mutateAsync(userInfo);
+              if (userInfo.password !== userInfo.confirmedPassword) {
+                toast({
+                  variant: "destructive",
+                  title: "Passwords don't match",
+                });
+                return;
+              }
+              createUserMutation.mutate(userInfo);
             }}
             className={`w-full py-2 rounded font-bold text-white`}
           >
-            Continue
+            {createUserMutation.isPending ? <LoadingSpinner /> : "Continue"}
           </Button>
         </div>
       </div>

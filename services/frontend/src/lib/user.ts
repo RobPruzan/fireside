@@ -15,10 +15,10 @@ export const userQueryOptions = {
         credentials: "include",
       },
     });
-    console.log({ res });
     if (res.error) {
       return Promise.reject(res.error);
     }
+    res.data.user;
 
     switch (res.data.kind) {
       case "logged-in": {
@@ -32,7 +32,4 @@ export const userQueryOptions = {
   retryDelay: 10000,
 } satisfies QueryOptions;
 
-export const useUser = () => {
-  const userQuery = useQuery(userQueryOptions);
-  return userQuery;
-};
+export const useUser = () => useQuery(userQueryOptions);
