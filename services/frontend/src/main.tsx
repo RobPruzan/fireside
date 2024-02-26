@@ -9,6 +9,7 @@ import { useNavigate } from "@tanstack/react-router";
 import darkAsset from "./assets/dark.png";
 import lightAsset from "./assets/light.png";
 import logo from "./assets/bonfire.png";
+import { RouteProvider } from "./context/RouteContext";
 
 import {
   createRootRouteWithContext,
@@ -24,6 +25,7 @@ import Landing from "./components/Landing";
 import Login from "./components/Login";
 import Register from "./components/Register";
 import { Button } from "./components/ui/button";
+import { useRouteContext } from "./context/RouteContext";
 
 const envSchema = z.object(
   {
@@ -48,6 +50,8 @@ const client = edenTreaty<App>(import.meta.env.VITE_API_URL);
 
 function RootComponent() {
   const { theme, setTheme } = useTheme();
+  const { isLoginOrRegister } = useRouteContext();
+
   const navigate = useNavigate({
     from: "/",
   });
@@ -61,38 +65,40 @@ function RootComponent() {
   };
 
   return (
-    <div className="min-h-screen  flex flex-col items-start w-screen justify-start">
+    <div className="min-h-screen flex flex-col items-start w-screen justify-start">
       <div className="flex justify-between items-center mx-auto w-full px-10 pt-5">
         <Link to="/" className="flex items-center">
           <img src={logo} alt="Logo" className="h-8 w-8 mr-2" />
           <span className={`text-xl`}>Fireside</span>
         </Link>
-        <div className="flex items-center">
-          <Button variant={"ghost"} onClick={toggleTheme} className="mr-3">
-            <img
-              src={theme.value === "light" ? lightAsset : darkAsset}
-              alt="Theme toggle"
-              className="h-6 w-6"
-            />
-          </Button>
-          <div className="mx-3 h-6 w-px bg-foreground"></div>
-          <Button
-            variant={"ghost"}
-            onClick={handleLoginClick}
-            className={`text-sm mr-3 `}
-          >
-            Log in
-          </Button>
-          <Button
-            variant={"ghost"}
-            onClick={() => {
-              navigate({ to: "/register" });
-            }}
-            className={`px-4 py-2 rounded`}
-          >
-            Get Started
-          </Button>
-        </div>
+        {!isLoginOrRegister && (
+          <div className="flex items-center">
+            <Button variant={"ghost"} onClick={toggleTheme} className="mr-3">
+              <img
+                src={theme.value === "light" ? lightAsset : darkAsset}
+                alt="Theme toggle"
+                className="h-6 w-6"
+              />
+            </Button>
+            <div className="mx-3 h-6 w-px bg-foreground"></div>
+            <Button
+              variant={"ghost"}
+              onClick={handleLoginClick}
+              className={`text-sm mr-3 `}
+            >
+              Log in
+            </Button>
+            <Button
+              variant={"ghost"}
+              onClick={() => {
+                navigate({ to: "/register" });
+              }}
+              className={`px-4 py-2 rounded`}
+            >
+              Get Started
+            </Button>
+          </div>
+        )}
       </div>
       <Outlet />
       <ReactQueryDevtools buttonPosition="bottom-left" />
@@ -151,7 +157,11 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <ThemeProvider>
       <QueryClientProvider client={queryClient}>
-        <RouterProvider router={router} />
+        <RouteProvider>
+          {" "}
+          {/* Wrap RouterProvider inside RouteProvider */}
+          <RouterProvider router={router} />
+        </RouteProvider>
       </QueryClientProvider>
     </ThemeProvider>
   </React.StrictMode>
