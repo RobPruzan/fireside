@@ -1,12 +1,15 @@
+import "./index.css";
 import React from "react";
 import ReactDOM from "react-dom/client";
-// import { logMe } from "@fireside/backend";
 import { edenTreaty } from "@elysiajs/eden";
-import "./index.css";
 import { z } from "zod";
 import type { App } from "@fireside/backend";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
-// import { run, test } from "@fireside/utils";
+import { useNavigate } from "@tanstack/react-router";
+import darkAsset from "./assets/dark.png";
+import lightAsset from "./assets/light.png";
+import logo from "./assets/bonfire.png";
+
 import {
   createRootRouteWithContext,
   createRoute,
@@ -15,21 +18,12 @@ import {
   Outlet,
   RouterProvider,
 } from "@tanstack/react-router";
-import {
-  QueryClient,
-  QueryClientProvider,
-  // useMutation,
-  // useQuery,
-  useQueryClient,
-  // useSuspenseQuery,
-} from "@tanstack/react-query";
-// import { Button } from "./components/ui/button";
-import { ThemeProvider /*, useTheme */ } from "./hooks/useTheme";
-// import { User } from "../../db/src/schema";
-// import { useToast } from "./components/ui/use-toast";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { ThemeProvider, useTheme } from "./hooks/useTheme";
 import Landing from "./components/Landing";
 import Login from "./components/Login";
 import Register from "./components/Register";
+import { Button } from "./components/ui/button";
 
 const envSchema = z.object(
   {
@@ -51,49 +45,55 @@ declare global {
 }
 
 const client = edenTreaty<App>(import.meta.env.VITE_API_URL);
-const userQueryOptions = {
-  queryKey: ["users"],
-  queryFn: async () => {
-    await new Promise((res) => {
-      setTimeout(() => {
-        res(null);
-      }, 1000);
-    });
-
-    return (await client.test.get()).data?.users ?? [];
-  },
-};
 
 function RootComponent() {
-  // const { theme, setTheme } = useTheme();
-  // const userQuery = useSuspenseQuery(userQueryOptions);
-  const queryClient = useQueryClient();
-  // const { toast } = useToast();
-  // const createUserMutation = useMutation({
-  //   mutationFn: (userInfo: { displayName: string }) =>
-  //     client.user.create.post(userInfo),
-  //   onSuccess: (res) => {
-  //     if (res.error) {
-  //       toast({
-  //         variant: "destructive",
-  //         title: "Failed to create user",
-  //         description: res.error.message,
-  //       });
-  //       return;
-  //     }
-  //     queryClient.setQueriesData<Array<User>>(userQueryOptions, (prev) =>
-  //       prev ? [...prev, res.data] : [res.data]
-  //     );
-  //   },
-  // });
+  const { theme, setTheme } = useTheme();
+  const navigate = useNavigate({
+    from: "/",
+  });
+
+  const toggleTheme = () => {
+    setTheme(theme.value === "light" ? "dark" : "light");
+  };
+
+  const handleLoginClick = () => {
+    navigate({ to: "/login" });
+  };
 
   return (
-    <div className="min-h-screen  flex flex-col items-start w-screen">
-      <div className="w-full flex">
-        {/* <Link to="/">Home</Link> */}
-        {/* Button logic commented out */}
+    <div className="min-h-screen  flex flex-col items-start w-screen justify-start">
+      <div className="flex justify-between items-center mx-auto w-full px-10 pt-5">
+        <Link to="/" className="flex items-center">
+          <img src={logo} alt="Logo" className="h-8 w-8 mr-2" />
+          <span className={`text-xl`}>Fireside</span>
+        </Link>
+        <div className="flex items-center">
+          <Button variant={"ghost"} onClick={toggleTheme} className="mr-3">
+            <img
+              src={theme.value === "light" ? lightAsset : darkAsset}
+              alt="Theme toggle"
+              className="h-6 w-6"
+            />
+          </Button>
+          <div className="mx-3 h-6 w-px bg-foreground"></div>
+          <Button
+            variant={"ghost"}
+            onClick={handleLoginClick}
+            className={`text-sm mr-3 `}
+          >
+            Log in
+          </Button>
+          <Button
+            variant={"ghost"}
+            onClick={() => {
+              navigate({ to: "/register" });
+            }}
+            className={`px-4 py-2 rounded`}
+          >
+            Get Started
+          </Button>
+        </div>
       </div>
-      {/* User mutation and query display logic commented out */}
       <Outlet />
       <ReactQueryDevtools buttonPosition="bottom-left" />
     </div>
@@ -126,7 +126,11 @@ const loginPageRoute = createRoute({
 
 const queryClient = new QueryClient();
 
-const routeTree = rootRoute.addChildren([landingPageRoute, registerPageRoute, loginPageRoute]);
+const routeTree = rootRoute.addChildren([
+  landingPageRoute,
+  registerPageRoute,
+  loginPageRoute,
+]);
 
 const router = createRouter({
   routeTree,
