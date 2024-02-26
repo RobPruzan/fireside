@@ -156,6 +156,8 @@ export const userRoute = new Elysia({
         .where(eq(user.token, hashedToken))
     ).at(0);
 
+    console.log({ countObj });
+
     if (!countObj) {
       set.status = 500;
       throw new Error("Error when searching users");
