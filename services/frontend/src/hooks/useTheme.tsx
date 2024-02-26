@@ -34,9 +34,6 @@ export const ThemeProvider = ({ children }: { children: React.ReactNode }) => {
       setTheme({ value: "light" });
       return;
     }
-    console.log({ theme });
-
-    // .setAttribute("class", theme.value);
   }, []);
 
   return (

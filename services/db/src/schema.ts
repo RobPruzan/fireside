@@ -15,7 +15,9 @@ export const user = pgTable("user", {
   email: text("email").notNull(),
   password: text("password").notNull(),
   role: text("role").$type<"instructor" | "student">().notNull(),
-  createdAt: timestamp("created_at").$defaultFn(() => new Date()),
+  createdAt: timestamp("created_at")
+    .$defaultFn(() => new Date())
+    .notNull(),
   updatedAt: timestamp("updated_at"),
 });
 
