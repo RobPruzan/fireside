@@ -5,7 +5,12 @@ import { edenTreaty } from "@elysiajs/eden";
 import { z } from "zod";
 import type { App } from "@fireside/backend";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
-import { redirect, useNavigate } from "@tanstack/react-router";
+import {
+  redirect,
+  useNavigate,
+  useRouter,
+  useRouterState,
+} from "@tanstack/react-router";
 import darkAsset from "./assets/dark.png";
 import lightAsset from "./assets/light.png";
 import logo from "./assets/bonfire.png";
@@ -35,6 +40,7 @@ import { CircleUser } from "lucide-react";
 import { run } from "@fireside/utils";
 import { LoadingSpinner } from "./components/ui/loading";
 import { Profile } from "./components/Profile";
+import { cn } from "./lib/utils";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -74,6 +80,7 @@ function RootComponent() {
   const navigate = useNavigate({
     from: "/",
   });
+  const router = useRouterState();
 
   const toggleTheme = () => {
     setTheme(theme.value === "light" ? "dark" : "light");
@@ -100,7 +107,11 @@ function RootComponent() {
           <span className={`text-xl`}>Fireside</span>
         </Link>
         <div className="flex items-center">
-          <Button variant={"ghost"} onClick={toggleTheme} className="mr-3">
+          <Button
+            variant={"ghost"}
+            onClick={toggleTheme}
+            className={cn(["mr-3"])}
+          >
             <img
               src={theme.value === "light" ? lightAsset : darkAsset}
               alt="Theme toggle"
@@ -111,8 +122,9 @@ function RootComponent() {
           {!user.data ? (
             <Button
               variant={"ghost"}
+              disabled={router.location.pathname === "/login"}
               onClick={handleLoginClick}
-              className={`text-sm mr-3 `}
+              className={"text-sm mr-3 "}
             >
               Log in
             </Button>
@@ -141,6 +153,7 @@ function RootComponent() {
                 if (user.data) {
                   return (
                     <Button
+                      disabled={router.location.pathname === "/profile"}
                       onClick={() => navigate({ to: "/profile" })}
                       className="flex gap-x-4"
                       variant={"ghost"}
@@ -151,6 +164,7 @@ function RootComponent() {
                 }
                 return (
                   <Button
+                    disabled={router.location.pathname === "/register"}
                     variant={"ghost"}
                     onClick={() => {
                       navigate({ to: "/register" });
