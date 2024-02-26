@@ -24,6 +24,9 @@ importers:
       '@sinclair/typebox':
         specifier: ^0.32.14
         version: 0.32.14
+      drizzle-typebox:
+        specifier: ^0.1.1
+        version: 0.1.1(@sinclair/typebox@0.32.14)(drizzle-orm@0.29.3)
       elysia:
         specifier: ^0.8.17
         version: 0.8.17(@sinclair/typebox@0.32.14)(typescript@5.3.3)
@@ -37,6 +40,9 @@ importers:
 
   services/db:
     dependencies:
+      dotenv:
+        specifier: ^16.4.5
+        version: 16.4.5
       drizzle-orm:
         specifier: ^0.29.3
         version: 0.29.3(pg@8.11.3)(postgres@3.4.3)
@@ -65,18 +71,27 @@ importers:
       '@fireside/utils':
         specifier: '*'
         version: link:../../packages/utils
+      '@radix-ui/react-label':
+        specifier: ^2.0.2
+        version: 2.0.2(@types/react-dom@18.2.19)(@types/react@18.2.56)(react-dom@18.2.0)(react@18.2.0)
       '@radix-ui/react-slot':
         specifier: ^1.0.2
         version: 1.0.2(@types/react@18.2.56)(react@18.2.0)
       '@radix-ui/react-toast':
         specifier: ^1.1.5
         version: 1.1.5(@types/react-dom@18.2.19)(@types/react@18.2.56)(react-dom@18.2.0)(react@18.2.0)
+      '@tanstack/query-sync-storage-persister':
+        specifier: ^5.24.1
+        version: 5.24.1
       '@tanstack/react-query':
         specifier: ^5.22.2
         version: 5.22.2(react@18.2.0)
       '@tanstack/react-query-devtools':
         specifier: ^5.23.0
         version: 5.23.0(@tanstack/react-query@5.22.2)(react@18.2.0)
+      '@tanstack/react-query-persist-client':
+        specifier: ^5.24.1
+        version: 5.24.1(@tanstack/react-query@5.22.2)(react@18.2.0)
       '@tanstack/react-router':
         specifier: ^1.16.6
         version: 1.16.6(react-dom@18.2.0)(react@18.2.0)
@@ -1039,6 +1054,27 @@ packages:
       react-dom: 18.2.0(react@18.2.0)
     dev: false
 
+  /@radix-ui/react-label@2.0.2(@types/react-dom@18.2.19)(@types/react@18.2.56)(react-dom@18.2.0)(react@18.2.0):
+    resolution: {integrity: sha512-N5ehvlM7qoTLx7nWPodsPYPgMzA5WM8zZChQg8nyFJKnDO5WHdba1vv5/H6IO5LtJMfD2Q3wh1qHFGNtK0w3bQ==}
+    peerDependencies:
+      '@types/react': '*'
+      '@types/react-dom': '*'
+      react: ^16.8 || ^17.0 || ^18.0
+      react-dom: ^16.8 || ^17.0 || ^18.0
+    peerDependenciesMeta:
+      '@types/react':
+        optional: true
+      '@types/react-dom':
+        optional: true
+    dependencies:
+      '@babel/runtime': 7.23.9
+      '@radix-ui/react-primitive': 1.0.3(@types/react-dom@18.2.19)(@types/react@18.2.56)(react-dom@18.2.0)(react@18.2.0)
+      '@types/react': 18.2.56
+      '@types/react-dom': 18.2.19
+      react: 18.2.0
+      react-dom: 18.2.0(react@18.2.0)
+    dev: false
+
   /@radix-ui/react-portal@1.0.4(@types/react-dom@18.2.19)(@types/react@18.2.56)(react-dom@18.2.0)(react@18.2.0):
     resolution: {integrity: sha512-Qki+C/EuGUVCQTOTD5vzJzJuMUlewbzuKyUy+/iHM2uwGiru9gZeBJtHAPKAEkB5KWGi9mP/CHKcY0wt1aW45Q==}
     peerDependencies:
@@ -1346,8 +1382,25 @@ packages:
     resolution: {integrity: sha512-z3PwKFUFACMUqe1eyesCIKg3Jv1mysSrYfrEW5ww5DCDUD4zlpTKBvUDaEjsfZzL3ULrFLDM9yVUxI/fega1Qg==}
     dev: false
 
+  /@tanstack/query-core@5.24.1:
+    resolution: {integrity: sha512-DZ6Nx9p7BhjkG50ayJ+MKPgff+lMeol7QYXkvuU5jr2ryW/4ok5eanaS9W5eooA4xN0A/GPHdLGOZGzArgf5Cg==}
+    dev: false
+
   /@tanstack/query-devtools@5.23.0:
     resolution: {integrity: sha512-e0NpY8D+8km9fEZrfPNkb69nY5vQsH4Cp8YzaRJQEUXO0hANUOroGsNWSI3mLL7H/8y9GXD3N5I3IoE9z6lulQ==}
+    dev: false
+
+  /@tanstack/query-persist-client-core@5.24.1:
+    resolution: {integrity: sha512-ayUDCSCXAq3ZYXMrVQ3c4g2Mvj+d/Q7rGkNJTvdw09DZQUUMTfZsvSayitJjOxqJl1Pex4HmZNk8PiDvrqvlRQ==}
+    dependencies:
+      '@tanstack/query-core': 5.24.1
+    dev: false
+
+  /@tanstack/query-sync-storage-persister@5.24.1:
+    resolution: {integrity: sha512-dfqgFgb+6tmdvnE1vMQbBuZOBUi7zFeQB/gQJgiADJ2IO0OXp/Ucj06sVOLm9fAPGiUBDqF+UW/xB9ipBH2+Hw==}
+    dependencies:
+      '@tanstack/query-core': 5.24.1
+      '@tanstack/query-persist-client-core': 5.24.1
     dev: false
 
   /@tanstack/react-query-devtools@5.23.0(@tanstack/react-query@5.22.2)(react@18.2.0):
@@ -1357,6 +1410,17 @@ packages:
       react: ^18.0.0
     dependencies:
       '@tanstack/query-devtools': 5.23.0
+      '@tanstack/react-query': 5.22.2(react@18.2.0)
+      react: 18.2.0
+    dev: false
+
+  /@tanstack/react-query-persist-client@5.24.1(@tanstack/react-query@5.22.2)(react@18.2.0):
+    resolution: {integrity: sha512-USD4afkZbSsAWwor5xbXTkzca0ud4SLd2Q++he8Y1iEyOCh7QJhn+zwsKOaqH2X3ecQMvH/jIzO2r+fieKyMvg==}
+    peerDependencies:
+      '@tanstack/react-query': ^5.24.1
+      react: ^18.0.0
+    dependencies:
+      '@tanstack/query-persist-client-core': 5.24.1
       '@tanstack/react-query': 5.22.2(react@18.2.0)
       react: 18.2.0
     dev: false
@@ -1961,6 +2025,11 @@ packages:
       esutils: 2.0.3
     dev: true
 
+  /dotenv@16.4.5:
+    resolution: {integrity: sha512-ZmdL2rui+eB2YwhsWzjInR8LldtZHGDoQ1ugH85ppHKwpUHL7j7rN0Ti9NCnGiQbhaZ11FpR+7ao1dNsmduNUg==}
+    engines: {node: '>=12'}
+    dev: false
+
   /dreamopt@0.8.0:
     resolution: {integrity: sha512-vyJTp8+mC+G+5dfgsY+r3ckxlz+QMX40VjPQsZc5gxVAxLmi64TBoVkP54A/pRAXMXsbu2GMMBrZPxNv23waMg==}
     engines: {node: '>=0.4.0'}
@@ -2063,6 +2132,16 @@ packages:
     dependencies:
       pg: 8.11.3
       postgres: 3.4.3
+    dev: false
+
+  /drizzle-typebox@0.1.1(@sinclair/typebox@0.32.14)(drizzle-orm@0.29.3):
+    resolution: {integrity: sha512-eNIDe+EOCB96/bbRHOPbrC+bsuCXFd2H0/96Fl0cJkY+NKnu2qLTnGI6ILXPbyu82Yr1tsShlzDypw+VeCDqaQ==}
+    peerDependencies:
+      '@sinclair/typebox': '>=0.17.6'
+      drizzle-orm: '>=0.23.13'
+    dependencies:
+      '@sinclair/typebox': 0.32.14
+      drizzle-orm: 0.29.3(pg@8.11.3)(postgres@3.4.3)
     dev: false
 
   /eastasianwidth@0.2.0:

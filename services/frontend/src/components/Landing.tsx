@@ -5,6 +5,9 @@ import darkAsset from "../assets/dark.png";
 import lightAsset from "../assets/light.png";
 import logo from "../assets/bonfire.png";
 import { Button } from "./ui/button";
+import { useUser } from "@/lib/user";
+import { run } from "@fireside/utils";
+import { LoadingSpinner } from "./ui/loading";
 
 function Landing() {
 
@@ -16,6 +19,8 @@ function Landing() {
     navigate({ to: "/register" });
   };
 
+  const user = useUser();
+
   return (
     <div className="text-center mt-16 w-full p-8">
       <h2 className={`text-5xl font-bold mt-24 `}>
@@ -26,15 +31,54 @@ function Landing() {
       <p className={`mt-8 `}>
         Fireside is the connected workspace where students get answers
       </p>
-      <Button
-        size={"lg"}
-        onClick={handleGetStartedClick}
-        className={
-          "mt-10 px-6 py-3 rounded font-bold bg-foreground text-white dark:text-black"
+      {run(() => {
+        switch (user.status) {
+          case "pending": {
+            return (
+              <Button
+                size={"lg"}
+                disabled
+                className={
+                  "mt-10 px-6 py-3 rounded font-bold bg-foreground text-white dark:text-black"
+                }
+              >
+                <LoadingSpinner />
+              </Button>
+            );
+          }
+          case "error": {
+            return null;
+          }
+          case "success": {
+            if (user.data) {
+              return (
+                <Button
+                  size={"lg"}
+                  onClick={() => {
+                    navigate({ to: "/connect" });
+                  }}
+                  className={
+                    "mt-10 px-6 py-3 rounded font-bold bg-foreground text-white dark:text-black"
+                  }
+                >
+                  Start connecting
+                </Button>
+              );
+            }
+            return (
+              <Button
+                size={"lg"}
+                onClick={handleGetStartedClick}
+                className={
+                  "mt-10 px-6 py-3 rounded font-bold bg-foreground text-white dark:text-black"
+                }
+              >
+                Get Started
+              </Button>
+            );
+          }
         }
-      >
-        Get Started
-      </Button>
+      })}
     </div>
   );
 }

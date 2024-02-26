@@ -9,6 +9,5 @@ import path from "path";
   });
 
   const users = await db.select().from(user);
-  console.log("users:", users);
   await sql.end();
 })();
