@@ -5,8 +5,8 @@
   "main": "./src/index.ts",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "generate": "drizzle-kit generate:pg",
-    "migrate": "bun src/migrate.ts",
+    "migrate:generate": "drizzle-kit generate:pg --schema=./src/schema.ts",
+    "migrate:run": "ts-node src/migrate.ts",
     "build": "tsc",
     "studio": "drizzle-kit studio"
   },
@@ -14,7 +14,6 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "dotenv": "^16.4.4",
     "drizzle-orm": "^0.29.3",
     "pg": "^8.11.3",
     "postgres": "^3.4.3"
