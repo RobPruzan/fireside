@@ -1,5 +1,5 @@
 import "./index.css";
-import React from "react";
+import React, { useEffect } from "react";
 import ReactDOM from "react-dom/client";
 import { edenTreaty } from "@elysiajs/eden";
 import { z } from "zod";
@@ -71,6 +71,19 @@ envSchema.parse({
 declare global {
   interface ImportMetaEnv extends z.infer<typeof envSchema> {}
 }
+
+const ReactiveAuthRedirect = ({ children }: { children: React.ReactNode }) => {
+  const userQuery = useUser();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!userQuery.data) {
+      navigate({ to: "/login" });
+    }
+  }, [userQuery.data]);
+
+  return <>{children}</>;
+};
 
 export const client = edenTreaty<App>(import.meta.env.VITE_API_URL);
 
@@ -233,7 +246,11 @@ const loginPageRoute = createRoute({
 const profileRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/profile",
-  component: Profile,
+  component: () => (
+    <ReactiveAuthRedirect>
+      <Profile />
+    </ReactiveAuthRedirect>
+  ),
   beforeLoad: async ({ context: { queryClient } }) => {
     await persister.restoreClient();
     const user = queryClient.getQueryData<FiresideUser>(
@@ -246,11 +263,15 @@ const profileRoute = createRoute({
   },
 });
 
-const connectedRoute = createRoute({
+const connectRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/connect",
   pendingComponent: LoadingSpinner,
-  component: () => <div>not implemented</div>,
+  component: () => (
+    <ReactiveAuthRedirect>
+      <div>not implemented</div>
+    </ReactiveAuthRedirect>
+  ),
   beforeLoad: async ({ context: { queryClient } }) => {
     await persister.restoreClient();
     if (!queryClient.getQueryData<FiresideUser>(userQueryOptions.queryKey)) {
@@ -264,7 +285,7 @@ const routeTree = rootRoute.addChildren([
   registerPageRoute,
   loginPageRoute,
   profileRoute,
-  connectedRoute,
+  connectRoute,
 ]);
 
 const router = createRouter({
