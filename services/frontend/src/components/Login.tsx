@@ -44,7 +44,7 @@ function SignUp() {
   return (
     <div className={`flex flex-col justify-between w-full `}>
       <div className="flex flex-col items-center justify-start flex-grow pt-32">
-        <h2 className={`text-5xl font-semibold mb-10 `}>Sign Up</h2>
+        <h2 className={`text-5xl font-semibold mb-10 `}>Login</h2>
         <div className="w-full max-w-xs">
           <div className="space-y-4 mb-6">
             <div>

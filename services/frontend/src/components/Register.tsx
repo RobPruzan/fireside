@@ -1,4 +1,4 @@
-import { useNavigate, useRouter } from "@tanstack/react-router";
+import { Link, useNavigate, useRouter } from "@tanstack/react-router";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import React, { useEffect } from "react";
@@ -134,6 +134,12 @@ function Register() {
           >
             {createUserMutation.isPending ? <LoadingSpinner /> : "Continue"}
           </Button>
+          <Link
+            className="text-primary text-sm hover:text-primary/80"
+            to="/login"
+          >
+            Already have an account?
+          </Link>
         </div>
       </div>
     </div>
