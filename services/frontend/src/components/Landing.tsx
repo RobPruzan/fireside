@@ -7,6 +7,7 @@ import logo from "../assets/bonfire.png";
 import { Button } from "./ui/button";
 
 function Landing() {
+
   const navigate = useNavigate({
     from: "/",
   });
@@ -16,7 +17,7 @@ function Landing() {
   };
 
   return (
-    <div className="text-center mt-16 w-full">
+    <div className="text-center mt-16 w-full p-8">
       <h2 className={`text-5xl font-bold mt-24 `}>
         Empowering Education,
         <br />
