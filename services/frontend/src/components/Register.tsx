@@ -16,7 +16,7 @@ function Register() {
                 <Input
                   type={label === "Email" ? "email" : "password"}
                   placeholder={`${label}`}
-                  className={`mt-1 w-full rounded p-2 border-secondary/90 dark:border-2 text-sm text-black`}
+                  className={`mt-1 w-full rounded p-2 border-secondary/90 dark:border-2 text-sm `}
                 />
               </div>
             ))}
