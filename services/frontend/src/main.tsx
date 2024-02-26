@@ -5,12 +5,19 @@ import { edenTreaty } from "@elysiajs/eden";
 import { z } from "zod";
 import type { App } from "@fireside/backend";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
-import { useNavigate } from "@tanstack/react-router";
+import {
+  redirect,
+  useNavigate,
+  useRouter,
+  useRouterState,
+} from "@tanstack/react-router";
 import darkAsset from "./assets/dark.png";
 import lightAsset from "./assets/light.png";
 import logo from "./assets/bonfire.png";
 import { RouteProvider } from "./context/RouteContext";
 
+import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client";
+import { createSyncStoragePersister } from "@tanstack/query-sync-storage-persister";
 import {
   createRootRouteWithContext,
   createRoute,
@@ -19,14 +26,33 @@ import {
   Outlet,
   RouterProvider,
 } from "@tanstack/react-router";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryClient, useMutation } from "@tanstack/react-query";
 import { ThemeProvider, useTheme } from "./hooks/useTheme";
 import Landing from "./components/Landing";
-import Login from "./components/Login";
-import Register from "./components/Register";
+import SignUp from "./components/Login";
+
 import { Button } from "./components/ui/button";
 import { useRouteContext } from "./context/RouteContext";
+import Register from "./components/Register";
+import { Toaster } from "./components/ui/toaster";
+import { FiresideUser, userQueryOptions, useUser } from "./lib/user";
+import { CircleUser } from "lucide-react";
+import { run } from "@fireside/utils";
+import { LoadingSpinner } from "./components/ui/loading";
+import { Profile } from "./components/Profile";
+import { cn } from "./lib/utils";
 
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      gcTime: 1000 * 60 * 60 * 24, // 24 hours
+    },
+  },
+});
+
+const persister = createSyncStoragePersister({
+  storage: window.localStorage,
+});
 const envSchema = z.object(
   {
     VITE_API_URL: z.string(),
@@ -46,15 +72,15 @@ declare global {
   interface ImportMetaEnv extends z.infer<typeof envSchema> {}
 }
 
-const client = edenTreaty<App>(import.meta.env.VITE_API_URL);
+export const client = edenTreaty<App>(import.meta.env.VITE_API_URL);
 
 function RootComponent() {
   const { theme, setTheme } = useTheme();
-  const { isLoginOrRegister } = useRouteContext();
-
+  const user = useUser();
   const navigate = useNavigate({
     from: "/",
   });
+  const router = useRouterState();
 
   const toggleTheme = () => {
     setTheme(theme.value === "light" ? "dark" : "light");
@@ -64,6 +90,15 @@ function RootComponent() {
     navigate({ to: "/login" });
   };
 
+  const logoutMutation = useMutation({
+    mutationFn: () =>
+      client.user["log-out"].post({
+        $fetch: {
+          credentials: "include",
+        },
+      }),
+  });
+
   return (
     <div className="min-h-screen flex flex-col items-start w-screen justify-start">
       <div className="flex justify-between items-center mx-auto w-full px-10 pt-5">
@@ -71,35 +106,80 @@ function RootComponent() {
           <img src={logo} alt="Logo" className="h-8 w-8 mr-2" />
           <span className={`text-xl`}>Fireside</span>
         </Link>
-        {!isLoginOrRegister && (
-          <div className="flex items-center">
-            <Button variant={"ghost"} onClick={toggleTheme} className="mr-3">
-              <img
-                src={theme.value === "light" ? lightAsset : darkAsset}
-                alt="Theme toggle"
-                className="h-6 w-6"
-              />
-            </Button>
-            <div className="mx-3 h-6 w-px bg-foreground"></div>
+        <div className="flex items-center">
+          <Button
+            variant={"ghost"}
+            onClick={toggleTheme}
+            className={cn(["mr-3"])}
+          >
+            <img
+              src={theme.value === "light" ? lightAsset : darkAsset}
+              alt="Theme toggle"
+              className="h-6 w-6"
+            />
+          </Button>
+          <div className="mx-3 h-6 w-px bg-foreground"></div>
+          {!user.data ? (
             <Button
               variant={"ghost"}
+              disabled={router.location.pathname === "/login"}
               onClick={handleLoginClick}
-              className={`text-sm mr-3 `}
+              className={"text-sm mr-3 "}
             >
               Log in
             </Button>
+          ) : (
             <Button
               variant={"ghost"}
               onClick={() => {
-                navigate({ to: "/register" });
+                logoutMutation.mutate();
+                queryClient.setQueryData(userQueryOptions.queryKey, () => null);
               }}
-              className={`px-4 py-2 rounded`}
+              className={`text-sm mr-3 `}
             >
-              Get Started
+              Log out
             </Button>
-          </div>
-        )}
+          )}
+          {run(() => {
+            switch (user.status) {
+              case "error": {
+                return null;
+              }
+              case "pending": {
+                return <LoadingSpinner />;
+              }
+
+              case "success": {
+                if (user.data) {
+                  return (
+                    <Button
+                      disabled={router.location.pathname === "/profile"}
+                      onClick={() => navigate({ to: "/profile" })}
+                      className="flex gap-x-4"
+                      variant={"ghost"}
+                    >
+                      <CircleUser />
+                    </Button>
+                  );
+                }
+                return (
+                  <Button
+                    disabled={router.location.pathname === "/register"}
+                    variant={"ghost"}
+                    onClick={() => {
+                      navigate({ to: "/register" });
+                    }}
+                    className={`px-4 py-2 rounded`}
+                  >
+                    Get Started
+                  </Button>
+                );
+              }
+            }
+          })}
+        </div>
       </div>
+      <Toaster />
       <Outlet />
       <ReactQueryDevtools buttonPosition="bottom-left" />
     </div>
@@ -122,20 +202,69 @@ const registerPageRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/register",
   component: Register,
+  beforeLoad: ({ context: { queryClient } }) => {
+    const user = queryClient.getQueryData<FiresideUser>(
+      userQueryOptions.queryKey
+    );
+    if (user) {
+      throw redirect({ from: "/register", to: "/" });
+    }
+  },
 });
 
 const loginPageRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/login",
-  component: Login,
+  component: SignUp,
+  loader: async ({ context }) => {
+    console.log("im a loader");
+    await context.queryClient.ensureQueryData(userQueryOptions);
+  },
+  beforeLoad: ({ context: { queryClient } }) => {
+    const user = queryClient.getQueryData<FiresideUser>(
+      userQueryOptions.queryKey
+    );
+    if (user) {
+      throw redirect({ from: "/register", to: "/" });
+    }
+  },
 });
 
-const queryClient = new QueryClient();
+const profileRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/profile",
+  component: Profile,
+  beforeLoad: async ({ context: { queryClient } }) => {
+    await persister.restoreClient();
+    const user = queryClient.getQueryData<FiresideUser>(
+      userQueryOptions.queryKey
+    );
+    if (!user) {
+      throw redirect({ from: "/profile", to: "/login" });
+    }
+    return { user };
+  },
+});
+
+const connectedRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/connect",
+  pendingComponent: LoadingSpinner,
+  component: () => <div>not implemented</div>,
+  beforeLoad: async ({ context: { queryClient } }) => {
+    await persister.restoreClient();
+    if (!queryClient.getQueryData<FiresideUser>(userQueryOptions.queryKey)) {
+      throw redirect({ from: "/connect", to: "/register" });
+    }
+  },
+});
 
 const routeTree = rootRoute.addChildren([
   landingPageRoute,
   registerPageRoute,
   loginPageRoute,
+  profileRoute,
+  connectedRoute,
 ]);
 
 const router = createRouter({
@@ -156,13 +285,14 @@ declare module "@tanstack/react-router" {
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <ThemeProvider>
-      <QueryClientProvider client={queryClient}>
-        <RouteProvider>
-          {" "}
-          {/* Wrap RouterProvider inside RouteProvider */}
-          <RouterProvider router={router} />
-        </RouteProvider>
-      </QueryClientProvider>
+      <PersistQueryClientProvider
+        client={queryClient}
+        persistOptions={{
+          persister: persister,
+        }}
+      >
+        <RouterProvider router={router} />
+      </PersistQueryClientProvider>
     </ThemeProvider>
   </React.StrictMode>
 );
