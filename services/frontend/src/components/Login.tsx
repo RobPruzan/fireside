@@ -85,6 +85,7 @@ function SignUp() {
             </div>
           </div>
           <Button
+            disabled={loginMutation.isPending}
             onClick={() => {
               loginMutation.mutate(userInfo);
             }}

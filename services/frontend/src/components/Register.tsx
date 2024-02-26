@@ -120,6 +120,7 @@ function Register() {
             </div>
           </div>
           <Button
+            disabled={createUserMutation.isPending}
             onClick={async () => {
               if (userInfo.password !== userInfo.confirmedPassword) {
                 toast({

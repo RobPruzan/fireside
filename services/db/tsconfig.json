@@ -21,7 +21,8 @@
     "alwaysStrict": true,
     "noUnusedLocals": false,
     "noUnusedParameters": false,
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "noErrorTruncation": true
   },
   "include": ["**/*.ts"],
   "exclude": ["node_modules", "dist",]
