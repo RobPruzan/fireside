@@ -43,11 +43,7 @@ const cleanUser = (user: User) => {
   return cleanedUser;
 };
 
-export const validateAuthToken = async ({
-  authToken,
-}: {
-  authToken: string;
-}) => {
+export const getSession = async ({ authToken }: { authToken: string }) => {
   if (!authToken) {
     return {
       kind: "not-logged-in" as const,
@@ -230,7 +226,7 @@ export const userRoute = new Elysia({
     }
   )
   .post("/is-logged-in", async ({ cookie: { auth }, set }) => {
-    const isAuthResult = await validateAuthToken({ authToken: auth.get() });
+    const isAuthResult = await getSession({ authToken: auth.get() });
 
     switch (isAuthResult.kind) {
       case "logged-in": {

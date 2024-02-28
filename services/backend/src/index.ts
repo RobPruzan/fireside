@@ -5,26 +5,28 @@ import { Elysia } from "elysia";
 import {
   getDeleteAuthCookie,
   userRoute,
-  validateAuthToken,
+  getSession,
 } from "./user/authenticated";
 
-const authProtectedRoute = new Elysia({ prefix: "/protected" }).guard(
-  {
-    beforeHandle: async ({ cookie: { auth }, set }) => {
-      if (
-        (await validateAuthToken({ authToken: auth.get() })).kind ===
-        "not-logged-in"
-      ) {
-        set.status = 401;
-        return;
-      }
+const authProtectedRoute = new Elysia({ prefix: "/protected" })
+  .derive(async ({ cookie: { auth } }) => {
+    const session = await getSession({ authToken: auth.get() });
+    return { session };
+  })
+  .guard(
+    {
+      beforeHandle: async ({ session, set }) => {
+        if (session.kind === "not-logged-in") {
+          return (set.status = "Unauthorized");
+        }
+        return session.user;
+      },
     },
-  },
-  (app) =>
-    app.post("/log-out", (ctx) => {
-      ctx.cookie.auth.set(getDeleteAuthCookie());
-    })
-);
+    (app) =>
+      app
+        .derive(({ session }) => ({ user: session.user! }))
+        .post("/test", ({ user }) => {})
+  );
 
 const app = new Elysia()
   .use(
