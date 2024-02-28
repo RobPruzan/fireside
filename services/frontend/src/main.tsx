@@ -5,16 +5,10 @@ import { edenTreaty } from "@elysiajs/eden";
 import { z } from "zod";
 import type { App } from "@fireside/backend";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
-import {
-  redirect,
-  useNavigate,
-  useRouter,
-  useRouterState,
-} from "@tanstack/react-router";
+import { redirect, useNavigate, useRouterState } from "@tanstack/react-router";
 import darkAsset from "./assets/dark.png";
 import lightAsset from "./assets/light.png";
 import logo from "./assets/bonfire.png";
-import { RouteProvider } from "./context/RouteContext";
 
 import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client";
 import { createSyncStoragePersister } from "@tanstack/query-sync-storage-persister";
@@ -32,15 +26,16 @@ import Landing from "./components/Landing";
 import SignUp from "./components/Login";
 
 import { Button } from "./components/ui/button";
-import { useRouteContext } from "./context/RouteContext";
 import Register from "./components/Register";
 import { Toaster } from "./components/ui/toaster";
-import { FiresideUser, userQueryOptions, useUser } from "./lib/user";
+import { FiresideUser, userQueryOptions, useUser } from "./lib/useUser";
 import { CircleUser } from "lucide-react";
 import { run } from "@fireside/utils";
 import { LoadingSpinner } from "./components/ui/loading";
 import { Profile } from "./components/Profile";
 import { cn } from "./lib/utils";
+import { ExploreSidebar } from "./components/ExploreSideBar";
+import { ExploreContent } from "./components/ExploreContent";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -105,7 +100,7 @@ function RootComponent() {
 
   const logoutMutation = useMutation({
     mutationFn: () =>
-      client.user["log-out"].post({
+      client.protected["log-out"].post({
         $fetch: {
           credentials: "include",
         },
@@ -113,8 +108,8 @@ function RootComponent() {
   });
 
   return (
-    <div className="min-h-screen flex flex-col items-start w-screen justify-start">
-      <div className="flex justify-between items-center mx-auto w-full px-10 pt-5">
+    <div className="min-h-calc flex flex-col items-start w-screen justify-start">
+      <div className="flex justify-between items-center mx-auto w-full px-10 h-16">
         <Link to="/" className="flex items-center">
           <img src={logo} alt="Logo" className="h-8 w-8 mr-2" />
           <span className={`text-xl`}>Fireside</span>
@@ -263,21 +258,31 @@ const profileRoute = createRoute({
   },
 });
 
-const connectRoute = createRoute({
+const exploreRoute = createRoute({
   getParentRoute: () => rootRoute,
-  path: "/connect",
+  path: "/explore/$campId",
   pendingComponent: LoadingSpinner,
   component: () => (
     <ReactiveAuthRedirect>
-      <div>not implemented</div>
+      <div className="h-calc w-screen flex">
+        <ExploreSidebar />
+        <Outlet />
+      </div>
     </ReactiveAuthRedirect>
   ),
   beforeLoad: async ({ context: { queryClient } }) => {
     await persister.restoreClient();
     if (!queryClient.getQueryData<FiresideUser>(userQueryOptions.queryKey)) {
-      throw redirect({ from: "/connect", to: "/register" });
+      throw redirect({ from: "/explore/$campId", to: "/register" });
     }
   },
+});
+
+const exploreContentRoute = createRoute({
+  getParentRoute: () => exploreRoute,
+  path: "/",
+  pendingComponent: LoadingSpinner,
+  component: ExploreContent,
 });
 
 const routeTree = rootRoute.addChildren([
@@ -285,7 +290,7 @@ const routeTree = rootRoute.addChildren([
   registerPageRoute,
   loginPageRoute,
   profileRoute,
-  connectRoute,
+  exploreRoute.addChildren([exploreContentRoute]),
 ]);
 
 const router = createRouter({

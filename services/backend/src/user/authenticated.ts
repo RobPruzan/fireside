@@ -27,7 +27,7 @@ const getAuthCookie = ({ token }: { token: string }) =>
     sameSite: "none",
   } satisfies CookieOptions & { value: unknown });
 
-const getDeleteAuthCookie = () =>
+export const getDeleteAuthCookie = () =>
   ({
     value: "",
     httpOnly: true,
@@ -41,6 +41,41 @@ const getDeleteAuthCookie = () =>
 const cleanUser = (user: User) => {
   const { token, password, ...cleanedUser } = user;
   return cleanedUser;
+};
+
+export const validateAuthToken = async ({
+  authToken,
+}: {
+  authToken: string;
+}) => {
+  if (!authToken) {
+    return {
+      kind: "not-logged-in" as const,
+      reason: "No authorization token",
+    };
+  }
+
+  const users = await db.select().from(user);
+  const authUser = users.find(async ({ token, ...rest }) => {
+    if (!token) {
+      return false;
+    }
+
+    const res = await Bun.password.verify(authToken, token);
+    return res;
+  });
+
+  if (!authUser) {
+    return {
+      kind: "not-logged-in" as const,
+      reason: "No user with auth token found",
+    };
+  }
+
+  return {
+    kind: "logged-in" as const,
+    user: cleanUser(authUser),
+  };
 };
 
 export const userRoute = new Elysia({
@@ -194,37 +229,17 @@ export const userRoute = new Elysia({
       }),
     }
   )
-  .post("/is-logged-in", async ({ cookie, set }) => {
-    if (!cookie.auth.get()) {
-      return {
-        kind: "not-logged-in" as const,
-        reason: "No authorization token",
-      };
-    }
+  .post("/is-logged-in", async ({ cookie: { auth }, set }) => {
+    const isAuthResult = await validateAuthToken({ authToken: auth.get() });
 
-    const users = await db.select().from(user);
-    const authUser = users.find(async ({ token, ...rest }) => {
-      if (!token) {
-        return false;
+    switch (isAuthResult.kind) {
+      case "logged-in": {
+        set.status = 200;
+        return isAuthResult;
       }
-
-      const res = await Bun.password.verify(cookie.auth.get(), token);
-      return res;
-    });
-
-    if (!authUser) {
-      set.status = 401;
-      return {
-        kind: "not-logged-in" as const,
-        reason: "No user with auth token found",
-      };
+      case "not-logged-in": {
+        set.status = 401;
+        return isAuthResult;
+      }
     }
-
-    return {
-      kind: "logged-in" as const,
-      user: cleanUser(authUser),
-    };
-  })
-  .post("/log-out", (ctx) => {
-    ctx.cookie.auth.set(getDeleteAuthCookie());
   });

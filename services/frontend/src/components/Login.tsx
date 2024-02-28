@@ -7,7 +7,7 @@ import { Label } from "./ui/label";
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { client } from "@/main";
-import { FiresideUser, userQueryOptions } from "@/lib/user";
+import { FiresideUser, userQueryOptions } from "@/lib/useUser";
 import { LoadingSpinner } from "./ui/loading";
 
 function SignUp() {

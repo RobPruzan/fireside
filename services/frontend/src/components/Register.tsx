@@ -9,7 +9,7 @@ import { useToast } from "./ui/use-toast";
 import { useState } from "react";
 import { Label } from "./ui/label";
 import { User } from "../../../db/src";
-import { FiresideUser, userQueryOptions } from "@/lib/user";
+import { FiresideUser, userQueryOptions } from "@/lib/useUser";
 import { LoadingSpinner } from "./ui/loading";
 
 type CreateUserInfo = {
@@ -20,7 +20,6 @@ type CreateUserInfo = {
 
 function Register() {
   const { toast } = useToast();
-  // const navigate = useNavigate()
   const queryClient = useQueryClient();
   const createUserMutation = useMutation({
     mutationFn: async (createOpts: CreateUserInfo) => {
