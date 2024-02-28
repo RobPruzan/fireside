@@ -15,6 +15,13 @@
       "when": 1708966187643,
       "tag": "0001_premium_tony_stark",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1709099290129,
+      "tag": "0002_fresh_ted_forrester",
+      "breakpoints": true
     }
   ]
 }
