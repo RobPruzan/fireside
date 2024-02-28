@@ -57,3 +57,11 @@
     @apply bg-background text-foreground;
   }
 }
+
+.min-h-calc {
+  min-height: calc(100vh - 64px);
+}
+
+.h-calc {
+  height: calc(100vh - 64px);
+}

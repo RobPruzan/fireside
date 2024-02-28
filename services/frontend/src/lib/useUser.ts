@@ -1,9 +1,5 @@
 import { client } from "@/main";
-import {
-  useSuspenseQuery,
-  QueryOptions,
-  useQuery,
-} from "@tanstack/react-query";
+import { QueryOptions, useQuery } from "@tanstack/react-query";
 import { User } from "../../../db/src";
 
 export type FiresideUser = Omit<User, "token" | "password"> | null;
@@ -29,6 +25,7 @@ export const userQueryOptions = {
       }
     }
   },
+
   retryDelay: 10000,
 } satisfies QueryOptions;
 

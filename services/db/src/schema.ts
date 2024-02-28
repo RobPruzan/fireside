@@ -21,9 +21,15 @@ export const user = pgTable("user", {
   updatedAt: timestamp("updated_at"),
 });
 
+export type User = InferSelectModel<typeof user>;
+
 export const token = pgTable("token", {
   value: text("id").primaryKey(),
   expires: timestamp("expires").$defaultFn(() => getOneYearAheadDate()),
 });
 
-export type User = InferSelectModel<typeof user>;
+export const user_to_user = pgTable("friend", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  userOneId: uuid("id").references(() => user.id),
+  userTwoId: uuid("id").references(() => user.id),
+});

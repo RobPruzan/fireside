@@ -5,12 +5,11 @@ import darkAsset from "../assets/dark.png";
 import lightAsset from "../assets/light.png";
 import logo from "../assets/bonfire.png";
 import { Button } from "./ui/button";
-import { useUser } from "@/lib/user";
+import { useUser } from "@/lib/useUser";
 import { run } from "@fireside/utils";
 import { LoadingSpinner } from "./ui/loading";
 
 function Landing() {
-
   const navigate = useNavigate({
     from: "/",
   });
@@ -55,13 +54,16 @@ function Landing() {
                 <Button
                   size={"lg"}
                   onClick={() => {
-                    navigate({ to: "/connect" });
+                    navigate({
+                      to: `/explore/$campId`,
+                      params: { campId: "cse-312" },
+                    });
                   }}
                   className={
                     "mt-10 px-6 py-3 rounded font-bold bg-foreground text-white dark:text-black"
                   }
                 >
-                  Start connecting
+                  Explore
                 </Button>
               );
             }
