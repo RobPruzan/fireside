@@ -8,7 +8,8 @@ import {
   type User,
 } from "@fireside/db";
 
-import { Elysia, NotFoundError, t, type CookieOptions } from "elysia";
+import { Elysia, t, type CookieOptions } from "elysia";
+import { routerWithSession, authHandle } from "./lib";
 
 const getHashedToken = async ({ token }: { token: string }) =>
   await Bun.password.hash(token, {
@@ -229,3 +230,11 @@ export const userRoute = new Elysia({
     const isAuthResult = await getSession({ authToken: auth.get() });
     return isAuthResult;
   });
+
+export const userProtectedRoute = routerWithSession({ prefix: "/user" }).guard(
+  { beforeHandle: authHandle },
+  (app) =>
+    app.post("/log-out", (ctx) => {
+      ctx.cookie.auth.set(getDeleteAuthCookie());
+    })
+);

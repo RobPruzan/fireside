@@ -9,6 +9,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { client } from "@/main";
 import { FiresideUser, userQueryOptions } from "@/lib/useUser";
 import { LoadingSpinner } from "./ui/loading";
+import { useToast } from "./ui/use-toast";
 
 function SignUp() {
   const navigate = useNavigate({ from: "/login" });
@@ -17,6 +18,7 @@ function SignUp() {
     password: "",
   });
   const queryClient = useQueryClient();
+  const { toast } = useToast();
   const loginMutation = useMutation({
     mutationFn: async (loginInfo: typeof userInfo) => {
       const res = await client.user.login.post(loginInfo, {
@@ -40,6 +42,7 @@ function SignUp() {
         }
       }
     },
+    onError: (e) => toast({ variant: "destructive", title: e.message }),
   });
   return (
     <div className={`flex flex-col justify-between w-full `}>
