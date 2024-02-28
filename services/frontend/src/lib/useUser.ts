@@ -12,7 +12,7 @@ export const userQueryOptions = {
       },
     });
     if (res.error) {
-      return Promise.reject(res.error);
+      throw res.error;
     }
     res.data.user;
 

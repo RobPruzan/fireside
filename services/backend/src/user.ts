@@ -227,15 +227,5 @@ export const userRoute = new Elysia({
   )
   .post("/is-logged-in", async ({ cookie: { auth }, set }) => {
     const isAuthResult = await getSession({ authToken: auth.get() });
-
-    switch (isAuthResult.kind) {
-      case "logged-in": {
-        set.status = 200;
-        return isAuthResult;
-      }
-      case "not-logged-in": {
-        set.status = 401;
-        return isAuthResult;
-      }
-    }
+    return isAuthResult;
   });
