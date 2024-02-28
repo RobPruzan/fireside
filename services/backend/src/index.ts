@@ -2,11 +2,7 @@ import cors from "@elysiajs/cors";
 import { db } from "@fireside/db";
 import { user } from "@fireside/db/src/schema";
 import { Elysia } from "elysia";
-import {
-  getDeleteAuthCookie,
-  userRoute,
-  getSession,
-} from "./user/authenticated";
+import { getDeleteAuthCookie, getSession, userRoute } from "./user";
 
 const authProtectedRoute = new Elysia({ prefix: "/protected" })
   .derive(async ({ cookie: { auth } }) => {
@@ -19,13 +15,14 @@ const authProtectedRoute = new Elysia({ prefix: "/protected" })
         if (session.kind === "not-logged-in") {
           return (set.status = "Unauthorized");
         }
-        return session.user;
       },
     },
     (app) =>
       app
         .derive(({ session }) => ({ user: session.user! }))
-        .post("/test", ({ user }) => {})
+        .post("/log-out", (ctx) => {
+          ctx.cookie.auth.set(getDeleteAuthCookie());
+        })
   );
 
 const app = new Elysia()

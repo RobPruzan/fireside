@@ -106,7 +106,6 @@ function RootComponent() {
         },
       }),
   });
-
   return (
     <div className="min-h-calc flex flex-col items-start w-screen justify-start">
       <div className="flex justify-between items-center mx-auto w-full px-10 h-16">
@@ -225,7 +224,6 @@ const loginPageRoute = createRoute({
   path: "/login",
   component: SignUp,
   loader: async ({ context }) => {
-    console.log("im a loader");
     await context.queryClient.ensureQueryData(userQueryOptions);
   },
   beforeLoad: ({ context: { queryClient } }) => {
