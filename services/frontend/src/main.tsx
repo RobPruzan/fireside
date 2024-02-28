@@ -99,12 +99,7 @@ function RootComponent() {
   };
 
   const logoutMutation = useMutation({
-    mutationFn: () =>
-      client.protected["log-out"].post({
-        $fetch: {
-          credentials: "include",
-        },
-      }),
+    mutationFn: () => client.protected.user["log-out"].post(),
   });
   return (
     <div className="min-h-calc flex flex-col items-start w-screen justify-start">

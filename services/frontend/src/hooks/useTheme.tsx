@@ -16,6 +16,7 @@ export const ThemeContext = createContext<{
 
 export const ThemeProvider = ({ children }: { children: React.ReactNode }) => {
   const [theme, setTheme] = useState<{ value: Theme }>({ value: "dark" });
+
   useEffect(() => {
     const currentTheme = document.getElementsByTagName("body").item(0)!;
     const hasDark = currentTheme.className.includes("dark");
