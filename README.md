@@ -11,8 +11,9 @@
 ### Setting up db
 
 1. `docker-compose up db --build`
-1. `cd services/db`
-1. `pnpm migrate:generate && pnpm migrate:run`
+2. `cd services/db`
+3. `echo "CONNECTION_STRING=postgres://test_user:test_password@localhost/test_db" > .env`
+4. `pnpm migrate:generate && pnpm migrate:run`
 
 ### Setting up backend
 
