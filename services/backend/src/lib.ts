@@ -2,11 +2,7 @@ import type { StatusMap } from "@fireside/utils/src/constants";
 import { Elysia } from "elysia";
 import { getSession } from "./user";
 
-export const routerWithSession = <T extends string>({
-  prefix,
-}: {
-  prefix: T;
-}) =>
+export const routerWithSession = <T>({ prefix }: { prefix: T }) =>
   new Elysia({ prefix: `/protected/${prefix}` }).derive(
     async ({ cookie: { auth } }) => {
       const session = await getSession({ authToken: auth.get() });
