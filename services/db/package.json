@@ -14,8 +14,10 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@sinclair/typebox": "^0.32.14",
     "dotenv": "^16.4.5",
     "drizzle-orm": "^0.29.3",
+    "drizzle-typebox": "^0.1.1",
     "pg": "^8.11.3",
     "postgres": "^3.4.3"
   },

@@ -1,8 +1,8 @@
 import cors from "@elysiajs/cors";
 
 import { Elysia } from "elysia";
-import { getSession, userProtectedRoute, userRoute } from "./user";
-import { parseCookie } from "./lib";
+import { userProtectedRoute, userRoute } from "./user";
+import { campRouter } from "./camp";
 
 const port = 8080;
 
@@ -15,7 +15,7 @@ const app = new Elysia()
   )
   .use(userProtectedRoute)
   .use(userRoute)
-
+  .use(campRouter)
   .onError(({ error }) => {
     return error.toString();
   })
