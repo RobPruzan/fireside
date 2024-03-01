@@ -9,7 +9,7 @@ import {
 } from "@fireside/db";
 
 import { Elysia, t, type CookieOptions } from "elysia";
-import { authHandle } from "./lib";
+import { ProtectedElysia, getDeleteAuthCookie } from "./lib";
 import { StatusMap } from "@fireside/utils/src/constants";
 
 const getHashedToken = async ({ token }: { token: string }) =>
@@ -23,17 +23,6 @@ const getAuthCookie = ({ token }: { token: string }) =>
     value: token,
     httpOnly: true,
     expires: getOneYearAheadDate(),
-    secure: true,
-    domain: "localhost",
-    path: "/",
-    sameSite: "none",
-  } satisfies CookieOptions & { value: unknown });
-
-export const getDeleteAuthCookie = () =>
-  ({
-    value: "",
-    httpOnly: true,
-    expires: new Date(),
     secure: true,
     domain: "localhost",
     path: "/",
@@ -231,28 +220,9 @@ export const userRoute = new Elysia({
     const isAuthResult = await getSession({ authToken: auth.get() });
     return isAuthResult;
   });
-// not as extendable as i want but whatever
-export const userProtectedRoute = new Elysia({
-  prefix: "/protected/user",
-}).guard(
-  {
-    cookie: t.Cookie({
-      auth: t.String(),
-    }),
-  },
-  (app) =>
-    app
-      .resolve(({ cookie: { auth }, set }) => {
-        const session = getSession({ authToken: auth.get() });
 
-        if (!session) {
-          set.status = 401;
-          throw new Error("Unauthorized");
-        }
-
-        return session;
-      })
-      .post("/log-out", (ctx) => {
-        ctx.cookie.auth.set(getDeleteAuthCookie());
-      })
-);
+export const userProtectedRoute = ProtectedElysia({
+  prefix: "/user",
+}).post("/log-out", (ctx) => {
+  ctx.cookie.auth.set(getDeleteAuthCookie());
+});

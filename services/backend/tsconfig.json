@@ -17,5 +17,7 @@
     "strict": true,
     "skipLibCheck": true,
     "noFallthroughCasesInSwitch": true,
+    "noErrorTruncation": true,
+
   }
 }

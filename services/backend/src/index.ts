@@ -1,7 +1,8 @@
 import cors from "@elysiajs/cors";
 
 import { Elysia } from "elysia";
-import { userProtectedRoute, userRoute } from "./user";
+import { getSession, userProtectedRoute, userRoute } from "./user";
+import { parseCookie } from "./lib";
 
 const port = 8080;
 
