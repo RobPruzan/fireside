@@ -22,14 +22,7 @@ import { Profile } from "./components/Profile";
 import { LoadingSpinner } from "./components/ui/loading";
 import { FiresideUser, useUser, userQueryOptions } from "./lib/useUser";
 import { run } from "@fireside/utils";
-import {
-  DropdownMenu,
-  DropdownMenuTrigger,
-  DropdownMenuContent,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuItem,
-} from "@radix-ui/react-dropdown-menu";
+
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { CircleUser } from "lucide-react";
 import { Button } from "./components/ui/button";
@@ -41,6 +34,14 @@ import { client } from "./main";
 import Register from "./components/Register";
 import { useEffect } from "react";
 import { createSyncStoragePersister } from "@tanstack/query-sync-storage-persister";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "./components/ui/dropdown-menu";
 
 export const queryClient = new QueryClient({
   defaultOptions: {
@@ -135,16 +136,7 @@ export const rootRoute = createRootRouteWithContext<{
               />
             </Button>
             <div className="mx-3 h-6 w-px bg-foreground"></div>
-            {!user.data && (
-              <Button
-                variant={"ghost"}
-                disabled={router.location.pathname === "/login"}
-                onClick={handleLoginClick}
-                className={"text-sm mr-3 "}
-              >
-                Log in
-              </Button>
-            )}
+
             {run(() => {
               switch (user.status) {
                 case "error": {
@@ -195,6 +187,16 @@ export const rootRoute = createRootRouteWithContext<{
                 }
               }
             })}
+            {!user.data && (
+              <Button
+                variant={"ghost"}
+                disabled={router.location.pathname === "/login"}
+                onClick={handleLoginClick}
+                className={"text-sm mr-3 "}
+              >
+                Log in
+              </Button>
+            )}
           </div>
         </div>
         <Toaster />
