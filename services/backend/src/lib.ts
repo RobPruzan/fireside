@@ -2,20 +2,6 @@ import type { StatusMap } from "@fireside/utils/src/constants";
 import { Elysia, t, type CookieOptions } from "elysia";
 import { getSession } from "./user";
 
-export const authHandle = async ({
-  session,
-  set,
-}: {
-  set: { status?: number | keyof typeof StatusMap };
-  session: ReturnType<typeof getSession> extends Promise<infer R>
-    ? R
-    : "L bozo once again";
-}) => {
-  if (session.kind === "not-logged-in") {
-    return (set.status = "Unauthorized");
-  }
-};
-
 export const sessionGuard = {
   cookie: t.Cookie({
     auth: t.String(),
@@ -34,7 +20,7 @@ export const ProtectedElysia = <T extends string>({
     const session = await getSession({ authToken: auth.get() });
     if (session.kind === "not-logged-in") {
       set.status = 401;
-      return;
+      throw new Error("must be logged in");
     }
     // By default set the request to 200, since that's the framework default
     set.status = 200;
