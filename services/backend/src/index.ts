@@ -17,7 +17,7 @@ const app = new Elysia()
     cors({
       credentials: true,
       allowedHeaders: ["Origin, X-Requested-With, Content-Type, Accept"],
-    })
+    }),
   )
   // order matters till v1.0 local scoping can be implemented
   .use(noAuthRoutes)

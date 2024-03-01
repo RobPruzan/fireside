@@ -36,7 +36,7 @@ export const getDeleteAuthCookie = () =>
     domain: "localhost",
     path: "/",
     sameSite: "none",
-  } satisfies CookieOptions & { value: unknown });
+  }) satisfies CookieOptions & { value: unknown };
 
 export const parseCookie = (cookieString: string): Record<string, string> => {
   const cookieData: Record<string, string> = {};
