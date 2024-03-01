@@ -8,7 +8,6 @@ import path from "path";
   await migrate(db, {
     migrationsFolder: path.join(__dirname, "..", "drizzle"),
   });
-
-  const users = await db.select().from(user);
+  console.log("Migrated successfully!");
   await sql.end();
 })();

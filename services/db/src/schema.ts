@@ -8,7 +8,7 @@ export const getOneYearAheadDate = () => {
   return new Date(
     currentDate.getFullYear() + 1,
     currentDate.getMonth(),
-    currentDate.getDate(),
+    currentDate.getDate()
   );
 };
 export const user = pgTable("user", {
@@ -50,14 +50,38 @@ export const campSchema = createInsertSchema(camp);
 
 export const campMembers = pgTable("campMembers", {
   id: uuid("id").defaultRandom().primaryKey(),
-  camp_id: uuid("camp_id").references(() => camp.id),
-  user_id: uuid("user_id").references(() => user.id),
+  campId: uuid("camp_id").references(() => camp.id),
+  userId: uuid("user_id").references(() => user.id),
 });
 
-export const campMembersSchema = createInsertSchema(campMembers, {
-  user_id: Type.Optional(Type.String()),
+export const campMembersInsertSchema = createInsertSchema(campMembers, {
+  userId: Type.Optional(Type.String()),
 });
 
-export const campMembersWithoutUserSchema = createInsertSchema(campMembers, {
-  user_id: Type.Optional(Type.String()),
+export const campMembersWithoutUserInsertSchema = createInsertSchema(
+  campMembers,
+  {
+    userId: Type.Optional(Type.String()),
+  }
+);
+
+export const bonfire = pgTable("bonfire", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  campId: uuid("camp_id").references(() => camp.id),
+  name: text("name").notNull(),
+  createdAt: timestamp("created_at")
+    .$defaultFn(() => new Date())
+    .notNull(),
+  updatedAt: timestamp("updated_at"),
+});
+
+export const bonfireInsertSchema = createInsertSchema(bonfire);
+
+export const userToBonfire = pgTable("userToBonfire", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  userId: uuid("userId").references(() => user.id),
+  bonfireId: uuid("bonfireId").references(() => bonfire.id),
+  joinedAt: timestamp("created_at")
+    .$defaultFn(() => new Date())
+    .notNull(),
 });

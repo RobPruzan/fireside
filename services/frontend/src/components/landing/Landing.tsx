@@ -1,13 +1,11 @@
 import React from "react";
-import { useTheme } from "../hooks/useTheme";
+import { useTheme } from "../../hooks/useTheme";
 import { useNavigate } from "@tanstack/react-router";
-import darkAsset from "../assets/dark.png";
-import lightAsset from "../assets/light.png";
-import logo from "../assets/bonfire.png";
-import { Button } from "./ui/button";
+
+import { Button } from "../ui/button";
 import { useUser } from "@/lib/useUser";
 import { run } from "@fireside/utils";
-import { LoadingSpinner } from "./ui/loading";
+import { LoadingSpinner } from "../ui/loading";
 
 function Landing() {
   const navigate = useNavigate({
@@ -55,7 +53,7 @@ function Landing() {
                   size={"lg"}
                   onClick={() => {
                     navigate({
-                      to: `/explore/$id`,
+                      to: `/camp`,
                       params: {
                         id: "hello",
                       },
