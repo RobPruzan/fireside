@@ -3,7 +3,11 @@ import {
   createRootRouteWithContext,
   createRoute,
   redirect,
+  useMatch,
+  useMatchRoute,
+  useChildMatches,
   useNavigate,
+  Outlet,
 } from "@tanstack/react-router";
 import Landing from "./components/landing/Landing";
 import SignUp from "./components/landing/Login";
@@ -39,12 +43,18 @@ export const rootRoute = createRootRouteWithContext<{
   loader: async ({ context: { queryClient }, location, navigate }) => {
     const user = await getUser({ queryClient });
     if (user && location.href === "/") {
-      // not type safe, be careful b/c its root
       navigate({ from: "/", to: "/camp" });
     }
   },
-  pendingComponent: () => <>loading</>,
-  component: RootLandingLayout,
+  pendingComponent: () => <>...</>,
+  component: () => {
+    const firstChild = useChildMatches().at(0);
+    if (firstChild?.id === "/camp") {
+      return <RootCampLayout />;
+    }
+
+    return <RootLandingLayout />;
+  },
 });
 
 export const landingPageRoute = createRoute({
@@ -101,7 +111,7 @@ export const campRoute = createRoute({
 
   component: () => (
     <ReactiveAuthRedirect>
-      <RootCampLayout />
+      <Outlet />
     </ReactiveAuthRedirect>
   ),
 });
