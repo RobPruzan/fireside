@@ -18,6 +18,7 @@ const app = new Elysia()
   )
   .use(userProtectedRoute)
   .use(userRoute)
+
   .use(campRouter)
   .onError(({ error }) => {
     return error.toString();
