@@ -27,7 +27,7 @@ const getAuthCookie = ({ token }: { token: string }) =>
     domain: "localhost",
     path: "/",
     sameSite: "none",
-  }) satisfies CookieOptions & { value: unknown };
+  } satisfies CookieOptions & { value: unknown });
 
 const cleanUser = (user: User) => {
   const { token, password, ...cleanedUser } = user;
@@ -129,7 +129,7 @@ export const userRoute = new Elysia({
 
       if (!newUser) {
         throw new Error(
-          "Failed to create user, could not retrieve created user",
+          "Failed to create user, could not retrieve created user"
         );
       }
 
@@ -151,7 +151,7 @@ export const userRoute = new Elysia({
         password: t.String(),
         confirmedPassword: t.String(),
       }),
-    },
+    }
   )
   .post(
     "/login",
@@ -166,7 +166,7 @@ export const userRoute = new Elysia({
 
       const verified = await Bun.password.verify(
         ctx.body.password,
-        potentialUser?.password,
+        potentialUser?.password
       );
       if (!verified) {
         ctx.set.status = 401;
@@ -216,7 +216,7 @@ export const userRoute = new Elysia({
         email: t.String(),
         password: t.String(),
       }),
-    },
+    }
   )
   .post("/is-logged-in", async ({ cookie: { auth }, set }) => {
     const isAuthResult = await getSession({ authToken: auth.get() });

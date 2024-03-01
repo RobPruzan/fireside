@@ -1,15 +1,15 @@
 import { Link, useNavigate } from "@tanstack/react-router";
-import { Button } from "./ui/button";
-import { Input } from "./ui/input";
+import { Button } from "../ui/button";
+import { Input } from "../ui/input";
 import React, { useEffect } from "react";
-import { useRouteContext } from "../context/RouteContext";
-import { Label } from "./ui/label";
+import { useRouteContext } from "../../context/RouteContext";
+import { Label } from "../ui/label";
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { client } from "@/main";
 import { FiresideUser, userQueryOptions } from "@/lib/useUser";
-import { LoadingSpinner } from "./ui/loading";
-import { useToast } from "./ui/use-toast";
+import { LoadingSpinner } from "../ui/loading";
+import { useToast } from "../ui/use-toast";
 
 function SignUp() {
   const navigate = useNavigate({ from: "/login" });
@@ -35,7 +35,7 @@ function SignUp() {
         case "success": {
           queryClient.setQueryData<FiresideUser>(
             userQueryOptions.queryKey,
-            () => res.data.user,
+            () => res.data.user
           );
           navigate({ to: "/" });
           return;

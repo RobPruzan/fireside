@@ -11,6 +11,7 @@ export const userQueryOptions = {
         credentials: "include",
       },
     });
+
     if (res.error) {
       throw res.error;
     }

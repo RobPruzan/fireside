@@ -1,7 +1,7 @@
 import {
   camp,
   campMembers,
-  campMembersWithoutUserSchema,
+  campMembersWithoutUserInsertSchema,
   campSchema,
 } from "@fireside/db";
 import { ProtectedElysia } from "./lib";
@@ -14,8 +14,8 @@ export const campRouter = ProtectedElysia({ prefix: "/camp" })
   .post(
     "/join",
     ({ body, user }) =>
-      db.insert(campMembers).values({ ...body, user_id: user.id }),
+      db.insert(campMembers).values({ ...body, userId: user.id }),
     {
-      body: campMembersWithoutUserSchema,
-    },
+      body: campMembersWithoutUserInsertSchema,
+    }
   );
