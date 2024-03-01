@@ -37,7 +37,7 @@ function SignUp() {
             userQueryOptions.queryKey,
             () => res.data.user
           );
-          navigate({ to: "/" });
+          navigate({ to: "/" });  
           return;
         }
       }
