@@ -20,7 +20,12 @@ import {
   Outlet,
   RouterProvider,
 } from "@tanstack/react-router";
-import { QueryClient, useMutation } from "@tanstack/react-query";
+import {
+  QueryClient,
+  queryOptions,
+  useMutation,
+  useQueryClient,
+} from "@tanstack/react-query";
 import { ThemeProvider, useTheme } from "./hooks/useTheme";
 import Landing from "./components/Landing";
 import SignUp from "./components/Login";
@@ -36,6 +41,15 @@ import { Profile } from "./components/Profile";
 import { cn } from "./lib/utils";
 import { ExploreSidebar } from "./components/ExploreSideBar";
 import { ExploreContent } from "./components/ExploreContent";
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuItem,
+} from "./components/ui/dropdown-menu";
+import { useToast } from "./components/ui/use-toast";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -98,8 +112,36 @@ function RootComponent() {
     navigate({ to: "/login" });
   };
 
+  const { toast } = useToast();
+
+  const queryClient = useQueryClient();
+
   const logoutMutation = useMutation({
-    mutationFn: () => client.protected.user["log-out"].post(),
+    mutationFn: async () => {
+      const res = await client.protected.user["log-out"].post({
+        $fetch: {
+          credentials: "include",
+        },
+      });
+      if (res.error) {
+        throw new Error(res.error.value);
+      }
+
+      return res.data;
+    },
+    onSuccess: () => {
+      queryClient.setQueryData<FiresideUser>(userQueryOptions.queryKey, null);
+      toast({
+        title: "Logged out!",
+      });
+    },
+    onError: (err) => {
+      toast({
+        variant: "destructive",
+        title: "Could not log out",
+        description: err.message,
+      });
+    },
   });
   return (
     <div className="min-h-calc flex flex-col items-start w-screen justify-start">
@@ -121,7 +163,7 @@ function RootComponent() {
             />
           </Button>
           <div className="mx-3 h-6 w-px bg-foreground"></div>
-          {!user.data ? (
+          {!user.data && (
             <Button
               variant={"ghost"}
               disabled={router.location.pathname === "/login"}
@@ -129,17 +171,6 @@ function RootComponent() {
               className={"text-sm mr-3 "}
             >
               Log in
-            </Button>
-          ) : (
-            <Button
-              variant={"ghost"}
-              onClick={() => {
-                logoutMutation.mutate();
-                queryClient.setQueryData(userQueryOptions.queryKey, () => null);
-              }}
-              className={`text-sm mr-3 `}
-            >
-              Log out
             </Button>
           )}
           {run(() => {
@@ -154,14 +185,27 @@ function RootComponent() {
               case "success": {
                 if (user.data) {
                   return (
-                    <Button
-                      disabled={router.location.pathname === "/profile"}
-                      onClick={() => navigate({ to: "/profile" })}
-                      className="flex gap-x-4"
-                      variant={"ghost"}
-                    >
-                      <CircleUser />
-                    </Button>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant={"ghost"}>
+                          <CircleUser />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent>
+                        <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem
+                          onClick={() => navigate({ to: "/profile" })}
+                        >
+                          Profile
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={() => logoutMutation.mutate()}
+                        >
+                          Logout
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   );
                 }
                 return (
@@ -253,29 +297,15 @@ const profileRoute = createRoute({
 
 const exploreRoute = createRoute({
   getParentRoute: () => rootRoute,
-  path: "/explore/$campId",
+  path: "/explore/",
   pendingComponent: LoadingSpinner,
-  component: () => (
-    <ReactiveAuthRedirect>
-      <div className="h-calc w-screen flex">
-        <ExploreSidebar />
-        <Outlet />
-      </div>
-    </ReactiveAuthRedirect>
-  ),
+  component: ExploreContent,
   beforeLoad: async ({ context: { queryClient } }) => {
     await persister.restoreClient();
     if (!queryClient.getQueryData<FiresideUser>(userQueryOptions.queryKey)) {
-      throw redirect({ from: "/explore/$campId", to: "/register" });
+      throw redirect({ from: "/explore", to: "/register" });
     }
   },
-});
-
-const exploreContentRoute = createRoute({
-  getParentRoute: () => exploreRoute,
-  path: "/",
-  pendingComponent: LoadingSpinner,
-  component: ExploreContent,
 });
 
 const routeTree = rootRoute.addChildren([
@@ -283,7 +313,7 @@ const routeTree = rootRoute.addChildren([
   registerPageRoute,
   loginPageRoute,
   profileRoute,
-  exploreRoute.addChildren([exploreContentRoute]),
+  exploreRoute,
 ]);
 
 const router = createRouter({

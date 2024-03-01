@@ -2,13 +2,15 @@ import type { StatusMap } from "@fireside/utils/src/constants";
 import { Elysia } from "elysia";
 import { getSession } from "./user";
 
-export const routerWithSession = <T>({ prefix }: { prefix: T }) =>
-  new Elysia({ prefix: `/protected/${prefix}` }).derive(
-    async ({ cookie: { auth } }) => {
-      const session = await getSession({ authToken: auth.get() });
-      return { session };
-    }
-  );
+// export const routerWithSession = <T>({ prefix }: { prefix: T }) =>
+//   new Elysia({ prefix: `/protected/${prefix}` }).resolve(
+//     async ({ cookie: { auth } }) => {
+//       console.log("route");
+//       const session = await getSession({ authToken: auth.get() });
+//       // console.log(session);
+//       // return { session };
+//     }
+//   );
 
 export const authHandle = async ({
   session,
@@ -19,6 +21,7 @@ export const authHandle = async ({
     ? R
     : "L bozo once again";
 }) => {
+  console.log("auth handle", session);
   if (session.kind === "not-logged-in") {
     return (set.status = "Unauthorized");
   }

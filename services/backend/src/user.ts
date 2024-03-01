@@ -9,7 +9,8 @@ import {
 } from "@fireside/db";
 
 import { Elysia, t, type CookieOptions } from "elysia";
-import { routerWithSession, authHandle } from "./lib";
+import { authHandle } from "./lib";
+import { StatusMap } from "@fireside/utils/src/constants";
 
 const getHashedToken = async ({ token }: { token: string }) =>
   await Bun.password.hash(token, {
@@ -230,11 +231,28 @@ export const userRoute = new Elysia({
     const isAuthResult = await getSession({ authToken: auth.get() });
     return isAuthResult;
   });
-
-export const userProtectedRoute = routerWithSession({ prefix: "/user" }).guard(
-  { beforeHandle: authHandle },
+// not as extendable as i want but whatever
+export const userProtectedRoute = new Elysia({
+  prefix: "/protected/user",
+}).guard(
+  {
+    cookie: t.Cookie({
+      auth: t.String(),
+    }),
+  },
   (app) =>
-    app.post("/log-out", (ctx) => {
-      ctx.cookie.auth.set(getDeleteAuthCookie());
-    })
+    app
+      .resolve(({ cookie: { auth }, set }) => {
+        const session = getSession({ authToken: auth.get() });
+
+        if (!session) {
+          set.status = 401;
+          throw new Error("Unauthorized");
+        }
+
+        return session;
+      })
+      .post("/log-out", (ctx) => {
+        ctx.cookie.auth.set(getDeleteAuthCookie());
+      })
 );

@@ -3,6 +3,8 @@ import cors from "@elysiajs/cors";
 import { Elysia } from "elysia";
 import { userProtectedRoute, userRoute } from "./user";
 
+const port = 8080;
+
 const app = new Elysia()
   .use(
     cors({
@@ -10,11 +12,14 @@ const app = new Elysia()
       allowedHeaders: ["Origin, X-Requested-With, Content-Type, Accept"],
     })
   )
-  .use(userRoute)
   .use(userProtectedRoute)
+  .use(userRoute)
+
   .onError(({ error }) => {
     return error.toString();
   })
-  .listen(8080);
+  .listen(port);
+
+console.log(`Running on port ${port}`);
 
 export type App = typeof app;

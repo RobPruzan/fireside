@@ -55,8 +55,8 @@ function Landing() {
                   size={"lg"}
                   onClick={() => {
                     navigate({
-                      to: `/explore/$campId`,
-                      params: { campId: "cse-312" },
+                      to: `/explore`,
+
                     });
                   }}
                   className={
