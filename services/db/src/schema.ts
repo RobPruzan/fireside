@@ -8,7 +8,7 @@ export const getOneYearAheadDate = () => {
   return new Date(
     currentDate.getFullYear() + 1,
     currentDate.getMonth(),
-    currentDate.getDate()
+    currentDate.getDate(),
   );
 };
 export const user = pgTable("user", {

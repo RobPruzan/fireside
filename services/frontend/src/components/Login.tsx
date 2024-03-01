@@ -35,9 +35,9 @@ function SignUp() {
         case "success": {
           queryClient.setQueryData<FiresideUser>(
             userQueryOptions.queryKey,
-            () => res.data.user
+            () => res.data.user,
           );
-          navigate({ to: "/" });  
+          navigate({ to: "/" });
           return;
         }
       }

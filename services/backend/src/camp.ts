@@ -17,5 +17,5 @@ export const campRouter = ProtectedElysia({ prefix: "/camp" })
       db.insert(campMembers).values({ ...body, user_id: user.id }),
     {
       body: campMembersWithoutUserSchema,
-    }
+    },
   );

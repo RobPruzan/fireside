@@ -219,7 +219,7 @@ export const registerPageRoute = createRoute({
   component: Register,
   beforeLoad: ({ context: { queryClient } }) => {
     const user = queryClient.getQueryData<FiresideUser>(
-      userQueryOptions.queryKey
+      userQueryOptions.queryKey,
     );
     if (user) {
       throw redirect({ from: "/register", to: "/" });
@@ -236,7 +236,7 @@ export const loginPageRoute = createRoute({
   },
   beforeLoad: ({ context: { queryClient } }) => {
     const user = queryClient.getQueryData<FiresideUser>(
-      userQueryOptions.queryKey
+      userQueryOptions.queryKey,
     );
     if (user) {
       throw redirect({ from: "/register", to: "/" });
@@ -255,7 +255,7 @@ export const profileRoute = createRoute({
   beforeLoad: async ({ context: { queryClient } }) => {
     await persister.restoreClient();
     const user = queryClient.getQueryData<FiresideUser>(
-      userQueryOptions.queryKey
+      userQueryOptions.queryKey,
     );
     if (!user) {
       throw redirect({ from: "/profile", to: "/login" });
@@ -273,10 +273,13 @@ export const exploreRoute = createRoute({
   beforeLoad: async ({ context: { queryClient } }) => {
     await persister.restoreClient();
     const user = queryClient.getQueryData<FiresideUser>(
-      userQueryOptions.queryKey
+      userQueryOptions.queryKey,
     );
     if (!queryClient.getQueryData<FiresideUser>(userQueryOptions.queryKey)) {
-      throw redirect({ from: "/explore/$id", to: "/register" });
+      throw redirect({
+        from: "/explore/$id",
+        to: "/register",
+      });
     }
     return { user };
   },
