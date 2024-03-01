@@ -31,16 +31,19 @@ export const ProtectedElysia = <T extends string>({
   new Elysia({
     prefix: `/protected${prefix}`,
     name: "auth-middleware",
-  }).resolve(({ cookie: { auth }, set }) => {
-    const session = getSession({ authToken: auth.get() });
+  })
+    .derive(async ({ cookie: { auth }, set }) => {
+      const session = await getSession({ authToken: auth.get() });
 
-    if (!session) {
-      set.status = 401;
-      throw new Error("Unauthorized");
-    }
+      if (!session) {
+        set.status = 401;
+        throw new Error("Unauthorized");
+      }
 
-    return session;
-  });
+      return session;
+    })
+    // why we have to double derive to get correct type? Only god knows
+    .derive((ctx) => ({ user: ctx.user! }));
 
 export const getDeleteAuthCookie = () =>
   ({

@@ -1,5 +1,8 @@
+import { Type } from "@sinclair/typebox";
 import { InferSelectModel } from "drizzle-orm";
 import { serial, text, timestamp, pgTable, uuid } from "drizzle-orm/pg-core";
+import { createInsertSchema } from "drizzle-typebox";
+
 export const getOneYearAheadDate = () => {
   const currentDate = new Date();
   return new Date(
@@ -43,8 +46,18 @@ export const camp = pgTable("camp", {
   updatedAt: timestamp("updated_at"),
 });
 
+export const campSchema = createInsertSchema(camp);
+
 export const campMembers = pgTable("campMembers", {
   id: uuid("id").defaultRandom().primaryKey(),
   camp_id: uuid("camp_id").references(() => camp.id),
   user_id: uuid("user_id").references(() => user.id),
+});
+
+export const campMembersSchema = createInsertSchema(campMembers, {
+  user_id: Type.Optional(Type.String()),
+});
+
+export const campMembersWithoutUserSchema = createInsertSchema(campMembers, {
+  user_id: Type.Optional(Type.String()),
 });

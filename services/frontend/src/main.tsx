@@ -40,7 +40,7 @@ import { LoadingSpinner } from "./components/ui/loading";
 import { Profile } from "./components/Profile";
 import { cn } from "./lib/utils";
 import { ExploreSidebar } from "./components/ExploreSideBar";
-import { ExploreContent } from "./components/ExploreContent";
+import { ExploreCamp } from "./components/ExploreContent";
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -297,14 +297,18 @@ const profileRoute = createRoute({
 
 const exploreRoute = createRoute({
   getParentRoute: () => rootRoute,
-  path: "/explore/",
+  path: "/explore/$id",
   pendingComponent: LoadingSpinner,
-  component: ExploreContent,
+  component: ExploreCamp,
   beforeLoad: async ({ context: { queryClient } }) => {
     await persister.restoreClient();
+    const user = queryClient.getQueryData<FiresideUser>(
+      userQueryOptions.queryKey
+    );
     if (!queryClient.getQueryData<FiresideUser>(userQueryOptions.queryKey)) {
-      throw redirect({ from: "/explore", to: "/register" });
+      throw redirect({ from: "/explore/$id", to: "/register" });
     }
+    return { user };
   },
 });
 
