@@ -9,6 +9,9 @@ const port = 8080;
 
 export const { db } = createDB();
 
+const authRoutes = new Elysia().use(campRouter).use(userProtectedRoute);
+const noAuthRoutes = new Elysia().use(userRoute);
+
 const app = new Elysia()
   .use(
     cors({
@@ -16,10 +19,10 @@ const app = new Elysia()
       allowedHeaders: ["Origin, X-Requested-With, Content-Type, Accept"],
     })
   )
-  .use(userProtectedRoute)
-  .use(userRoute)
+  // order matters till v1.0 local scoping can be implemented
+  .use(noAuthRoutes)
+  .use(authRoutes)
 
-  .use(campRouter)
   .onError(({ error }) => {
     return error.toString();
   })
