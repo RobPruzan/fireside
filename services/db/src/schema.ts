@@ -30,6 +30,21 @@ export const token = pgTable("token", {
 
 export const user_to_user = pgTable("friend", {
   id: uuid("id").defaultRandom().primaryKey(),
-  userOneId: uuid("id").references(() => user.id),
-  userTwoId: uuid("id").references(() => user.id),
+  userOneId: uuid("userOneId").references(() => user.id),
+  userTwoId: uuid("userTwoId").references(() => user.id),
+});
+
+export const camp = pgTable("camp", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  name: text("name").notNull(),
+  createdAt: timestamp("created_at")
+    .$defaultFn(() => new Date())
+    .notNull(),
+  updatedAt: timestamp("updated_at"),
+});
+
+export const campMembers = pgTable("campMembers", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  camp_id: uuid("camp_id").references(() => camp.id),
+  user_id: uuid("user_id").references(() => user.id),
 });
