@@ -3,8 +3,11 @@ import cors from "@elysiajs/cors";
 import { Elysia } from "elysia";
 import { userProtectedRoute, userRoute } from "./user";
 import { campRouter } from "./camp";
+import { createDB } from "@fireside/db";
 
 const port = 8080;
+
+export const { db } = createDB();
 
 const app = new Elysia()
   .use(

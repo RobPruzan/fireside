@@ -11,7 +11,6 @@ export const authHandle = async ({
     ? R
     : "L bozo once again";
 }) => {
-  console.log("auth handle", session);
   if (session.kind === "not-logged-in") {
     return (set.status = "Unauthorized");
   }
@@ -34,16 +33,16 @@ export const ProtectedElysia = <T extends string>({
   })
     .derive(async ({ cookie: { auth }, set }) => {
       const session = await getSession({ authToken: auth.get() });
-
-      if (!session) {
+      if (session.kind === "not-logged-in") {
         set.status = 401;
-        throw new Error("Unauthorized");
+        return;
       }
-
       return session;
     })
     // why we have to double derive to get correct type? Only god knows
-    .derive((ctx) => ({ user: ctx.user! }));
+    .derive((ctx) => {
+      return { user: ctx.user! };
+    });
 
 export const getDeleteAuthCookie = () =>
   ({

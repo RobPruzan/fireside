@@ -1,9 +1,10 @@
 import { migrate } from "drizzle-orm/postgres-js/migrator";
-import { db, sql } from "./index";
+import { createDB } from "./index";
 import { user } from "./schema";
 import path from "path";
 
 (async () => {
+  const { db, sql } = createDB();
   await migrate(db, {
     migrationsFolder: path.join(__dirname, "..", "drizzle"),
   });

@@ -1,5 +1,4 @@
 import {
-  db,
   user,
   eq,
   token,
@@ -11,6 +10,7 @@ import {
 import { Elysia, t, type CookieOptions } from "elysia";
 import { ProtectedElysia, getDeleteAuthCookie } from "./lib";
 import { StatusMap } from "@fireside/utils/src/constants";
+import { db } from ".";
 
 const getHashedToken = async ({ token }: { token: string }) =>
   await Bun.password.hash(token, {

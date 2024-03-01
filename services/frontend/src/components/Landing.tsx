@@ -55,8 +55,10 @@ function Landing() {
                   size={"lg"}
                   onClick={() => {
                     navigate({
-                      to: `/explore`,
-
+                      to: `/explore/$id`,
+                      params: {
+                        id: "hello",
+                      },
                     });
                   }}
                   className={

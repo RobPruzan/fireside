@@ -3,9 +3,9 @@ import {
   campMembers,
   campMembersWithoutUserSchema,
   campSchema,
-  db,
 } from "@fireside/db";
 import { ProtectedElysia } from "./lib";
+import { db } from ".";
 
 export const campRouter = ProtectedElysia({ prefix: "/camp" })
   .post("/create", ({ body }) => db.insert(camp).values(body), {

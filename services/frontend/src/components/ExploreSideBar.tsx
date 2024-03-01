@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 type Props = {};
 
 export const ExploreSidebar = () => {
-  const { campId } = useParams({ from: "/explore/$campId" });
+  const { id } = useParams({ from: "/explore/$id" });
   return (
     <div className="h-full  flex flex-col p-2 gap-y-3">
       {/* <Button
