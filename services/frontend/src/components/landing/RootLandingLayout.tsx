@@ -1,4 +1,4 @@
-import { useTheme } from "@/hooks/useTheme";
+import { ThemeToggle, useTheme } from "@/hooks/useTheme";
 import { useUser, FiresideUser, userQueryOptions } from "@/lib/useUser";
 import { cn } from "@/lib/utils";
 import { client } from "@/main";
@@ -80,17 +80,7 @@ export const RootLandingLayout = () => {
           <span className={`text-xl`}>Fireside</span>
         </Link>
         <div className="flex items-center">
-          <Button
-            variant={"ghost"}
-            onClick={toggleTheme}
-            className={cn(["mr-3"])}
-          >
-            <img
-              src={theme.value === "light" ? "/light.png" : "/dark.png"}
-              alt="Theme toggle"
-              className="h-6 w-6"
-            />
-          </Button>
+          <ThemeToggle />
           <div className="mx-3 h-6 w-px bg-foreground"></div>
 
           {run(() => {

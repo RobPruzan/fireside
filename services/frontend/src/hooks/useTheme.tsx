@@ -1,3 +1,5 @@
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import { createContext, useContext, useEffect, useState } from "react";
 
 export type Setter<T> = React.Dispatch<React.SetStateAction<T>>;
@@ -66,4 +68,24 @@ export const useTheme = () => {
   };
 
   return { setTheme, ...rest };
+};
+
+export const ThemeToggle = () => {
+  const { setTheme, theme } = useTheme();
+
+  return (
+    <Button
+      variant={"ghost"}
+      onClick={() => {
+        setTheme((prev) => (prev === "dark" ? "light" : "dark"));
+      }}
+      className={cn(["mr-3"])}
+    >
+      <img
+        src={theme.value === "light" ? "/light.png" : "/dark.png"}
+        alt="Theme toggle"
+        className="h-6 w-6"
+      />
+    </Button>
+  );
 };
