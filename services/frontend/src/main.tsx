@@ -94,7 +94,11 @@ const ReactiveAuthRedirect = ({ children }: { children: React.ReactNode }) => {
   return <>{children}</>;
 };
 
-export const client = edenTreaty<App>(import.meta.env.VITE_API_URL);
+export const client = edenTreaty<App>(import.meta.env.VITE_API_URL, {
+  $fetch: {
+    credentials: "include",
+  },
+});
 
 function RootComponent() {
   const { theme, setTheme } = useTheme();
@@ -295,11 +299,12 @@ const profileRoute = createRoute({
   },
 });
 
-const exploreRoute = createRoute({
+export const exploreRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/explore/$id",
   pendingComponent: LoadingSpinner,
   component: ExploreCamp,
+  loader: async () => await queryClient.ensureQueryData(userQueryOptions),
   beforeLoad: async ({ context: { queryClient } }) => {
     await persister.restoreClient();
     const user = queryClient.getQueryData<FiresideUser>(
