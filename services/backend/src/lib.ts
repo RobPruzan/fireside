@@ -36,6 +36,8 @@ export const ProtectedElysia = <T extends string>({
       set.status = 401;
       return;
     }
+    // By default set the request to 200, since that's the framework default
+    set.status = 200;
     return { user: session.user };
   });
 
