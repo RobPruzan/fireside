@@ -121,7 +121,6 @@ export const campRoute = createRoute({
   component: () => (
     <ReactiveAuthRedirect>
       <RootCampLayout />
-      <Outlet />
     </ReactiveAuthRedirect>
   ),
 });
