@@ -4,14 +4,11 @@ import { useSuspenseQuery } from "@tanstack/react-query";
 import { useLoaderData } from "@tanstack/react-router";
 import { Input } from "../ui/input";
 import { useState } from "react";
+import { useCamps } from "./camp-state";
 
 export const Explore = () => {
   const loaderData = useLoaderData({ from: "/camp-layout/camp" });
-  const user =
-    useSuspenseQuery({ ...userQueryOptions, initialData: loaderData.user })
-      .data ?? loaderData.user;
-  const camps =
-    useSuspenseQuery(getCampQueryOptions({ userId: user.id })).data ?? [];
+  const { camps } = useCamps();
   const [searchFilter, setSearchFilter] = useState("");
 
   return (
