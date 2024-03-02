@@ -1,7 +1,3 @@
-import { getCampQueryOptions } from "@/lib/useCampsQuery";
-import { userQueryOptions } from "@/lib/useUserQuery";
-import { useSuspenseQuery } from "@tanstack/react-query";
-import { useLoaderData } from "@tanstack/react-router";
 import { Input } from "../ui/input";
 import { useState } from "react";
 import { useCamps } from "./camp-state";

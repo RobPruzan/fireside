@@ -1,10 +1,8 @@
 import { ThemeToggle } from "@/hooks/useTheme";
 import { useUserQuery } from "@/lib/useUserQuery";
 
-import { useQueryClient } from "@tanstack/react-query";
-import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
-import { Button, buttonVariants } from "../ui/button";
-import { useToast } from "../ui/use-toast";
+import { Link, useRouterState } from "@tanstack/react-router";
+import { buttonVariants } from "../ui/button";
 import { ProfileDropdown } from "../ProfileDropdown";
 import { cn } from "@/lib/utils";
 
