@@ -133,15 +133,14 @@ export const campsRoute = createRoute({
   path: "/camp",
   loader: async ({ context: { queryClient } }) => {
     const user = await getUser({ queryClient });
-    const campsPromise = queryClient.ensureQueryData(
-      getCampQueryOptions({ userId: user?.id })
-    );
 
     if (!user) {
       throw redirect({ from: "/register", to: "/" });
     }
-    const res = await campsPromise;
-    console.log({ falskfjds: res });
+    await queryClient.ensureQueryData(
+      getCampQueryOptions({ userId: user?.id })
+    );
+
     return { user };
   },
   pendingComponent: LoadingSpinner,
@@ -160,6 +159,8 @@ export const exploreRoute = createRoute({
     if (!user) {
       throw redirect({ from: "/camp", to: "/login" });
     }
+
+    await queryClient.ensureQueryData(getCampQueryOptions({ userId: user.id }));
     return { user };
   },
   component: Explore,
