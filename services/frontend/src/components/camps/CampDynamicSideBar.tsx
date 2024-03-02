@@ -1,9 +1,8 @@
 import { cn } from "@/lib/utils";
-import { Link, useLoaderData } from "@tanstack/react-router";
+import { Link } from "@tanstack/react-router";
 import { ChevronLeft, MoreVertical, PlusCircle } from "lucide-react";
 import { useState } from "react";
 import { Button, buttonVariants } from "../ui/button";
-import { useSuspenseQuery } from "@tanstack/react-query";
 import {
   Dialog,
   DialogTrigger,
@@ -17,14 +16,13 @@ import { Input } from "../ui/input";
 import { Label } from "../ui/label";
 
 import { LoadingSpinner } from "../ui/loading";
-import { getCampQueryOptions } from "@/lib/useCampsQuery";
-import { FiresideUser, userQueryOptions } from "@/lib/useUserQuery";
 import { hasKey } from "@fireside/utils";
 import { useCurrentRoute } from "@/hooks/useCurrentRoute";
 import { useAtom, useSetAtom } from "jotai";
 import {
   createCampModalOpen,
   dynamicSideBarOpen,
+  useCamps,
   useCreateCampMutation,
 } from "./camp-state";
 export const CampDynamicSideBar = () => {
@@ -32,13 +30,7 @@ export const CampDynamicSideBar = () => {
   const [modalOpen, setModalOpen] = useAtom(createCampModalOpen);
   const [campSearch, setCampSearch] = useState("");
   const [newCampRoomName, setNewCampRoomName] = useState("");
-  const loaderData = useLoaderData({ from: "/camp-layout" });
-  const user =
-    useSuspenseQuery({ ...userQueryOptions, initialData: loaderData.user })
-      .data ?? loaderData.user;
-
-  const camps =
-    useSuspenseQuery(getCampQueryOptions({ userId: user.id })).data ?? [];
+  const { camps } = useCamps();
   const currentRoute = useCurrentRoute();
   const createCampMutation = useCreateCampMutation();
   return (

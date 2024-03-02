@@ -34,18 +34,24 @@ import { useSetAtom } from "jotai";
 export const dynamicSideBarOpen = atom(true);
 export const createCampModalOpen = atom(false);
 
-export const useCreateCampMutation = (opts?: { user?: FiresideUser }) => {
-  const queryClient = useQueryClient();
-  const { toast } = useToast();
-
+export const useDefinedUser = (opts?: { user?: FiresideUser }) => {
   const user = useSuspenseQuery(userQueryOptions).data;
 
   const shouldBeDefinedUser = opts?.user ?? user;
   if (!shouldBeDefinedUser) {
     throw new Error(
-      "Must either ensure query data for user at route load, or provide a user"
+      "Must ensure at route level user is authorized, or provide a non null user as an argument"
     );
   }
+
+  return shouldBeDefinedUser;
+};
+
+export const useCreateCampMutation = (opts?: { user?: FiresideUser }) => {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  const user = useDefinedUser(opts);
 
   const setModalOpen = useSetAtom(createCampModalOpen);
 
@@ -61,7 +67,7 @@ export const useCreateCampMutation = (opts?: { user?: FiresideUser }) => {
     },
     onSuccess: (camp) => {
       queryClient.setQueryData<Array<FiresideCamp>>(
-        getCampQueryOptions({ userId: shouldBeDefinedUser.id }).queryKey,
+        getCampQueryOptions({ userId: user.id }).queryKey,
         (prev) => [...(prev ?? []), camp]
       );
       setModalOpen(false);
@@ -71,4 +77,10 @@ export const useCreateCampMutation = (opts?: { user?: FiresideUser }) => {
   });
 
   return createCampMutation;
+};
+
+export const useCamps = (opts?: { user?: FiresideUser }) => {
+  const user = useDefinedUser(opts);
+  const campsQuery = useSuspenseQuery(getCampQueryOptions({ userId: user.id }));
+  return { camps: campsQuery.data, query: campsQuery };
 };
