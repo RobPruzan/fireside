@@ -5,12 +5,15 @@ import {
   getOneYearAheadDate,
   count,
   type User,
+  chatDB,
 } from "@fireside/db";
 
 import { Elysia, t, type CookieOptions } from "elysia";
 import { ProtectedElysia, getDeleteAuthCookie } from "./lib";
 import { StatusMap } from "@fireside/utils/src/constants";
 import { db } from ".";
+import { routerWithSession, authHandle } from "./lib";
+import { uuid } from "drizzle-orm/pg-core";
 
 const getHashedToken = async ({ token }: { token: string }) =>
   await Bun.password.hash(token, {
@@ -218,16 +221,6 @@ export const userRoute = new Elysia({
       }),
     }
   )
-
-/*
-  .post(
-    "/chat",
-    db.insert()
-    .values(
-
-    )
-  )*/
-
 
   .post("/is-logged-in", async ({ cookie: { auth }, set }) => {
     const isAuthResult = await getSession({ authToken: auth.get() });
