@@ -69,23 +69,28 @@ export const rootRoute = createRootRouteWithContext<{
   queryClient: QueryClient;
 }>()();
 
-export const rootLandingRoute = createRoute({
+export const rootLandingLayout = createRoute({
   getParentRoute: () => rootRoute,
-  path: "/",
+  id: "layout",
   component: () => {
-    const { isTransitioning } = useRouterState();
+    // const { isTransitioning } = useRouterState();
     return (
       <>
         <NavBar />
-        <MatchRoute to="/">{!isTransitioning && <Landing />}</MatchRoute>
         <Outlet />
       </>
     );
   },
 });
 
+export const rootLandingRoute = createRoute({
+  getParentRoute: () => rootLandingLayout,
+  path: "/",
+  component: Landing,
+});
+
 export const registerPageRoute = createRoute({
-  getParentRoute: () => rootLandingRoute,
+  getParentRoute: () => rootLandingLayout,
   path: "/register",
   component: Register,
   pendingComponent: LoadingSpinner,
@@ -98,7 +103,7 @@ export const registerPageRoute = createRoute({
 });
 
 export const profileRoute = createRoute({
-  getParentRoute: () => rootLandingRoute,
+  getParentRoute: () => rootLandingLayout,
   path: "/profile",
   component: () => (
     <ReactiveAuthRedirect>
@@ -116,7 +121,7 @@ export const profileRoute = createRoute({
 });
 
 export const loginPageRoute = createRoute({
-  getParentRoute: () => rootLandingRoute,
+  getParentRoute: () => rootLandingLayout,
   path: "/login",
   component: SignUp,
   pendingComponent: LoadingSpinner,
@@ -192,7 +197,8 @@ export const campRoute = createRoute({
 });
 
 export const routeTree = rootRoute.addChildren([
-  rootLandingRoute.addChildren([
+  rootLandingLayout.addChildren([
+    rootLandingRoute,
     registerPageRoute,
     loginPageRoute,
     profileRoute,
@@ -208,3 +214,9 @@ export const router = createRouter({
     queryClient,
   },
 });
+
+declare module "@tanstack/react-router" {
+  interface Register {
+    router: typeof router;
+  }
+}
