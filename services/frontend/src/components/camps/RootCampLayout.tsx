@@ -247,7 +247,7 @@ export const RootCampLayout = () => {
             />
           </div>
 
-          <div className="flex flex-col overflow-y-auto h-full w-full p-5">
+          <div className="flex flex-col overflow-y-auto h-full w-full p-5 gap-y-1">
             {camps
               .filter((camp) =>
                 camp.name.toLowerCase().includes(campSearch.toLowerCase())
