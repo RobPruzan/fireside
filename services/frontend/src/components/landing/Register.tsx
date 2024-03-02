@@ -42,7 +42,7 @@ function Register() {
         userQueryOptions.queryKey,
         () => data
       );
-      navigate({ to: "/" });
+      navigate({ to: "/camp" });
     },
   });
   const navigate = useNavigate({ from: "/register" });
@@ -56,86 +56,97 @@ function Register() {
     <div className={`flex flex-col justify-between w-full `}>
       <div className="flex flex-col items-center justify-start flex-grow pt-32">
         <h2 className={`text-5xl font-semibold mb-10 `}>Sign Up</h2>
-        <div className="w-full max-w-xs">
-          <div className="space-y-4 mb-6">
-            <div>
-              <Label
-                htmlFor={"email-input"}
-                className={`block text-sm font-medium`}
-              >
-                Email
-              </Label>
-              <Input
-                onChange={(e) =>
-                  setUserInfo((prev) => ({ ...prev, email: e.target.value }))
-                }
-                value={userInfo.email}
-                id={`email-input`}
-                type={"Email"}
-                placeholder={"Email"}
-                className={`mt-1 w-full rounded p-2 border-secondary/90 dark:border-2 text-sm `}
-              />
-            </div>
-            <div>
-              <Label
-                htmlFor={"password-input"}
-                className={`block text-sm font-medium`}
-              >
-                Password
-              </Label>
-              <Input
-                onChange={(e) =>
-                  setUserInfo((prev) => ({ ...prev, password: e.target.value }))
-                }
-                value={userInfo.password}
-                id={"password-input"}
-                type={"password"}
-                placeholder={"Password"}
-                className={`mt-1 w-full rounded p-2 border-secondary/90 dark:border-2 text-sm `}
-              />
-            </div>
+        <div className="w-full max-w-xs flex flex-col gap-y-2">
+          <div className="flex flex-col ">
+            <div className="space-y-4 mb-6">
+              <div>
+                <Label
+                  htmlFor={"email-input"}
+                  className={`block text-sm font-medium`}
+                >
+                  Email
+                </Label>
+                <Input
+                  onChange={(e) =>
+                    setUserInfo((prev) => ({ ...prev, email: e.target.value }))
+                  }
+                  value={userInfo.email}
+                  id={`email-input`}
+                  type={"Email"}
+                  placeholder={"Email"}
+                  className={`mt-1 w-full rounded p-2 border-secondary/90 dark:border-2 text-sm `}
+                />
+              </div>
+              <div>
+                <Label
+                  htmlFor={"password-input"}
+                  className={`block text-sm font-medium`}
+                >
+                  Password
+                </Label>
+                <Input
+                  onChange={(e) =>
+                    setUserInfo((prev) => ({
+                      ...prev,
+                      password: e.target.value,
+                    }))
+                  }
+                  value={userInfo.password}
+                  id={"password-input"}
+                  type={"password"}
+                  placeholder={"Password"}
+                  className={`mt-1 w-full rounded p-2 border-secondary/90 dark:border-2 text-sm `}
+                />
+              </div>
 
-            <div>
-              <Label htmlFor="password" className={`block text-sm font-medium`}>
-                Confirm Password
-              </Label>
-              <Input
-                onChange={(e) =>
-                  setUserInfo((prev) => ({
-                    ...prev,
-                    confirmedPassword: e.target.value,
-                  }))
-                }
-                value={userInfo.confirmedPassword}
-                id="password"
-                type={"password"}
-                placeholder={"Confirm Password"}
-                className={`mt-1 w-full rounded p-2 dark:bg-secondary border-secondary/90 dark:border-2 bg-muted text-sm`}
-              />
+              <div>
+                <Label
+                  htmlFor="password"
+                  className={`block text-sm font-medium`}
+                >
+                  Confirm Password
+                </Label>
+                <Input
+                  onChange={(e) =>
+                    setUserInfo((prev) => ({
+                      ...prev,
+                      confirmedPassword: e.target.value,
+                    }))
+                  }
+                  value={userInfo.confirmedPassword}
+                  id="password"
+                  type={"password"}
+                  placeholder={"Confirm Password"}
+                  className={`mt-1 w-full rounded p-2 dark:bg-secondary border-secondary/90 dark:border-2 bg-muted text-sm`}
+                />
+              </div>
             </div>
+            <Button
+              disabled={createUserMutation.isPending}
+              onClick={async () => {
+                if (userInfo.password !== userInfo.confirmedPassword) {
+                  toast({
+                    variant: "destructive",
+                    title: "Passwords don't match",
+                  });
+                  return;
+                }
+                createUserMutation.mutate(userInfo);
+              }}
+              className={`w-full py-2 rounded font-bold text-white`}
+            >
+              {createUserMutation.isPending ? <LoadingSpinner /> : "Continue"}
+            </Button>
           </div>
-          <Button
-            disabled={createUserMutation.isPending}
-            onClick={async () => {
-              if (userInfo.password !== userInfo.confirmedPassword) {
-                toast({
-                  variant: "destructive",
-                  title: "Passwords don't match",
-                });
-                return;
-              }
-              createUserMutation.mutate(userInfo);
-            }}
-            className={`w-full py-2 rounded font-bold text-white`}
-          >
-            {createUserMutation.isPending ? <LoadingSpinner /> : "Continue"}
-          </Button>
-          <Link
-            className="text-primary text-sm hover:text-primary/80"
-            to="/login"
-          >
-            Already have an account?
-          </Link>
+          <div>
+            {" "}
+            <Link
+              className="text-primary text-sm hover:text-primary/80 mt-4"
+              to="/login"
+            >
+              Already have an account?
+            </Link>
+          </div>
         </div>
       </div>
     </div>

@@ -31,7 +31,7 @@ function SignUp() {
             userQueryOptions.queryKey,
             () => res.data.user
           );
-          navigate({ to: "/" });
+          navigate({ to: "/camp" });
           return;
         }
       }
@@ -42,60 +42,68 @@ function SignUp() {
     <div className={`flex flex-col justify-between w-full `}>
       <div className="flex flex-col items-center justify-start flex-grow pt-32">
         <h2 className={`text-5xl font-semibold mb-10 `}>Login</h2>
-        <div className="w-full max-w-xs">
-          <div className="space-y-4 mb-6">
-            <div>
-              <Label
-                htmlFor={"email-input"}
-                className={`block text-sm font-medium`}
-              >
-                Email
-              </Label>
-              <Input
-                onChange={(e) =>
-                  setUserInfo((prev) => ({ ...prev, email: e.target.value }))
-                }
-                value={userInfo.email}
-                id={`email-input`}
-                type={"Email"}
-                placeholder={"Email"}
-                className={`mt-1 w-full rounded p-2 border-secondary/90 dark:border-2 text-sm `}
-              />
+        <div className="w-full max-w-xs flex flex-col gap-y-2">
+          <div className="flex flex-col">
+            <div className="space-y-4 mb-6">
+              <div>
+                <Label
+                  htmlFor={"email-input"}
+                  className={`block text-sm font-medium`}
+                >
+                  Email
+                </Label>
+                <Input
+                  onChange={(e) =>
+                    setUserInfo((prev) => ({ ...prev, email: e.target.value }))
+                  }
+                  value={userInfo.email}
+                  id={`email-input`}
+                  type={"Email"}
+                  placeholder={"Email"}
+                  className={`mt-1 w-full rounded p-2 border-secondary/90 dark:border-2 text-sm `}
+                />
+              </div>
+              <div>
+                <Label
+                  htmlFor={"password-input"}
+                  className={`block text-sm font-medium`}
+                >
+                  Password
+                </Label>
+                <Input
+                  onChange={(e) =>
+                    setUserInfo((prev) => ({
+                      ...prev,
+                      password: e.target.value,
+                    }))
+                  }
+                  value={userInfo.password}
+                  id={"password-input"}
+                  type={"password"}
+                  placeholder={"Password"}
+                  className={`mt-1 w-full rounded p-2 border-secondary/90 dark:border-2 text-sm `}
+                />
+              </div>
             </div>
-            <div>
-              <Label
-                htmlFor={"password-input"}
-                className={`block text-sm font-medium`}
-              >
-                Password
-              </Label>
-              <Input
-                onChange={(e) =>
-                  setUserInfo((prev) => ({ ...prev, password: e.target.value }))
-                }
-                value={userInfo.password}
-                id={"password-input"}
-                type={"password"}
-                placeholder={"Password"}
-                className={`mt-1 w-full rounded p-2 border-secondary/90 dark:border-2 text-sm `}
-              />
-            </div>
+
+            <Button
+              disabled={loginMutation.isPending}
+              onClick={() => {
+                loginMutation.mutate(userInfo);
+              }}
+              className={`w-full py-2 rounded font-bold text-white`}
+            >
+              {loginMutation.isPending ? <LoadingSpinner /> : "Continue"}
+            </Button>
           </div>
-          <Button
-            disabled={loginMutation.isPending}
-            onClick={() => {
-              loginMutation.mutate(userInfo);
-            }}
-            className={`w-full py-2 rounded font-bold text-white`}
-          >
-            {loginMutation.isPending ? <LoadingSpinner /> : "Continue"}
-          </Button>
-          <Link
-            className="text-primary text-sm hover:text-primary/80"
-            to="/register"
-          >
-            Don't have an account?
-          </Link>
+          <div>
+            <Link
+              className="text-primary text-sm hover:text-primary/80 mt-3"
+              to="/register"
+            >
+              Don't have an account?
+            </Link>
+          </div>
         </div>
       </div>
     </div>

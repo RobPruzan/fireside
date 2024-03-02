@@ -19,10 +19,26 @@ import { useState } from "react";
 import { Button } from "../ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { ProfileDropdown } from "../ProfileDropdown";
+import { useMutation } from "@tanstack/react-query";
+import { client } from "@/edenClient";
+import { useToast } from "../ui/use-toast";
 
 export const RootCampLayout = () => {
   const [sideBarOpen, setSideBarOpen] = useState(true);
-  const {} = useRouteContext({ from: "/camp" });
+  const { toast } = useToast();
+
+  const createCampMutation = useMutation({
+    mutationFn: async (createOps: { name: string }) => {
+      const res = await client.protected.camp.create.post(createOps);
+      if (res.error) {
+        throw Error(res.error.value);
+      }
+
+      return res.data;
+    },
+    onError: (e) =>
+      toast({ title: "Failed to create camp", variant: "destructive" }),
+  });
   return (
     <div className="h-screen w-screen flex">
       <div className="w-[18%] border-r-2 border-r-accent/50 h-full p-2 px-4 min-w-fit">
