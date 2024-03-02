@@ -3,15 +3,22 @@ import { cn } from "@/lib/utils";
 import {
   Link,
   Outlet,
+  useChildMatches,
   useLoaderData,
+  useMatch,
+  useMatchRoute,
   useRouteContext,
+  useRouterState,
 } from "@tanstack/react-router";
 import {
   ChevronLeft,
   CircleUserRound,
   MessageSquare,
+  MoreHorizontal,
+  MoreVertical,
   PanelRight,
   PlusCircle,
+  Search,
   Settings,
   User,
 } from "lucide-react";
@@ -50,12 +57,22 @@ export const RootCampLayout = () => {
 
   const [campRoomName, setCampRoomName] = useState("");
   const queryClient = useQueryClient();
+  const [campSearch, setCampSearch] = useState("");
+  const loaderData = useLoaderData({ from: "/camp" });
+  const user =
+    useSuspenseQuery({ ...userQueryOptions, initialData: loaderData.user })
+      .data ?? loaderData.user;
+  const match = useMatchRoute();
 
-  const { user } = useLoaderData({ from: "/camp" });
+  const campIdRoute = match({ to: "/camp/$campId" });
+  const matchesExplore = match({ to: "/camp/" });
+  const matchesFriends = match({ to: "/camp/friends" });
+
+  // const childrenMatches = use
 
   const camps =
     useSuspenseQuery(getCampQueryOptions({ userId: user.id })).data ?? [];
-
+  console.log({ camps });
   const createCampMutation = useMutation({
     mutationKey: ["create-camp"],
     mutationFn: async (createOps: { name: string }) => {
@@ -108,29 +125,41 @@ export const RootCampLayout = () => {
           </div>
 
           <div className="h-3/4 flex flex-col py-10 w-full gap-y-1">
-            <Button
-              className="flex gap-x-5 justify-between w-full py-6"
-              variant={"ghost"}
+            <Link
+              to="/camp/friends"
+              className={buttonVariants({
+                className: cn([
+                  "flex gap-x-4 justify-between w-full py-6 min-w-fit",
+                  matchesFriends && "bg-accent",
+                ]),
+                variant: "ghost",
+              })}
+              // className="flex gap-x-5 justify-between w-full py-6"
+              // variant={"ghost"}
             >
               <div className="flex items-center gap-x-4">
                 <User />
                 <span className="text-lg"> Friends</span>
               </div>
               <div className="text-lg  items-center">3</div>
-            </Button>
-            <Button
-              className={cn([
-                "flex gap-x-4 justify-between w-full py-6 min-w-fit",
-                true && "bg-accent",
-              ])}
-              variant={"ghost"}
+            </Link>
+
+            <Link
+              to="/camp/"
+              className={buttonVariants({
+                className: cn([
+                  "flex gap-x-4 justify-between w-full py-6 min-w-fit",
+                  matchesExplore && "bg-accent",
+                ]),
+                variant: "ghost",
+              })}
             >
               <div className="flex items-center gap-x-4">
-                <MessageSquare />
-                <span className="text-lg"> Camp rooms</span>
+                <Search />
+                <span className="text-lg"> Search</span>
               </div>
               <div className="text-lg items-center">0</div>
-            </Button>
+            </Link>
           </div>
         </div>
         <div className="h-[10%] min-h-[50px] flex items-end justify-evenly">
@@ -143,103 +172,134 @@ export const RootCampLayout = () => {
       </div>
       <div
         className={cn([
-          "min-w-[28%] h-screen overflow-y-auto flex flex-col",
+          "min-w-[28%] h-screen overflow-y-auto flex flex-col relative",
           !sideBarOpen && "hidden",
         ])}
       >
-        <div className="h-[5%]  flex justify-end p-4">
-          <Button
-            className="absolute"
-            onClick={() => {
-              setSideBarOpen(false);
-            }}
-            variant={"ghost"}
-          >
-            <ChevronLeft />
-          </Button>
-        </div>
-        <div className="h-[5%] flex items-start justify-start px-10">
-          <span className="text-3xl font-semibold ">Camp rooms</span>
-        </div>
-        <div className=" flex flex-col justify-start items-center p-4">
-          <Dialog open={modalOpen} onOpenChange={(open) => setModalOpen(open)}>
-            <DialogTrigger asChild>
-              <Button
-                className="w-full text-lg py-6 flex gap-x-3 justify-start"
-                variant={"ghost"}
-              >
-                <span>Create class room</span>
-                <PlusCircle />
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Create camp room</DialogTitle>
-                <DialogDescription></DialogDescription>
-              </DialogHeader>
-              <Label htmlFor="camp-room-name">Name</Label>
-              <Input
-                value={campRoomName}
-                onChange={(e) => setCampRoomName(e.target.value)}
-                className="camp-room-name"
-              />
-              <DialogFooter>
-                <Button variant={"outline"}>Cancel</Button>
+        <Button
+          className="absolute top-2 right-2"
+          onClick={() => {
+            setSideBarOpen(false);
+          }}
+          variant={"ghost"}
+        >
+          <ChevronLeft />
+        </Button>
+
+        <div className="flex flex-col w-full h-1/6">
+          <div className="h-1/2 flex items-start justify-start pt-5 pl-5 ">
+            <span className="text-3xl font-semibold ">Camp rooms</span>
+          </div>
+          <div className="flex h-1/2 border-b-2 gap-x-2 border-accent/50 px-5 py-2 justify-start w-full">
+            <Dialog
+              open={modalOpen}
+              onOpenChange={(open) => setModalOpen(open)}
+            >
+              <DialogTrigger asChild>
                 <Button
-                  className="min-w-[78px]"
-                  onClick={() =>
-                    createCampMutation.mutate({
-                      name: campRoomName,
-                    })
-                  }
+                  className="w-full text-lg flex gap-x-3 justify-center items-center"
+                  variant={"ghost"}
                 >
-                  {createCampMutation.isPending ? <LoadingSpinner /> : "Create"}
+                  {/* <span>Create camp room</span> */}
+                  <PlusCircle />
                 </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
-          <div className="flex flex-col overflow-y-auto h-full w-full">
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Create camp room</DialogTitle>
+                  <DialogDescription></DialogDescription>
+                </DialogHeader>
+                <Label htmlFor="camp-room-name">Name</Label>
+                <Input
+                  value={campRoomName}
+                  onChange={(e) => setCampRoomName(e.target.value)}
+                  className="camp-room-name"
+                />
+                <DialogFooter>
+                  <Button variant={"outline"}>Cancel</Button>
+                  <Button
+                    className="min-w-[78px]"
+                    onClick={() =>
+                      createCampMutation.mutate({
+                        name: campRoomName,
+                      })
+                    }
+                  >
+                    {createCampMutation.isPending ? (
+                      <LoadingSpinner />
+                    ) : (
+                      "Create"
+                    )}
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+          </div>
+        </div>
+
+        <div className=" flex flex-col justify-start items-center h-5/6">
+          <div className="w-full flex justify-star p-5">
+            <Input
+              value={campSearch}
+              onChange={(e) => setCampSearch(e.target.value)}
+              placeholder="Search my camps"
+              className="w-full min-[50px]"
+            />
+          </div>
+
+          <div className="flex flex-col overflow-y-auto h-full w-full p-5">
             {camps
+              .filter((camp) =>
+                camp.name.toLowerCase().includes(campSearch.toLowerCase())
+              )
               .toSorted(
                 (a, b) =>
                   new Date(b.createdAt).getTime() -
                   new Date(a.createdAt).getTime()
               )
               .map((camp) => (
-                <Link
-                  // onClick={() => nav}
-                  to="/camp/$campId"
-                  params={{
-                    campId: camp.id,
-                  }}
-                  key={camp.id}
-                  className={buttonVariants({
-                    className: "py-9 w-full flex justify-between",
-                    variant: "ghost",
-                  })}
-                  // variant={"ghost"}
-                >
-                  <div>
-                    <div className="rounded-full bg-green-200 border-green-100 border h-5 w-5"></div>
-                  </div>
-                  <div className="flex flex-col">
-                    <div>{camp.name}</div>
-                    <div className="text-sm text-foreground/30">
-                      {new Date(camp.createdAt).toDateString()}
+                <div className="flex w-full items-center gap-x-2" key={camp.id}>
+                  <Link
+                    // onClick={() => nav}
+                    to="/camp/$campId"
+                    params={{
+                      campId: camp.id,
+                    }}
+                    className={buttonVariants({
+                      className: cn([
+                        "py-9 w-full flex justify-between",
+                        campIdRoute &&
+                          campIdRoute.campId === camp.id &&
+                          "bg-accent",
+                      ]),
+                      variant: "ghost",
+                    })}
+                  >
+                    <div>
+                      <div className="rounded-full bg-green-200 border-green-100 border h-5 w-5"></div>
                     </div>
-                  </div>
-                  <div className="relative w-1/4 flex items-start">
-                    {/* <Avatar className="absolute top-0 right-0">
-                    <AvatarImage className="w-5 h-5" src="/person.png" />
-                  </Avatar>
-                  <Avatar className="absolute top-- right-2">
-                    <AvatarImage className="w-5 h-5" src="/person.png" />
-                  </Avatar>
-                  <Avatar className="absolute top-0 right-4">
-                    <AvatarImage className="w-5 h-5" src="/person.png" />
-                  </Avatar> */}
-                  </div>
-                </Link>
+                    <div className="flex flex-col">
+                      <div>{camp.name}</div>
+                      <div className="text-sm text-foreground/30">
+                        {new Date(camp.createdAt).toDateString()}
+                      </div>
+                    </div>
+                    <div className="relative w-1/4 flex items-center justify-end">
+                      {/* <Avatar className="absolute top-0 right-0">
+                        <AvatarImage className="w-5 h-5" src="/person.png" />
+                      </Avatar>
+                      <Avatar className="absolute top-- right-2">
+                        <AvatarImage className="w-5 h-5" src="/person.png" />
+                      </Avatar>
+                      <Avatar className="absolute top-0 right-4">
+                        <AvatarImage className="w-5 h-5" src="/person.png" />
+                      </Avatar> */}
+                    </div>
+                  </Link>
+                  <Button className="h-full p-0" variant={"ghost"}>
+                    <MoreVertical />
+                  </Button>
+                </div>
               ))}
           </div>
         </div>

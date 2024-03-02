@@ -33,6 +33,7 @@ import { LoadingSpinner } from "./components/ui/loading";
 import { createSyncStoragePersister } from "@tanstack/query-sync-storage-persister";
 import { getCampQueryOptions } from "./lib/useCampsQuery";
 import { Camp } from "./components/camps/Camp";
+import { Friends } from "./components/camps/Friends";
 
 export const queryClient = new QueryClient({
   defaultOptions: {
@@ -53,6 +54,7 @@ const ReactiveAuthRedirect = ({ children }: { children: React.ReactNode }) => {
   const user = useQueryClient().getQueryData<FiresideUser>(
     userQueryOptions.queryKey
   );
+  console.log({ user });
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -134,10 +136,12 @@ export const campsRoute = createRoute({
     const campsPromise = queryClient.ensureQueryData(
       getCampQueryOptions({ userId: user?.id })
     );
+
     if (!user) {
       throw redirect({ from: "/register", to: "/" });
     }
-    await campsPromise;
+    const res = await campsPromise;
+    console.log({ falskfjds: res });
     return { user };
   },
   pendingComponent: LoadingSpinner,
@@ -161,11 +165,24 @@ export const exploreRoute = createRoute({
   component: Explore,
 });
 
+export const friendsRoute = createRoute({
+  getParentRoute: () => campsRoute,
+  path: "/friends",
+  loader: async ({ context: { queryClient } }) => {
+    const user = await getUser({ queryClient });
+    if (!user) {
+      throw redirect({ from: "/camp", to: "/login" });
+    }
+    return { user };
+  },
+  component: Friends,
+});
 export const campRoute = createRoute({
   getParentRoute: () => campsRoute,
   path: "/$campId",
   loader: async ({ context: { queryClient } }) => {
     const user = await getUser({ queryClient });
+    console.log(user);
     if (!user) {
       throw redirect({ from: "/camp/$campId", to: "/login" });
     }
@@ -180,7 +197,7 @@ export const routeTree = rootRoute.addChildren([
     loginPageRoute,
     profileRoute,
   ]),
-  campsRoute.addChildren([exploreRoute, campRoute]),
+  campsRoute.addChildren([exploreRoute, campRoute, friendsRoute]),
 ]);
 
 export const router = createRouter({
