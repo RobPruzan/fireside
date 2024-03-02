@@ -3,13 +3,7 @@ import { Link, useLoaderData } from "@tanstack/react-router";
 import { ChevronLeft, MoreVertical, PlusCircle } from "lucide-react";
 import { useState } from "react";
 import { Button, buttonVariants } from "../ui/button";
-import {
-  useMutation,
-  useQueryClient,
-  useSuspenseQuery,
-} from "@tanstack/react-query";
-import { client } from "@/edenClient";
-import { useToast } from "../ui/use-toast";
+import { useSuspenseQuery } from "@tanstack/react-query";
 import {
   Dialog,
   DialogTrigger,
@@ -23,20 +17,21 @@ import { Input } from "../ui/input";
 import { Label } from "../ui/label";
 
 import { LoadingSpinner } from "../ui/loading";
-import { FiresideCamp } from "../../../../db/src";
 import { getCampQueryOptions } from "@/lib/useCampsQuery";
-import { userQueryOptions } from "@/lib/useUserQuery";
+import { FiresideUser, userQueryOptions } from "@/lib/useUserQuery";
 import { hasKey } from "@fireside/utils";
 import { useCurrentRoute } from "@/hooks/useCurrentRoute";
-import { useSetAtom } from "jotai";
-import { dynamicSideBarOpen } from "./camp-state";
+import { useAtom, useSetAtom } from "jotai";
+import {
+  createCampModalOpen,
+  dynamicSideBarOpen,
+  useCreateCampMutation,
+} from "./camp-state";
 export const CampDynamicSideBar = () => {
   const setSideBarOpen = useSetAtom(dynamicSideBarOpen);
-  const [modalOpen, setModalOpen] = useState(false);
+  const [modalOpen, setModalOpen] = useAtom(createCampModalOpen);
   const [campSearch, setCampSearch] = useState("");
   const [newCampRoomName, setNewCampRoomName] = useState("");
-  const queryClient = useQueryClient();
-  const { toast } = useToast();
   const loaderData = useLoaderData({ from: "/camp-layout" });
   const user =
     useSuspenseQuery({ ...userQueryOptions, initialData: loaderData.user })
@@ -45,26 +40,7 @@ export const CampDynamicSideBar = () => {
   const camps =
     useSuspenseQuery(getCampQueryOptions({ userId: user.id })).data ?? [];
   const currentRoute = useCurrentRoute();
-  const createCampMutation = useMutation({
-    mutationKey: ["create-camp"],
-    mutationFn: async (createOps: { name: string }) => {
-      const res = await client.protected.camp.create.post(createOps);
-      if (res.error) {
-        throw Error(res.error.value);
-      }
-
-      return res.data;
-    },
-    onSuccess: (camp) => {
-      queryClient.setQueryData<Array<FiresideCamp>>(
-        getCampQueryOptions({ userId: user.id }).queryKey,
-        (prev) => [...(prev ?? []), camp]
-      );
-      setModalOpen(false);
-    },
-    onError: () =>
-      toast({ title: "Failed to create camp", variant: "destructive" }),
-  });
+  const createCampMutation = useCreateCampMutation();
   return (
     <>
       <Button
