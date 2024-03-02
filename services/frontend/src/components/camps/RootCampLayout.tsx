@@ -1,18 +1,6 @@
 import { cn } from "@/lib/utils";
-import { Outlet, useLoaderData } from "@tanstack/react-router";
-import { useState } from "react";
-import {
-  useMutation,
-  useQueryClient,
-  useSuspenseQuery,
-} from "@tanstack/react-query";
-import { client } from "@/edenClient";
-import { useToast } from "../ui/use-toast";
+import { Outlet } from "@tanstack/react-router";
 
-import { FiresideCamp } from "../../../../db/src";
-import { getCampQueryOptions } from "@/lib/useCampsQuery";
-import { userQueryOptions } from "@/lib/useUserQuery";
-import { useCurrentRoute } from "@/hooks/useCurrentRoute";
 import { CampStaticSideBar } from "./CampStaticSideBar";
 import { CampDynamicSideBar } from "./CampDynamicSideBar";
 import { useAtomValue } from "jotai";

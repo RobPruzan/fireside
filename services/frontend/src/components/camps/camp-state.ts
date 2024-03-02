@@ -1,9 +1,4 @@
 import { atom } from "jotai";
-import { cn } from "@/lib/utils";
-import { Link, useLoaderData } from "@tanstack/react-router";
-import { ChevronLeft, MoreVertical, PlusCircle } from "lucide-react";
-import { useState } from "react";
-import { Button, buttonVariants } from "../ui/button";
 import {
   useMutation,
   useQueryClient,
@@ -11,24 +6,10 @@ import {
 } from "@tanstack/react-query";
 import { client } from "@/edenClient";
 import { useToast } from "../ui/use-toast";
-import {
-  Dialog,
-  DialogTrigger,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-} from "../ui/dialog";
-import { Input } from "../ui/input";
-import { Label } from "../ui/label";
 
-import { LoadingSpinner } from "../ui/loading";
 import { FiresideCamp } from "../../../../db/src";
 import { getCampQueryOptions } from "@/lib/useCampsQuery";
 import { FiresideUser, userQueryOptions } from "@/lib/useUserQuery";
-import { hasKey } from "@fireside/utils";
-import { useCurrentRoute } from "@/hooks/useCurrentRoute";
 import { useSetAtom } from "jotai";
 
 export const dynamicSideBarOpen = atom(true);

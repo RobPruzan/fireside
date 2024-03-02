@@ -1,4 +1,4 @@
-import { useParams, useRouter, useRouterState } from "@tanstack/react-router";
+import { useParams } from "@tanstack/react-router";
 
 export const Camp = () => {
   const { campId } = useParams({ from: "/camp-layout/camp/$campId" });
