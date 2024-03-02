@@ -39,6 +39,9 @@ export const ProfileDropdown = () => {
       toast({
         title: "Logged out!",
       });
+      navigate({
+        to: "/",
+      });
     },
     onError: (err) => {
       toast({
