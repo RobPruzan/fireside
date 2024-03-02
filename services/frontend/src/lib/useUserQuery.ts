@@ -26,4 +26,4 @@ export const userQueryOptions = {
   retryDelay: 10000,
 } satisfies QueryOptions;
 
-export const useUser = () => useQuery(userQueryOptions);
+export const useUserQuery = () => useQuery(userQueryOptions);

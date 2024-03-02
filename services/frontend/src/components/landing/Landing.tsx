@@ -3,7 +3,7 @@ import { useTheme } from "../../hooks/useTheme";
 import { useNavigate } from "@tanstack/react-router";
 
 import { Button } from "../ui/button";
-import { useUser } from "@/lib/useUser";
+import { useUserQuery } from "@/lib/useUserQuery";
 import { run } from "@fireside/utils";
 import { LoadingSpinner } from "../ui/loading";
 
@@ -16,7 +16,7 @@ function Landing() {
     navigate({ to: "/register" });
   };
 
-  const user = useUser();
+  const user = useUserQuery();
 
   return (
     <div className="text-center mt-16 w-full p-8">

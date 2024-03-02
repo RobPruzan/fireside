@@ -8,7 +8,7 @@ import { useToast } from "../ui/use-toast";
 import { useState } from "react";
 import { Label } from "../ui/label";
 import { User } from "../../../../db/src";
-import { FiresideUser, userQueryOptions } from "@/lib/useUser";
+import { FiresideUser, userQueryOptions } from "@/lib/useUserQuery";
 import { LoadingSpinner } from "../ui/loading";
 import { client } from "@/edenClient";
 

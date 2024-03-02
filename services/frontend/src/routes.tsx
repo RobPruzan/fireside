@@ -14,19 +14,25 @@ import {
   useMatchRoute,
   useRouterState,
 } from "@tanstack/react-router";
-import { FiresideUser, useUser, userQueryOptions } from "./lib/useUser";
+import {
+  FiresideUser,
+  useUserQuery,
+  userQueryOptions,
+} from "./lib/useUserQuery";
 
 import { useEffect } from "react";
 
 import Register from "./components/landing/Register";
 import SignUp from "./components/landing/Login";
 import { Profile } from "./components/landing/Profile";
-import { Explore } from "./components/camp/Explore";
-import { RootCampLayout } from "./components/camp/RootCampLayout";
-import { NavBar } from "./components/camp/NavBar";
+import { Explore } from "./components/camps/Explore";
+import { RootCampLayout } from "./components/camps/RootCampLayout";
+import { NavBar } from "./components/camps/NavBar";
 import Landing from "./components/landing/Landing";
 import { LoadingSpinner } from "./components/ui/loading";
 import { createSyncStoragePersister } from "@tanstack/query-sync-storage-persister";
+import { getCampQueryOptions } from "./lib/useCampsQuery";
+import { Camp } from "./components/camps/Camp";
 
 export const queryClient = new QueryClient({
   defaultOptions: {
@@ -50,7 +56,6 @@ const ReactiveAuthRedirect = ({ children }: { children: React.ReactNode }) => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    console.log("hi");
     if (!user) {
       navigate({ to: "/" });
     }
@@ -116,19 +121,24 @@ export const loginPageRoute = createRoute({
   loader: async ({ context: { queryClient } }) => {
     const user = await getUser({ queryClient });
     if (user) {
-      throw redirect({ from: "/register", to: "/" });
+      throw redirect({ from: "/login", to: "/" });
     }
   },
 });
 
-export const campRoute = createRoute({
+export const campsRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/camp",
   loader: async ({ context: { queryClient } }) => {
     const user = await getUser({ queryClient });
+    const campsPromise = queryClient.ensureQueryData(
+      getCampQueryOptions({ userId: user?.id })
+    );
     if (!user) {
       throw redirect({ from: "/register", to: "/" });
     }
+    await campsPromise;
+    return { user };
   },
   pendingComponent: LoadingSpinner,
   component: () => (
@@ -139,16 +149,29 @@ export const campRoute = createRoute({
 });
 
 export const exploreRoute = createRoute({
-  getParentRoute: () => campRoute,
+  getParentRoute: () => campsRoute,
   path: "/",
   loader: async ({ context: { queryClient } }) => {
     const user = await getUser({ queryClient });
     if (!user) {
-      throw redirect({ from: "/profile", to: "/login" });
+      throw redirect({ from: "/camp", to: "/login" });
     }
     return { user };
   },
   component: Explore,
+});
+
+export const campRoute = createRoute({
+  getParentRoute: () => campsRoute,
+  path: "/$campId",
+  loader: async ({ context: { queryClient } }) => {
+    const user = await getUser({ queryClient });
+    if (!user) {
+      throw redirect({ from: "/camp/$campId", to: "/login" });
+    }
+    return { user };
+  },
+  component: Camp,
 });
 
 export const routeTree = rootRoute.addChildren([
@@ -157,7 +180,7 @@ export const routeTree = rootRoute.addChildren([
     loginPageRoute,
     profileRoute,
   ]),
-  campRoute.addChildren([exploreRoute]),
+  campsRoute.addChildren([exploreRoute, campRoute]),
 ]);
 
 export const router = createRouter({

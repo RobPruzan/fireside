@@ -4,7 +4,7 @@ import { Input } from "../ui/input";
 import { Label } from "../ui/label";
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { FiresideUser, userQueryOptions } from "@/lib/useUser";
+import { FiresideUser, userQueryOptions } from "@/lib/useUserQuery";
 import { LoadingSpinner } from "../ui/loading";
 import { useToast } from "../ui/use-toast";
 import { client } from "@/edenClient";
