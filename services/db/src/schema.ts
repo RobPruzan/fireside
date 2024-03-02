@@ -92,7 +92,7 @@ export const userToBonfire = pgTable("userToBonfire", {
 
 
 export const chatDB = pgTable("chatMessages", {
-  id: uuid("id").defaultRandom().primaryKey(),
+  // id: uuid("id").defaultRandom().primaryKey(),
   userId: uuid("userId").references(()=>user.id),
   roomName: text("room").notNull(),
   chatMessage: text("msg").notNull()

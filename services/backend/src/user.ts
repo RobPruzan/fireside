@@ -12,7 +12,7 @@ import { Elysia, t, type CookieOptions } from "elysia";
 import { ProtectedElysia, getDeleteAuthCookie } from "./lib";
 import { StatusMap } from "@fireside/utils/src/constants";
 import { db } from ".";
-import { routerWithSession, authHandle } from "./lib";
+
 import { uuid } from "drizzle-orm/pg-core";
 
 const getHashedToken = async ({ token }: { token: string }) =>
@@ -228,8 +228,10 @@ export const userRoute = new Elysia({
     return isAuthResult;
   });
 
-export const userProtectedRoute = ProtectedElysia({
-  prefix: "/user",
-}).post("/log-out", (ctx) => {
-  ctx.cookie.auth.set(getDeleteAuthCookie());
-});
+export const userProtectedRoute = routerWithSession({ prefix: "/user" }).guard(
+  { beforeHandle: authHandle },
+  (app) =>
+    app.post("/log-out", (ctx) => {
+      ctx.cookie.auth.set(getDeleteAuthCookie());
+    })
+);

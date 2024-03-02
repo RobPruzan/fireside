@@ -1,5 +1,4 @@
 import {
-    db,
     user,
     eq,
     token,
@@ -10,30 +9,35 @@ import {
   } from "@fireside/db";
   
   import { Elysia, t, type CookieOptions } from "elysia";
-  import { routerWithSession, authHandle } from "./lib";
   import { uuid } from "drizzle-orm/pg-core";
   import { ProtectedElysia } from "./lib";
+   
 
 export const messageRoute = ProtectedElysia({
-  prefix: "/message",
+    prefix:"/message",
 })
-
 
 .post(
     "/chat",
     async (ctx) => {
-      const userID = uuid("userId").references(()=> user.id);
+        if(ctx){
+        const userID = uuid("userId").references(()=> user.id);
       
-      await db
-        .insert(chatDB)
-        .values({
-            roomName : "Default",
-            userId:userID,
-            chatMessage : ctx.body.message
-        })
+        await db
+            .insert(chatDB)
+            .values({
+                // id: db.select(""),
+                roomName : "Default",
+                userId:userID,
+                chatMessage : ctx.request.body
+            })
 
-     
-      ctx.body = "Chat message posted successfully";
+        }
+    },
+    {
+        body: t.Object({
+            message: t.String(),
+        })
     }
   );
 
