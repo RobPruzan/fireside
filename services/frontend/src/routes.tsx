@@ -133,9 +133,9 @@ export const loginPageRoute = createRoute({
   },
 });
 
-export const campsRoute = createRoute({
+export const campLayoutRoute = createRoute({
   getParentRoute: () => rootRoute,
-  path: "/camp",
+  id: "camp-layout",
   loader: async ({ context: { queryClient } }) => {
     const user = await getUser({ queryClient });
 
@@ -157,8 +157,8 @@ export const campsRoute = createRoute({
 });
 
 export const exploreRoute = createRoute({
-  getParentRoute: () => campsRoute,
-  path: "/",
+  getParentRoute: () => campLayoutRoute,
+  path: "/camp",
   loader: async ({ context: { queryClient } }) => {
     const user = await getUser({ queryClient });
     if (!user) {
@@ -172,20 +172,20 @@ export const exploreRoute = createRoute({
 });
 
 export const friendsRoute = createRoute({
-  getParentRoute: () => campsRoute,
-  path: "/friends",
+  getParentRoute: () => campLayoutRoute,
+  path: "/camp/friends",
   loader: async ({ context: { queryClient } }) => {
     const user = await getUser({ queryClient });
     if (!user) {
-      throw redirect({ from: "/camp", to: "/login" });
+      throw redirect({ from: "/camp/friends", to: "/login" });
     }
     return { user };
   },
   component: Friends,
 });
 export const campRoute = createRoute({
-  getParentRoute: () => campsRoute,
-  path: "/$campId",
+  getParentRoute: () => campLayoutRoute,
+  path: "/camp/$campId",
   loader: async ({ context: { queryClient } }) => {
     const user = await getUser({ queryClient });
     if (!user) {
@@ -203,7 +203,7 @@ export const routeTree = rootRoute.addChildren([
     loginPageRoute,
     profileRoute,
   ]),
-  campsRoute.addChildren([exploreRoute, campRoute, friendsRoute]),
+  campLayoutRoute.addChildren([exploreRoute, campRoute, friendsRoute]),
 ]);
 
 export const router = createRouter({

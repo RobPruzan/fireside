@@ -14,3 +14,16 @@ export type DateToString<
 export type DatesToString<T extends Record<string, unknown>> = {
   [K in keyof T]: DateToString<T[K]>;
 };
+
+type intersectUnion<t> = (t extends unknown ? (_: t) => void : never) extends (
+  _: infer intersection
+) => void
+  ? intersection
+  : never;
+
+export type unionKeyOf<t> = keyof intersectUnion<t>;
+
+export const hasKey = <o extends object, k extends unionKeyOf<o>>(
+  o: o,
+  k: k
+): o is Extract<o, { [_ in k]: unknown }> => k in o;
