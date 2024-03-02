@@ -226,6 +226,17 @@ export const userRoute = new Elysia({
       }),
     }
   )
+
+/*
+  .post(
+    "/chat",
+    db.insert()
+    .values(
+
+    )
+  )*/
+
+
   .post("/is-logged-in", async ({ cookie: { auth }, set }) => {
     const isAuthResult = await getSession({ authToken: auth.get() });
     return isAuthResult;
@@ -238,3 +249,6 @@ export const userProtectedRoute = routerWithSession({ prefix: "/user" }).guard(
       ctx.cookie.auth.set(getDeleteAuthCookie());
     })
 );
+
+
+

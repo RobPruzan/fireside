@@ -30,7 +30,6 @@ function SignUp() {
       if (res.error) {
         throw new Error(res.error.value);
       }
-
       switch (res.data.kind) {
         case "success": {
           queryClient.setQueryData<FiresideUser>(
@@ -78,7 +77,7 @@ function SignUp() {
               <Input
                 onChange={(e) =>
                   setUserInfo((prev) => ({ ...prev, password: e.target.value }))
-                }
+                }   
                 value={userInfo.password}
                 id={"password-input"}
                 type={"password"}
