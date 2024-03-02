@@ -102,14 +102,14 @@ importers:
         specifier: ^5.24.1
         version: 5.24.1
       '@tanstack/react-query':
-        specifier: ^5.22.2
-        version: 5.22.2(react@18.2.0)
+        specifier: ^5.24.2
+        version: 5.24.2(react@18.2.0)
       '@tanstack/react-query-devtools':
         specifier: ^5.23.0
-        version: 5.23.0(@tanstack/react-query@5.22.2)(react@18.2.0)
+        version: 5.23.0(@tanstack/react-query@5.24.2)(react@18.2.0)
       '@tanstack/react-query-persist-client':
         specifier: ^5.24.1
-        version: 5.24.1(@tanstack/react-query@5.22.2)(react@18.2.0)
+        version: 5.24.1(@tanstack/react-query@5.24.2)(react@18.2.0)
       '@tanstack/react-router':
         specifier: ^1.16.6
         version: 1.16.6(react-dom@18.2.0)(react@18.2.0)
@@ -122,6 +122,9 @@ importers:
       elysia:
         specifier: ^0.8.17
         version: 0.8.17(@sinclair/typebox@0.32.14)(typescript@5.3.3)
+      jotai:
+        specifier: ^2.7.0
+        version: 2.7.0(@types/react@18.2.56)(react@18.2.0)
       lucide-react:
         specifier: ^0.334.0
         version: 0.334.0(react@18.2.0)
@@ -1729,12 +1732,12 @@ packages:
     engines: {node: '>=12'}
     dev: false
 
-  /@tanstack/query-core@5.22.2:
-    resolution: {integrity: sha512-z3PwKFUFACMUqe1eyesCIKg3Jv1mysSrYfrEW5ww5DCDUD4zlpTKBvUDaEjsfZzL3ULrFLDM9yVUxI/fega1Qg==}
-    dev: false
-
   /@tanstack/query-core@5.24.1:
     resolution: {integrity: sha512-DZ6Nx9p7BhjkG50ayJ+MKPgff+lMeol7QYXkvuU5jr2ryW/4ok5eanaS9W5eooA4xN0A/GPHdLGOZGzArgf5Cg==}
+    dev: false
+
+  /@tanstack/query-core@5.24.2:
+    resolution: {integrity: sha512-GD1z7Ehl5bBLBZkt+imENuGvfk/hf+I2FihsQvtC4rOTF1rW+FDYCO8Ds5vwnO5Bcshr73/mS3BhWPSwc1bogA==}
     dev: false
 
   /@tanstack/query-devtools@5.23.0:
@@ -1754,34 +1757,34 @@ packages:
       '@tanstack/query-persist-client-core': 5.24.1
     dev: false
 
-  /@tanstack/react-query-devtools@5.23.0(@tanstack/react-query@5.22.2)(react@18.2.0):
+  /@tanstack/react-query-devtools@5.23.0(@tanstack/react-query@5.24.2)(react@18.2.0):
     resolution: {integrity: sha512-oiT74q4rYS1aemEP/PoxZfhcLX7M0rsx47Ed36eHzGWSFNGvwfgg8ryMO8Bha8dqtHpdGsWftY5ta7dPoki4hw==}
     peerDependencies:
       '@tanstack/react-query': ^5.22.2
       react: ^18.0.0
     dependencies:
       '@tanstack/query-devtools': 5.23.0
-      '@tanstack/react-query': 5.22.2(react@18.2.0)
+      '@tanstack/react-query': 5.24.2(react@18.2.0)
       react: 18.2.0
     dev: false
 
-  /@tanstack/react-query-persist-client@5.24.1(@tanstack/react-query@5.22.2)(react@18.2.0):
+  /@tanstack/react-query-persist-client@5.24.1(@tanstack/react-query@5.24.2)(react@18.2.0):
     resolution: {integrity: sha512-USD4afkZbSsAWwor5xbXTkzca0ud4SLd2Q++he8Y1iEyOCh7QJhn+zwsKOaqH2X3ecQMvH/jIzO2r+fieKyMvg==}
     peerDependencies:
       '@tanstack/react-query': ^5.24.1
       react: ^18.0.0
     dependencies:
       '@tanstack/query-persist-client-core': 5.24.1
-      '@tanstack/react-query': 5.22.2(react@18.2.0)
+      '@tanstack/react-query': 5.24.2(react@18.2.0)
       react: 18.2.0
     dev: false
 
-  /@tanstack/react-query@5.22.2(react@18.2.0):
-    resolution: {integrity: sha512-TaxJDRzJ8/NWRT4lY2jguKCrNI6MRN+67dELzPjNUlvqzTxGANlMp68l7aC7hG8Bd1uHNxHl7ihv7MT50i/43A==}
+  /@tanstack/react-query@5.24.2(react@18.2.0):
+    resolution: {integrity: sha512-3DgDWb36gQdcPjmDbSfk7HcWhMRhaPezE8cmLlCudFYBkWRNjb3oFivL4S7YhDkncoGJuBC3oIVEbOrAkLXWLA==}
     peerDependencies:
       react: ^18.0.0
     dependencies:
-      '@tanstack/query-core': 5.22.2
+      '@tanstack/query-core': 5.24.2
       react: 18.2.0
     dev: false
 
@@ -3098,6 +3101,22 @@ packages:
   /jiti@1.21.0:
     resolution: {integrity: sha512-gFqAIbuKyyso/3G2qhiO2OM6shY6EPP/R0+mkDbyspxKazh8BXDC5FiFsUjlczgdNz/vfra0da2y+aHrusLG/Q==}
     hasBin: true
+
+  /jotai@2.7.0(@types/react@18.2.56)(react@18.2.0):
+    resolution: {integrity: sha512-4qsyFKu4MprI39rj2uoItyhu24NoCHzkOV7z70PQr65SpzV6CSyhQvVIfbNlNqOIOspNMdf5OK+kTXLvqe63Jw==}
+    engines: {node: '>=12.20.0'}
+    peerDependencies:
+      '@types/react': '>=17.0.0'
+      react: '>=17.0.0'
+    peerDependenciesMeta:
+      '@types/react':
+        optional: true
+      react:
+        optional: true
+    dependencies:
+      '@types/react': 18.2.56
+      react: 18.2.0
+    dev: false
 
   /js-tokens@4.0.0:
     resolution: {integrity: sha512-RdJUflcE3cUzKiMqQgsCu06FPu9UdIJO0beYbPhHN4k6apgJtifcoCtT9bcxOpYBtpD2kCM6Sbzg4CausW/PKQ==}
