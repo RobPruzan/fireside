@@ -31,9 +31,14 @@ import { NavBar } from "./components/camps/NavBar";
 import Landing from "./components/landing/Landing";
 import { LoadingSpinner } from "./components/ui/loading";
 import { createSyncStoragePersister } from "@tanstack/query-sync-storage-persister";
-import { getCampQueryOptions } from "./lib/useCampsQuery";
+
 import { Camp } from "./components/camps/Camp";
 import { Friends } from "./components/camps/Friends";
+import {
+  getAllCampsQueryOptions,
+  getUserCampQueryOptions,
+} from "./components/camps/camp-state";
+import { Toaster } from "./components/ui/toaster";
 
 export const queryClient = new QueryClient({
   defaultOptions: {
@@ -142,16 +147,24 @@ export const campLayoutRoute = createRoute({
     if (!user) {
       throw redirect({ from: "/register", to: "/" });
     }
-    await queryClient.ensureQueryData(
-      getCampQueryOptions({ userId: user?.id })
-    );
+    await Promise.all([
+      queryClient.ensureQueryData(
+        getUserCampQueryOptions({ userId: user?.id })
+      ),
+      queryClient.ensureQueryData(getAllCampsQueryOptions({ userId: user.id })),
+    ]);
 
     return { user };
   },
-  pendingComponent: LoadingSpinner,
+  pendingComponent: () => (
+    <div className="h-screen w-screen flex items-center justify-center">
+      <LoadingSpinner />
+    </div>
+  ),
   component: () => (
     <ReactiveAuthRedirect>
       <RootCampLayout />
+      <Toaster />
     </ReactiveAuthRedirect>
   ),
 });
@@ -164,7 +177,9 @@ export const exploreRoute = createRoute({
     if (!user) {
       throw redirect({ from: "/camp", to: "/login" });
     }
-    await queryClient.ensureQueryData(getCampQueryOptions({ userId: user.id }));
+    await queryClient.ensureQueryData(
+      getUserCampQueryOptions({ userId: user.id })
+    );
 
     return { user };
   },
