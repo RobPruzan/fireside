@@ -1,15 +1,13 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
-import React, { useEffect } from "react";
-import { useRouteContext } from "../../context/RouteContext";
 import { Label } from "../ui/label";
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { client } from "@/main";
 import { FiresideUser, userQueryOptions } from "@/lib/useUser";
 import { LoadingSpinner } from "../ui/loading";
 import { useToast } from "../ui/use-toast";
+import { client } from "@/edenClient";
 
 function SignUp() {
   const navigate = useNavigate({ from: "/login" });
@@ -21,11 +19,7 @@ function SignUp() {
   const { toast } = useToast();
   const loginMutation = useMutation({
     mutationFn: async (loginInfo: typeof userInfo) => {
-      const res = await client.user.login.post(loginInfo, {
-        fetch: {
-          credentials: "include",
-        },
-      });
+      const res = await client.user.login.post(loginInfo);
 
       if (res.error) {
         throw new Error(res.error.value);

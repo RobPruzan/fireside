@@ -4,13 +4,13 @@ import { Input } from "../ui/input";
 import React, { useEffect } from "react";
 import { useRouteContext } from "../../context/RouteContext";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { client } from "@/main";
 import { useToast } from "../ui/use-toast";
 import { useState } from "react";
 import { Label } from "../ui/label";
 import { User } from "../../../../db/src";
 import { FiresideUser, userQueryOptions } from "@/lib/useUser";
 import { LoadingSpinner } from "../ui/loading";
+import { client } from "@/edenClient";
 
 type CreateUserInfo = {
   email: string;
@@ -23,11 +23,7 @@ function Register() {
   const queryClient = useQueryClient();
   const createUserMutation = useMutation({
     mutationFn: async (createOpts: CreateUserInfo) => {
-      const res = await client.user.create.post(createOpts, {
-        fetch: {
-          credentials: "include",
-        },
-      });
+      const res = await client.user.create.post(createOpts);
 
       if (res.error) {
         throw new Error(res.error.value);

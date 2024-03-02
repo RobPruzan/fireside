@@ -6,12 +6,10 @@ import { z } from "zod";
 import type { App } from "@fireside/backend";
 
 import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client";
-import { createRouter, RouterProvider } from "@tanstack/react-router";
+import { RouterProvider } from "@tanstack/react-router";
 import { ThemeProvider } from "./hooks/useTheme";
 
-import { routeTree } from "./routes";
-import { QueryClient } from "@tanstack/react-query";
-import { createSyncStoragePersister } from "@tanstack/query-sync-storage-persister";
+import { persister, queryClient, router } from "./routes";
 
 const envSchema = z.object(
   {
@@ -31,33 +29,6 @@ envSchema.parse({
 declare global {
   interface ImportMetaEnv extends z.infer<typeof envSchema> {}
 }
-
-export const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      gcTime: 1000 * 60 * 60 * 24, // 24 hours
-    },
-  },
-});
-
-export const persister = createSyncStoragePersister({
-  storage: window.localStorage,
-});
-
-export const client = edenTreaty<App>(import.meta.env.VITE_API_URL, {
-  $fetch: {
-    credentials: "include",
-  },
-});
-
-const router = createRouter({
-  routeTree,
-  defaultPreload: "intent",
-  defaultPreloadStaleTime: 0,
-  context: {
-    queryClient,
-  },
-});
 
 declare module "@tanstack/react-router" {
   interface Register {
