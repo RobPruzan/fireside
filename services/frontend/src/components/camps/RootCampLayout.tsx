@@ -275,17 +275,7 @@ export const RootCampLayout = () => {
                         {new Date(camp.createdAt).toDateString()}
                       </div>
                     </div>
-                    <div className="relative w-1/4 flex items-center justify-end">
-                      {/* <Avatar className="absolute top-0 right-0">
-                        <AvatarImage className="w-5 h-5" src="/person.png" />
-                      </Avatar>
-                      <Avatar className="absolute top-- right-2">
-                        <AvatarImage className="w-5 h-5" src="/person.png" />
-                      </Avatar>
-                      <Avatar className="absolute top-0 right-4">
-                        <AvatarImage className="w-5 h-5" src="/person.png" />
-                      </Avatar> */}
-                    </div>
+                    <div className="relative w-1/4 flex items-center justify-end"></div>
                   </Link>
                   <Button className="h-full p-0" variant={"ghost"}>
                     <MoreVertical />

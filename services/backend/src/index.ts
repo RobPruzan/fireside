@@ -27,7 +27,6 @@ const app = new Elysia()
     return error.toString();
   })
   .listen(port);
-//
+
 console.log(`Running on port ${port}`);
 export type App = typeof app;
-//
