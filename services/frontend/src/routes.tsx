@@ -78,11 +78,12 @@ export const rootLandingLayout = createRoute({
   getParentRoute: () => rootRoute,
   id: "layout",
   component: () => {
-    // const { isTransitioning } = useRouterState();
     return (
       <>
         <NavBar />
+
         <Outlet />
+        <Toaster />
       </>
     );
   },

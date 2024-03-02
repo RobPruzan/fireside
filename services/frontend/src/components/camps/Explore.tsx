@@ -4,6 +4,7 @@ import { useAllCamps, useJoinCampMutation, useUserCamps } from "./camp-state";
 import { Button } from "../ui/button";
 import { LoadingSpinner } from "../ui/loading";
 import { FiresideCamp } from "@fireside/db";
+import { CheckCircle } from "lucide-react";
 
 export const Explore = () => {
   const { camps } = useAllCamps();
@@ -20,6 +21,10 @@ export const Explore = () => {
       </div>
       <div className="h-[90%] flex flex-wrap gap-4 overflow-y-auto">
         {camps
+          .toSorted(
+            (a, b) =>
+              new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+          )
           .filter((camp) =>
             camp.name.toLowerCase().includes(searchFilter.toLowerCase())
           )
@@ -33,7 +38,8 @@ export const Explore = () => {
 
 const ExploreCard = ({ camp }: { camp: FiresideCamp & { count: number } }) => {
   const joinCampMutation = useJoinCampMutation();
-
+  const { camps } = useUserCamps();
+  console.log(camps, camp.id);
   return (
     <div
       key={camp.id}
@@ -43,13 +49,19 @@ const ExploreCard = ({ camp }: { camp: FiresideCamp & { count: number } }) => {
       <div>{camp.name}</div>
 
       <div>
-        <Button
-          onClick={() => {
-            joinCampMutation.mutate({ campId: camp.id });
-          }}
-        >
-          {joinCampMutation.isPending ? <LoadingSpinner /> : "Join Camp"}
-        </Button>
+        {!camps.some((userCamp) => userCamp.id === camp.id) ? (
+          <Button
+            onClick={() => {
+              joinCampMutation.mutate({ campId: camp.id });
+            }}
+          >
+            {joinCampMutation.isPending ? <LoadingSpinner /> : "Join Camp"}
+          </Button>
+        ) : (
+          <div className="flex gap-x-2 items-center">
+            <span>Joined</span> <CheckCircle className="text-green-500" />
+          </div>
+        )}
       </div>
     </div>
   );
