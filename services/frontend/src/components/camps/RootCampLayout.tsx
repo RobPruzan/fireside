@@ -4,7 +4,7 @@ import {
   Link,
   Outlet,
   useLoaderData,
-  useMatchRoute,
+  useMatches,
 } from "@tanstack/react-router";
 import {
   ChevronLeft,
@@ -42,6 +42,7 @@ import { LoadingSpinner } from "../ui/loading";
 import { FiresideCamp } from "../../../../db/src";
 import { getCampQueryOptions } from "@/lib/useCampsQuery";
 import { userQueryOptions } from "@/lib/useUserQuery";
+import { hasKey } from "@fireside/utils";
 
 export const RootCampLayout = () => {
   const [sideBarOpen, setSideBarOpen] = useState(true);
@@ -51,15 +52,14 @@ export const RootCampLayout = () => {
   const [campRoomName, setCampRoomName] = useState("");
   const queryClient = useQueryClient();
   const [campSearch, setCampSearch] = useState("");
-  const loaderData = useLoaderData({ from: "/camp" });
+  const loaderData = useLoaderData({ from: "/camp-layout" });
   const user =
     useSuspenseQuery({ ...userQueryOptions, initialData: loaderData.user })
       .data ?? loaderData.user;
-  const match = useMatchRoute();
 
-  const campIdRoute = match({ to: "/camp/$campId" });
-  const matchesExplore = match({ to: "/camp/" });
-  const matchesFriends = match({ to: "/camp/friends" });
+  // can do useMatchRoute because types are broken
+  const matches = useMatches();
+  const currentRoute = matches.at(-1)!;
 
   const camps =
     useSuspenseQuery(getCampQueryOptions({ userId: user.id })).data ?? [];
@@ -121,12 +121,11 @@ export const RootCampLayout = () => {
               className={buttonVariants({
                 className: cn([
                   "flex gap-x-4 justify-between w-full py-6 min-w-fit",
-                  matchesFriends && "bg-accent",
+                  currentRoute.routeId === "/camp-layout/camp/friends" &&
+                    "bg-accent",
                 ]),
                 variant: "ghost",
               })}
-              // className="flex gap-x-5 justify-between w-full py-6"
-              // variant={"ghost"}
             >
               <div className="flex items-center gap-x-4">
                 <User />
@@ -136,11 +135,11 @@ export const RootCampLayout = () => {
             </Link>
 
             <Link
-              to="/camp/"
+              to="/camp"
               className={buttonVariants({
                 className: cn([
                   "flex gap-x-4 justify-between w-full py-6 min-w-fit",
-                  matchesExplore && "bg-accent",
+                  currentRoute.routeId === "/camp-layout/camp" && "bg-accent",
                 ]),
                 variant: "ghost",
               })}
@@ -191,7 +190,6 @@ export const RootCampLayout = () => {
                   className="w-full text-lg flex gap-x-3 justify-center items-center"
                   variant={"ghost"}
                 >
-                  {/* <span>Create camp room</span> */}
                   <PlusCircle />
                 </Button>
               </DialogTrigger>
@@ -259,8 +257,9 @@ export const RootCampLayout = () => {
                     className={buttonVariants({
                       className: cn([
                         "py-9 w-full flex justify-between",
-                        campIdRoute &&
-                          campIdRoute.campId === camp.id &&
+                        currentRoute.routeId === "/camp-layout/camp/$campId" &&
+                          hasKey(currentRoute.params, "campId") &&
+                          currentRoute.params.campId === camp.id &&
                           "bg-accent",
                       ]),
                       variant: "ghost",

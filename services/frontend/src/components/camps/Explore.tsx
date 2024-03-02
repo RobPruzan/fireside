@@ -6,7 +6,7 @@ import { Input } from "../ui/input";
 import { useState } from "react";
 
 export const Explore = () => {
-  const loaderData = useLoaderData({ from: "/camp/" });
+  const loaderData = useLoaderData({ from: "/camp-layout/camp" });
   const user =
     useSuspenseQuery({ ...userQueryOptions, initialData: loaderData.user })
       .data ?? loaderData.user;
