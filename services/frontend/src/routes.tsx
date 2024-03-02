@@ -54,7 +54,7 @@ const ReactiveAuthRedirect = ({ children }: { children: React.ReactNode }) => {
   const user = useQueryClient().getQueryData<FiresideUser>(
     userQueryOptions.queryKey
   );
-  console.log({ user });
+
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -159,8 +159,8 @@ export const exploreRoute = createRoute({
     if (!user) {
       throw redirect({ from: "/camp", to: "/login" });
     }
-
     await queryClient.ensureQueryData(getCampQueryOptions({ userId: user.id }));
+
     return { user };
   },
   component: Explore,
@@ -183,7 +183,6 @@ export const campRoute = createRoute({
   path: "/$campId",
   loader: async ({ context: { queryClient } }) => {
     const user = await getUser({ queryClient });
-    console.log(user);
     if (!user) {
       throw redirect({ from: "/camp/$campId", to: "/login" });
     }

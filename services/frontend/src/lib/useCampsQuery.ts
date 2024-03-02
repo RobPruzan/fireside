@@ -7,7 +7,11 @@ export const getCampQueryOptions = ({ userId }: { userId: Nullish<string> }) =>
   ({
     queryFn: async () => {
       const res = await client.protected.camp.retrieve.get();
-      console.log("beeboop", res);
+
+      if (res.error) {
+        console.log("err");
+        throw new Error(res.error.value);
+      }
       return res.data;
     },
     queryKey: ["camps", userId],

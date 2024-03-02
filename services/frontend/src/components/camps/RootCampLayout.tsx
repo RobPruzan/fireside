@@ -3,18 +3,11 @@ import { cn } from "@/lib/utils";
 import {
   Link,
   Outlet,
-  useChildMatches,
   useLoaderData,
-  useMatch,
   useMatchRoute,
-  useRouteContext,
-  useRouterState,
 } from "@tanstack/react-router";
 import {
   ChevronLeft,
-  CircleUserRound,
-  MessageSquare,
-  MoreHorizontal,
   MoreVertical,
   PanelRight,
   PlusCircle,
@@ -47,8 +40,8 @@ import { Label } from "../ui/label";
 
 import { LoadingSpinner } from "../ui/loading";
 import { FiresideCamp } from "../../../../db/src";
-import { getCampQueryOptions, useCampsQuery } from "@/lib/useCampsQuery";
-import { useUserQuery, userQueryOptions } from "@/lib/useUserQuery";
+import { getCampQueryOptions } from "@/lib/useCampsQuery";
+import { userQueryOptions } from "@/lib/useUserQuery";
 
 export const RootCampLayout = () => {
   const [sideBarOpen, setSideBarOpen] = useState(true);
@@ -68,11 +61,9 @@ export const RootCampLayout = () => {
   const matchesExplore = match({ to: "/camp/" });
   const matchesFriends = match({ to: "/camp/friends" });
 
-  // const childrenMatches = use
-
   const camps =
     useSuspenseQuery(getCampQueryOptions({ userId: user.id })).data ?? [];
-  console.log({ camps });
+
   const createCampMutation = useMutation({
     mutationKey: ["create-camp"],
     mutationFn: async (createOps: { name: string }) => {
