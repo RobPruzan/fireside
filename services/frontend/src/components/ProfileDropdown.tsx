@@ -69,7 +69,7 @@ export const ProfileDropdown = () => {
                   Profile
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => logoutMutation.mutate()}>
-                  Logout
+                  {logoutMutation.isPending ? <LoadingSpinner /> : "Logout"}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>

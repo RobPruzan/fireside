@@ -1,4 +1,8 @@
-import { QueryClient } from "@tanstack/react-query";
+import {
+  QueryClient,
+  queryOptions,
+  useQueryClient,
+} from "@tanstack/react-query";
 import {
   createRootRouteWithContext,
   createRoute,
@@ -7,6 +11,8 @@ import {
   redirect,
   MatchRoute,
   createRouter,
+  useMatchRoute,
+  useRouterState,
 } from "@tanstack/react-router";
 import { FiresideUser, useUser, userQueryOptions } from "./lib/useUser";
 
@@ -38,14 +44,17 @@ const getUser = async ({ queryClient }: { queryClient: QueryClient }) => {
   return queryClient.getQueryData<FiresideUser>(userQueryOptions.queryKey);
 };
 const ReactiveAuthRedirect = ({ children }: { children: React.ReactNode }) => {
-  const userQuery = useUser();
+  const user = useQueryClient().getQueryData<FiresideUser>(
+    userQueryOptions.queryKey
+  );
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!userQuery.data) {
+    console.log("hi");
+    if (!user) {
       navigate({ to: "/" });
     }
-  }, [userQuery.data]);
+  }, [user]);
 
   return <>{children}</>;
 };
@@ -56,21 +65,23 @@ export const rootRoute = createRootRouteWithContext<{
 export const rootLandingRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/",
-  component: () => (
-    <div>
-      <NavBar />
-      <MatchRoute to="/">
-        <Landing />
-      </MatchRoute>
-      <Outlet />
-    </div>
-  ),
+  component: () => {
+    const { isTransitioning } = useRouterState();
+    return (
+      <>
+        <NavBar />
+        <MatchRoute to="/">{!isTransitioning && <Landing />}</MatchRoute>
+        <Outlet />
+      </>
+    );
+  },
 });
 
 export const registerPageRoute = createRoute({
   getParentRoute: () => rootLandingRoute,
   path: "/register",
   component: Register,
+  pendingComponent: LoadingSpinner,
   loader: async ({ context: { queryClient } }) => {
     const user = await getUser({ queryClient });
     if (user) {
@@ -87,6 +98,7 @@ export const profileRoute = createRoute({
       <Profile />
     </ReactiveAuthRedirect>
   ),
+  pendingComponent: LoadingSpinner,
   loader: async ({ context: { queryClient } }) => {
     const user = await getUser({ queryClient });
     if (!user) {
@@ -100,6 +112,7 @@ export const loginPageRoute = createRoute({
   getParentRoute: () => rootLandingRoute,
   path: "/login",
   component: SignUp,
+  pendingComponent: LoadingSpinner,
   loader: async ({ context: { queryClient } }) => {
     const user = await getUser({ queryClient });
     if (user) {
