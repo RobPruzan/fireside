@@ -1,4 +1,8 @@
-import { FiresideUser, useUser, userQueryOptions } from "@/lib/useUser";
+import {
+  FiresideUser,
+  useUserQuery,
+  userQueryOptions,
+} from "@/lib/useUserQuery";
 import { run } from "@fireside/utils";
 import { LoadingSpinner } from "./ui/loading";
 import {
@@ -19,7 +23,7 @@ import { queryClient } from "@/routes";
 import { client } from "@/edenClient";
 //
 export const ProfileDropdown = () => {
-  const user = useUser();
+  const user = useUserQuery();
   const navigate = useNavigate();
   const logoutMutation = useMutation({
     mutationFn: async () => {

@@ -1,5 +1,5 @@
 import { ThemeToggle } from "@/hooks/useTheme";
-import { useUser } from "@/lib/useUser";
+import { useUserQuery } from "@/lib/useUserQuery";
 
 import { useQueryClient } from "@tanstack/react-query";
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
@@ -9,7 +9,7 @@ import { ProfileDropdown } from "../ProfileDropdown";
 import { cn } from "@/lib/utils";
 
 export const NavBar = () => {
-  const user = useUser();
+  const user = useUserQuery();
   const router = useRouterState();
 
   return (
