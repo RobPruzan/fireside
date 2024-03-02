@@ -5,6 +5,7 @@ import { CampStaticSideBar } from "./CampStaticSideBar";
 import { CampDynamicSideBar } from "./CampDynamicSideBar";
 import { useAtomValue } from "jotai";
 import { dynamicSideBarOpen } from "./camp-state";
+import { Toaster } from "../ui/toaster";
 
 export const RootCampLayout = () => {
   const sideBarOpen = useAtomValue(dynamicSideBarOpen);

@@ -43,14 +43,19 @@ export const getSession = async ({ authToken }: { authToken: string }) => {
   }
 
   const users = await db.select().from(user);
-  const authUser = users.find(async ({ token, ...rest }) => {
-    if (!token) {
-      return false;
-    }
+  const verifiedStatus = await Promise.all(
+    users.map(async (user) => {
+      if (!user.token) {
+        return { verified: false, user: user };
+      }
 
-    const res = await Bun.password.verify(authToken, token);
-    return res;
-  });
+      const res = await Bun.password.verify(authToken, user.token);
+
+      return { verified: res, user: user };
+    })
+  );
+
+  const authUser = verifiedStatus.find((user) => user.verified)?.user;
 
   if (!authUser) {
     return {

@@ -22,7 +22,7 @@ import { useAtom, useSetAtom } from "jotai";
 import {
   createCampModalOpen,
   dynamicSideBarOpen,
-  useCamps,
+  useUserCamps,
   useCreateCampMutation,
 } from "./camp-state";
 export const CampDynamicSideBar = () => {
@@ -30,9 +30,10 @@ export const CampDynamicSideBar = () => {
   const [modalOpen, setModalOpen] = useAtom(createCampModalOpen);
   const [campSearch, setCampSearch] = useState("");
   const [newCampRoomName, setNewCampRoomName] = useState("");
-  const { camps } = useCamps();
+  const { camps } = useUserCamps();
   const currentRoute = useCurrentRoute();
   const createCampMutation = useCreateCampMutation();
+
   return (
     <>
       <Button

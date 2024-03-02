@@ -5,10 +5,11 @@ import { Link, useRouterState } from "@tanstack/react-router";
 import { buttonVariants } from "../ui/button";
 import { ProfileDropdown } from "../ProfileDropdown";
 import { cn } from "@/lib/utils";
+import { useCurrentRoute } from "@/hooks/useCurrentRoute";
 
 export const NavBar = () => {
   const user = useUserQuery();
-  const router = useRouterState();
+  const match = useCurrentRoute();
 
   return (
     <div className="flex justify-between items-center mx-auto w-full px-10 h-16">
@@ -23,12 +24,17 @@ export const NavBar = () => {
 
         {!user.data && (
           <Link
+            disabled={
+              match.routeId === "/layout/login" ||
+              match.routeId === "/layout/register"
+            }
             to="/register"
             className={buttonVariants({
               variant: "ghost",
               className: cn([
-                router.location.pathname === "/register" ||
-                  (router.location.pathname === "/login" && "bg-accent"),
+                (match.routeId === "/layout/login" ||
+                  match.routeId === "/layout/register") &&
+                  "bg-accent",
               ]),
             })}
           >

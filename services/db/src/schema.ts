@@ -52,18 +52,22 @@ export type FiresideCamp = InferSelectModel<typeof camp>;
 
 export const campSchema = createInsertSchema(camp);
 
-export const campMembers = pgTable("campMembers", {
+export const campMember = pgTable("campMember", {
   id: uuid("id").defaultRandom().primaryKey(),
-  campId: uuid("camp_id").references(() => camp.id),
-  userId: uuid("user_id").references(() => user.id),
+  campId: uuid("camp_id")
+    .references(() => camp.id)
+    .notNull(),
+  userId: uuid("user_id")
+    .references(() => user.id)
+    .notNull(),
 });
 
-export const campMembersInsertSchema = createInsertSchema(campMembers, {
+export const campMembersInsertSchema = createInsertSchema(campMember, {
   userId: Type.Optional(Type.String()),
 });
 
 export const campMembersWithoutUserInsertSchema = createInsertSchema(
-  campMembers,
+  campMember,
   {
     userId: Type.Optional(Type.String()),
   }
@@ -71,7 +75,9 @@ export const campMembersWithoutUserInsertSchema = createInsertSchema(
 
 export const bonfire = pgTable("bonfire", {
   id: uuid("id").defaultRandom().primaryKey(),
-  campId: uuid("camp_id").references(() => camp.id),
+  campId: uuid("camp_id")
+    .references(() => camp.id)
+    .notNull(),
   name: text("name").notNull(),
   createdAt: timestamp("created_at", { mode: "string" })
     .$defaultFn(() => new Date().toString())
@@ -83,8 +89,12 @@ export const bonfireInsertSchema = createInsertSchema(bonfire);
 
 export const userToBonfire = pgTable("userToBonfire", {
   id: uuid("id").defaultRandom().primaryKey(),
-  userId: uuid("userId").references(() => user.id),
-  bonfireId: uuid("bonfireId").references(() => bonfire.id),
+  userId: uuid("userId")
+    .references(() => user.id)
+    .notNull(),
+  bonfireId: uuid("bonfireId")
+    .references(() => bonfire.id)
+    .notNull(),
   joinedAt: timestamp("created_at", { mode: "string" })
     .$defaultFn(() => new Date().toString())
     .notNull(),

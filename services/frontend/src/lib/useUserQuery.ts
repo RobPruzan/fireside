@@ -1,4 +1,4 @@
-import { QueryOptions, useQuery } from "@tanstack/react-query";
+import { QueryOptions, UseQueryOptions, useQuery } from "@tanstack/react-query";
 import { User } from "../../../db/src";
 import { client } from "@/edenClient";
 
@@ -24,6 +24,6 @@ export const userQueryOptions = {
   },
 
   retryDelay: 10000,
-} satisfies QueryOptions;
+} satisfies UseQueryOptions;
 
 export const useUserQuery = () => useQuery(userQueryOptions);
