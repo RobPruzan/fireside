@@ -89,3 +89,11 @@ export const userToBonfire = pgTable("userToBonfire", {
     .$defaultFn(() => new Date().toString())
     .notNull(),
 });
+
+
+export const chatDB = pgTable("chatMessages", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  displayName: text("name").notNull(),
+  roomName: text("room").notNull(),
+  chatMessage: text("msg").notNull()
+});
