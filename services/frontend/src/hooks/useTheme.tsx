@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { Moon, Sun } from "lucide-react";
 import { createContext, useContext, useEffect, useState } from "react";
 
 export type Setter<T> = React.Dispatch<React.SetStateAction<T>>;
@@ -79,13 +80,8 @@ export const ThemeToggle = () => {
       onClick={() => {
         setTheme((prev) => (prev === "dark" ? "light" : "dark"));
       }}
-      className={cn(["mr-3"])}
     >
-      <img
-        src={theme.value === "light" ? "/light.png" : "/dark.png"}
-        alt="Theme toggle"
-        className="h-6 w-6"
-      />
+      {theme.value === "light" ? <Sun /> : <Moon />}
     </Button>
   );
 };

@@ -1,16 +1,12 @@
-import { client } from "@/main";
 import { QueryOptions, useQuery } from "@tanstack/react-query";
 import { User } from "../../../db/src";
+import { client } from "@/edenClient";
 
 export type FiresideUser = Omit<User, "token" | "password"> | null;
 export const userQueryOptions = {
   queryKey: ["user"],
   queryFn: async () => {
-    const res = await client.user["is-logged-in"].post({
-      $fetch: {
-        credentials: "include",
-      },
-    });
+    const res = await client.user["is-logged-in"].post();
 
     if (res.error) {
       throw res.error;

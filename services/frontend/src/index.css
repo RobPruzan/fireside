@@ -23,7 +23,7 @@
     --border: 28 20% 50%;
     --input: 28 20% 18%;
     --ring: 28 85.4% 62.4%;
-    --radius: 0.3rem;
+    --radius: 0.5rem;
   }
   .dark {
     --background: 28 10% 7%;
@@ -45,7 +45,7 @@
     --border: 28 20% 18%;
     --input: 28 20% 18%;
     --ring: 28 85.4% 62.4%;
-    --radius: 0.3rem;
+    --radius: 0.5rem;
   }
 }
 

@@ -2,25 +2,37 @@ import { QueryClient } from "@tanstack/react-query";
 import {
   createRootRouteWithContext,
   createRoute,
-  redirect,
-  useMatch,
-  useMatchRoute,
-  useChildMatches,
   useNavigate,
   Outlet,
+  redirect,
+  MatchRoute,
+  createRouter,
 } from "@tanstack/react-router";
-import Landing from "./components/landing/Landing";
-import SignUp from "./components/landing/Login";
-import { Profile } from "./components/landing/Profile";
 import { FiresideUser, useUser, userQueryOptions } from "./lib/useUser";
 
-import Register from "./components/landing/Register";
 import { useEffect } from "react";
-import { RootLandingLayout } from "./components/landing/RootLandingLayout";
-import { RootCampLayout } from "./components/camp/RootCampLayout";
-import { Explore } from "./components/camp/Explore";
-import { persister } from "./main";
 
+import Register from "./components/landing/Register";
+import SignUp from "./components/landing/Login";
+import { Profile } from "./components/landing/Profile";
+import { Explore } from "./components/camp/Explore";
+import { RootCampLayout } from "./components/camp/RootCampLayout";
+import { NavBar } from "./components/camp/NavBar";
+import Landing from "./components/landing/Landing";
+import { LoadingSpinner } from "./components/ui/loading";
+import { createSyncStoragePersister } from "@tanstack/query-sync-storage-persister";
+
+export const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      gcTime: 1000 * 60 * 60 * 24, // 24 hours
+    },
+  },
+});
+export const persister = createSyncStoragePersister({
+  storage: window.localStorage,
+});
+//
 const getUser = async ({ queryClient }: { queryClient: QueryClient }) => {
   await persister.restoreClient();
   return queryClient.getQueryData<FiresideUser>(userQueryOptions.queryKey);
@@ -39,33 +51,24 @@ const ReactiveAuthRedirect = ({ children }: { children: React.ReactNode }) => {
 };
 export const rootRoute = createRootRouteWithContext<{
   queryClient: QueryClient;
-}>()({
-  loader: async ({ context: { queryClient }, location, navigate }) => {
-    const user = await getUser({ queryClient });
-    if (user && location.href === "/") {
-      navigate({ from: "/", to: "/camp" });
-    }
-  },
-  pendingComponent: () => <>...</>,
-  component: () => {
-    const firstChild = useChildMatches().at(0);
-    if (firstChild?.id === "/camp") {
-      return <RootCampLayout />;
-    }
+}>()();
 
-    return <RootLandingLayout />;
-  },
-});
-
-export const landingPageRoute = createRoute({
+export const rootLandingRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/",
-
-  component: Landing,
+  component: () => (
+    <div>
+      <NavBar />
+      <MatchRoute to="/">
+        <Landing />
+      </MatchRoute>
+      <Outlet />
+    </div>
+  ),
 });
 
 export const registerPageRoute = createRoute({
-  getParentRoute: () => rootRoute,
+  getParentRoute: () => rootLandingRoute,
   path: "/register",
   component: Register,
   loader: async ({ context: { queryClient } }) => {
@@ -76,20 +79,8 @@ export const registerPageRoute = createRoute({
   },
 });
 
-export const loginPageRoute = createRoute({
-  getParentRoute: () => rootRoute,
-  path: "/login",
-  component: SignUp,
-  loader: async ({ context: { queryClient } }) => {
-    const user = await getUser({ queryClient });
-    if (user) {
-      throw redirect({ from: "/register", to: "/" });
-    }
-  },
-});
-
 export const profileRoute = createRoute({
-  getParentRoute: () => rootRoute,
+  getParentRoute: () => rootLandingRoute,
   path: "/profile",
   component: () => (
     <ReactiveAuthRedirect>
@@ -105,12 +96,31 @@ export const profileRoute = createRoute({
   },
 });
 
+export const loginPageRoute = createRoute({
+  getParentRoute: () => rootLandingRoute,
+  path: "/login",
+  component: SignUp,
+  loader: async ({ context: { queryClient } }) => {
+    const user = await getUser({ queryClient });
+    if (user) {
+      throw redirect({ from: "/register", to: "/" });
+    }
+  },
+});
+
 export const campRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/camp",
-
+  loader: async ({ context: { queryClient } }) => {
+    const user = await getUser({ queryClient });
+    if (!user) {
+      throw redirect({ from: "/register", to: "/" });
+    }
+  },
+  pendingComponent: LoadingSpinner,
   component: () => (
     <ReactiveAuthRedirect>
+      <RootCampLayout />
       <Outlet />
     </ReactiveAuthRedirect>
   ),
@@ -130,9 +140,19 @@ export const exploreRoute = createRoute({
 });
 
 export const routeTree = rootRoute.addChildren([
-  landingPageRoute,
-  registerPageRoute,
-  loginPageRoute,
-  profileRoute,
+  rootLandingRoute.addChildren([
+    registerPageRoute,
+    loginPageRoute,
+    profileRoute,
+  ]),
   campRoute.addChildren([exploreRoute]),
 ]);
+
+export const router = createRouter({
+  routeTree,
+  defaultPreload: "intent",
+  defaultPreloadStaleTime: 0,
+  context: {
+    queryClient,
+  },
+});
