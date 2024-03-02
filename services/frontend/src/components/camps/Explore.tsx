@@ -7,7 +7,6 @@ import { useState } from "react";
 import { useCamps } from "./camp-state";
 
 export const Explore = () => {
-  const loaderData = useLoaderData({ from: "/camp-layout/camp" });
   const { camps } = useCamps();
   const [searchFilter, setSearchFilter] = useState("");
 
