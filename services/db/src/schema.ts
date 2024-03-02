@@ -37,7 +37,7 @@ export const user_to_user = pgTable("friend", {
 
 export const chatDB = pgTable("chatMessages", {
   id: uuid("id").defaultRandom().primaryKey(),
-  displayName: text("name").notNull(),
+  userId: uuid("userId").references(()=>user.id),
   roomName: text("room").notNull(),
   chatMessage: text("msg").notNull()
 });
