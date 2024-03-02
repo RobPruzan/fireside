@@ -8,7 +8,6 @@ export const RootLandingLayout = () => {
     <div className="min-h-calc flex flex-col items-start w-screen justify-start">
       <NavBar />
       <Outlet />
-      <Toaster />
 
       <ReactQueryDevtools buttonPosition="bottom-left" />
     </div>

@@ -21,10 +21,12 @@ import { useMutation } from "@tanstack/react-query";
 import { toast } from "./ui/use-toast";
 import { queryClient } from "@/routes";
 import { client } from "@/edenClient";
+import { useState } from "react";
 //
 export const ProfileDropdown = () => {
   const user = useUserQuery();
   const navigate = useNavigate();
+  const [open, setOpen] = useState(false);
   const logoutMutation = useMutation({
     mutationFn: async () => {
       const res = await client.protected.user["log-out"].post();
@@ -35,12 +37,13 @@ export const ProfileDropdown = () => {
       return res.data;
     },
     onSuccess: () => {
+      setOpen(false);
+      navigate({
+        to: "/",
+      });
       queryClient.setQueryData<FiresideUser>(userQueryOptions.queryKey, null);
       toast({
         title: "Logged out!",
-      });
-      navigate({
-        to: "/",
       });
     },
     onError: (err) => {
@@ -63,7 +66,16 @@ export const ProfileDropdown = () => {
       case "success": {
         if (user.data) {
           return (
-            <DropdownMenu>
+            <DropdownMenu
+              open={open}
+              onOpenChange={(v) => {
+                // if (logoutMutation.isPending) {
+                //   return;
+                // }
+
+                setOpen(v);
+              }}
+            >
               <DropdownMenuTrigger asChild>
                 <Button variant={"ghost"}>
                   <CircleUser />
@@ -75,7 +87,12 @@ export const ProfileDropdown = () => {
                 <DropdownMenuItem onClick={() => navigate({ to: "/profile" })}>
                   Profile
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => logoutMutation.mutate()}>
+                <DropdownMenuItem
+                  onClick={(e) => {
+                    e.preventDefault();
+                    logoutMutation.mutate();
+                  }}
+                >
                   {logoutMutation.isPending ? <LoadingSpinner /> : "Logout"}
                 </DropdownMenuItem>
               </DropdownMenuContent>
