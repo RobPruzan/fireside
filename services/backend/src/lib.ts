@@ -18,10 +18,8 @@ export const ProtectedElysia = <T extends string>({
     name: "auth-middleware",
   }).derive(async ({ cookie: { auth }, set }) => {
     const session = await getSession({ authToken: auth.get() });
-    // console.log({ session });
     if (session.kind === "not-logged-in") {
       set.status = 401;
-      console.log("THIS CASE");
       throw new Error("must be logged in");
     }
     // By default set the request to 200, since that's the framework default
