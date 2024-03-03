@@ -20,7 +20,7 @@ import {
 import { Friend, FriendRequest } from "@fireside/db";
 import { useToast } from "../ui/use-toast";
 import { FiresideUser } from "@/lib/useUserQuery";
-import { run } from "@fireside/utils";
+import { InsideArray, InsidePromise, run } from "@fireside/utils";
 
 export const getFriendRequestsQueryOptions = ({ userId }: { userId: string }) =>
   ({
@@ -40,6 +40,8 @@ export const useGetUserFriendRequests = () => {
   const options = getFriendRequestsQueryOptions({ userId: user.id });
   const requestsQuery = useSuspenseQuery(options);
   const { friends } = useGetFriends();
+
+  type test = InsidePromise<ReturnType<typeof options.queryFn>>;
   return {
     friendRequests: requestsQuery.data ?? [],
     openFriendRequests: (requestsQuery.data ?? [])
@@ -52,9 +54,9 @@ export const useGetUserFriendRequests = () => {
           )
       ),
     query: requestsQuery,
-    optimisticFriendRequestsUpdater: makeArrayOptimisticUpdater<FriendRequest>({
+    optimisticFriendRequestsUpdater: makeArrayOptimisticUpdater({
       queryClient,
-      queryKey: options.queryKey,
+      options,
     }),
   };
 };
@@ -161,7 +163,7 @@ export const useGetUsers = () => {
     query: usersQuery,
     optimisticUsersUpdater: makeArrayOptimisticUpdater({
       queryClient,
-      queryKey: usersQueryOptions.queryKey,
+      options: usersQueryOptions,
     }),
   };
 };
@@ -192,13 +194,9 @@ export const useGetFriends = () => {
   return {
     friends: friendsQuery.data ?? [],
     query: friendsQuery,
-    optimisticFriendsUpdate: makeArrayOptimisticUpdater<{
-      friend: Friend;
-      user: FiresideUser;
-      otherUser: FiresideUser;
-    }>({
-      queryClient: queryClient,
-      queryKey: options.queryKey,
+    optimisticFriendsUpdate: makeArrayOptimisticUpdater({
+      queryClient,
+      options,
     }),
   };
 };
@@ -206,10 +204,9 @@ export const useGetFriends = () => {
 export const useAcceptFriendRequestMutation = () => {
   const { toast } = useToast();
 
-  const { optimisticFriendsUpdate, friends } = useGetFriends();
+  const { optimisticFriendsUpdate } = useGetFriends();
 
-  const { optimisticFriendRequestsUpdater, friendRequests } =
-    useGetUserFriendRequests();
+  const { optimisticFriendRequestsUpdater } = useGetUserFriendRequests();
   const user = useDefinedUser();
   const acceptFriendRequestMutation = useMutation({
     mutationFn: async ({ requestId }: { requestId: string }) => {

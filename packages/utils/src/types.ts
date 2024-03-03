@@ -27,3 +27,10 @@ export const hasKey = <o extends object, k extends unionKeyOf<o>>(
   o: o,
   k: k
 ): o is Extract<o, { [_ in k]: unknown }> => k in o;
+
+export type InsidePromise<T> = T extends Promise<infer R>
+  ? R
+  : "Better luck next time";
+export type InsideArray<T> = T extends Array<infer R>
+  ? R
+  : "Wow u suck at this";

@@ -1,5 +1,5 @@
-import { Nullish } from "@fireside/utils";
-import { QueryClient } from "@tanstack/react-query";
+import { InsideArray, InsidePromise, Nullish } from "@fireside/utils";
+import { QueriesOptions, QueryClient } from "@tanstack/react-query";
 import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
 import { FiresideUser } from "./useUserQuery";
@@ -9,20 +9,30 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 export const makeArrayOptimisticUpdater =
-  <T>({
+  <
+    TQueryFNResult,
+    TQueryFnResult = InsideArray<InsidePromise<TQueryFNResult>>
+  >({
     queryClient,
-    queryKey,
+    options,
   }: {
     queryClient: QueryClient;
-    queryKey: Array<Nullish<string>>;
+    options: {
+      queryFn: () => TQueryFNResult;
+      queryKey: Array<Nullish<string>>;
+    };
   }) =>
-  (stateOrUpdater: T | ((prev: Array<T>) => Array<T>)) => {
+  (
+    stateOrUpdater:
+      | TQueryFnResult
+      | ((prev: Array<TQueryFnResult>) => Array<TQueryFnResult>)
+  ) => {
     if (typeof stateOrUpdater === "function") {
-      queryClient.setQueryData(queryKey, stateOrUpdater);
+      queryClient.setQueryData(options.queryKey, stateOrUpdater);
       return;
     }
 
-    queryClient.setQueryData(queryKey, () => stateOrUpdater);
+    queryClient.setQueryData(options.queryKey, () => stateOrUpdater);
   };
 
 export const getNotMeUser = ({
