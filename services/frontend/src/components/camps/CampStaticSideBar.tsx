@@ -8,9 +8,11 @@ import { ProfileDropdown } from "../ProfileDropdown";
 import { useAtom } from "jotai";
 import { dynamicSideBarOpen } from "./camps-state";
 import { useCurrentRoute } from "@/hooks/useCurrentRoute";
+import { useGetFriends } from "./friends-state";
 
 export const CampStaticSideBar = () => {
   const [sideBarOpen, setSideBarOpen] = useAtom(dynamicSideBarOpen);
+  const { friends } = useGetFriends();
   const currentRoute = useCurrentRoute();
   return (
     <>
@@ -57,7 +59,7 @@ export const CampStaticSideBar = () => {
               <User />
               <span className="text-lg"> Friends</span>
             </div>
-            <div className="text-lg  items-center">3</div>
+            <div className="text-lg  items-center">{friends.length}</div>
           </Link>
 
           <Link
