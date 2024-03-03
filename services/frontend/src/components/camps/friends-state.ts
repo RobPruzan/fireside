@@ -12,10 +12,15 @@ import {
   useSuspenseQuery,
 } from "@tanstack/react-query";
 import { useDefinedUser } from "./camps-state";
-import { makeArrayOptimisticUpdater } from "@/lib/utils";
-import { FriendRequest } from "@fireside/db";
+import {
+  getNotMeUser,
+  getNotMeUserId,
+  makeArrayOptimisticUpdater,
+} from "@/lib/utils";
+import { Friend, FriendRequest } from "@fireside/db";
 import { useToast } from "../ui/use-toast";
 import { FiresideUser } from "@/lib/useUserQuery";
+import { run } from "@fireside/utils";
 
 export const getFriendRequestsQueryOptions = ({ userId }: { userId: string }) =>
   ({
@@ -34,10 +39,20 @@ export const useGetUserFriendRequests = () => {
   const queryClient = useQueryClient();
   const options = getFriendRequestsQueryOptions({ userId: user.id });
   const requestsQuery = useSuspenseQuery(options);
+  const { friends } = useGetFriends();
   return {
     friendRequests: requestsQuery.data ?? [],
+    openFriendRequests: (requestsQuery.data ?? [])
+      .filter(({ deleted, fromUserId }) => !deleted && fromUserId !== user.id)
+      .filter(
+        ({ fromUserId }) =>
+          !friends.some(
+            ({ friend: { userOneId, userTwoId } }) =>
+              fromUserId === userOneId || fromUserId === userTwoId
+          )
+      ),
     query: requestsQuery,
-    friendRequestsUpdater: makeArrayOptimisticUpdater<FriendRequest>({
+    optimisticFriendRequestsUpdater: makeArrayOptimisticUpdater<FriendRequest>({
       queryClient,
       queryKey: options.queryKey,
     }),
@@ -47,7 +62,10 @@ export const useGetUserFriendRequests = () => {
 export const useMakeFriendRequestMutation = () => {
   const { toast } = useToast();
 
-  const { friendRequestsUpdater } = useGetUserFriendRequests();
+  const { optimisticFriendRequestsUpdater, friendRequests } =
+    useGetUserFriendRequests();
+
+  const { optimisticFriendsUpdate } = useGetFriends();
 
   const makeFriendRequestMutation = useMutation({
     mutationFn: async (makeFriendRequestOpts: { to: string }) => {
@@ -66,9 +84,36 @@ export const useMakeFriendRequestMutation = () => {
         title: "Could not make friend request",
         description: e.message,
       }),
-    onSuccess: (newFriendRequest) => {
-      friendRequestsUpdater((prev) =>
-        !prev ? [newFriendRequest] : [...prev, newFriendRequest]
+    onSuccess: (result) => {
+      if (result.kind === "created-friend") {
+        optimisticFriendsUpdate((prev) => {
+          if (
+            friendRequests.some(
+              (request) => request.fromUserId === result.otherUser.id
+            )
+          ) {
+            return [...prev, result];
+          }
+
+          return prev;
+        });
+
+        optimisticFriendRequestsUpdater((prev) =>
+          !prev
+            ? [result.existingRequest]
+            : [...prev, result.existingRequest].map((request) => ({
+                ...request,
+                deleted: request.deleted
+                  ? true
+                  : result.existingRequest.id === request.id,
+              }))
+        );
+
+        return;
+      }
+
+      optimisticFriendRequestsUpdater((prev) =>
+        !prev ? [result.newFriendRequest] : [...prev, result.newFriendRequest]
       );
     },
   });
@@ -91,9 +136,28 @@ export const usersQueryOptions = {
 export const useGetUsers = () => {
   const usersQuery = useSuspenseQuery(usersQueryOptions);
   const queryClient = useQueryClient();
-
+  const { friends } = useGetFriends();
+  const { friendRequests } = useGetUserFriendRequests();
   return {
     users: usersQuery.data ?? [],
+    usersWithStatus: (usersQuery.data ?? []).map((externalUser) => ({
+      ...externalUser,
+      status: run(() => {
+        const sentRequest = friendRequests.some(
+          ({ toUserId }) => toUserId === externalUser.id
+        );
+
+        const isFriend = friends.some(
+          (friend) =>
+            friend.otherUser.id === externalUser.id ||
+            friend.user.id === externalUser.id
+        );
+
+        if (isFriend) return "is-friend" as const;
+        if (sentRequest) return "sent-request" as const;
+        return "no-relation" as const;
+      }),
+    })),
     query: usersQuery,
     optimisticUsersUpdater: makeArrayOptimisticUpdater({
       queryClient,
@@ -111,6 +175,7 @@ export const getFriendsQueryOptions = ({ userId }: { userId: string }) =>
       if (res.error) {
         throw new Error(res.error.value);
       }
+
       return res.data;
     },
   } satisfies UseQueryOptions);
@@ -127,7 +192,11 @@ export const useGetFriends = () => {
   return {
     friends: friendsQuery.data ?? [],
     query: friendsQuery,
-    optimisticFriendsUpdate: makeArrayOptimisticUpdater<FiresideUser>({
+    optimisticFriendsUpdate: makeArrayOptimisticUpdater<{
+      friend: Friend;
+      user: FiresideUser;
+      otherUser: FiresideUser;
+    }>({
       queryClient: queryClient,
       queryKey: options.queryKey,
     }),
@@ -137,8 +206,11 @@ export const useGetFriends = () => {
 export const useAcceptFriendRequestMutation = () => {
   const { toast } = useToast();
 
-  const { optimisticFriendsUpdate } = useGetFriends();
+  const { optimisticFriendsUpdate, friends } = useGetFriends();
 
+  const { optimisticFriendRequestsUpdater, friendRequests } =
+    useGetUserFriendRequests();
+  const user = useDefinedUser();
   const acceptFriendRequestMutation = useMutation({
     mutationFn: async ({ requestId }: { requestId: string }) => {
       const res = await client.protected.user.friends.request.accept[
@@ -158,10 +230,27 @@ export const useAcceptFriendRequestMutation = () => {
         description: e.message,
       });
     },
-    onSuccess: (newFriend) => {
-      optimisticFriendsUpdate((prev) =>
-        prev ? [...prev, newFriend] : [newFriend]
+    onSuccess: (data) => {
+      const createdFriendUserId =
+        user.id === data.friend.userOneId
+          ? data.friend.userTwoId
+          : data.friend.userOneId;
+      optimisticFriendsUpdate((prev) => (prev ? [...prev, data] : [data]));
+      optimisticFriendRequestsUpdater((prev) =>
+        prev.map((request) => {
+          if (createdFriendUserId === request.fromUserId) {
+            return {
+              ...request,
+              deleted: true,
+            };
+          }
+
+          return request;
+        })
       );
+      toast({
+        title: "Request accepted!",
+      });
     },
   });
 

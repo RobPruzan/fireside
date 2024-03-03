@@ -6,14 +6,17 @@ import { Button, buttonVariants } from "../ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { ProfileDropdown } from "../ProfileDropdown";
 import { useAtom } from "jotai";
-import { dynamicSideBarOpen } from "./camps-state";
+import { dynamicSideBarOpen, useDefinedUser } from "./camps-state";
 import { useCurrentRoute } from "@/hooks/useCurrentRoute";
-import { useGetFriends } from "./friends-state";
+import { useGetFriends, useGetUserFriendRequests } from "./friends-state";
 
 export const CampStaticSideBar = () => {
   const [sideBarOpen, setSideBarOpen] = useAtom(dynamicSideBarOpen);
   const { friends } = useGetFriends();
   const currentRoute = useCurrentRoute();
+  const { friendRequests, openFriendRequests } = useGetUserFriendRequests();
+  const user = useDefinedUser();
+
   return (
     <>
       <div className="h-[10%]">
@@ -63,23 +66,6 @@ export const CampStaticSideBar = () => {
           </Link>
 
           <Link
-            to="/camp"
-            className={buttonVariants({
-              className: cn([
-                "flex gap-x-4 justify-between w-full py-6 min-w-fit",
-                currentRoute.routeId === "/camp-layout/camp" && "bg-accent",
-              ]),
-              variant: "ghost",
-            })}
-          >
-            <div className="flex items-center gap-x-4">
-              <Search />
-              <span className="text-lg"> Search</span>
-            </div>
-            <div className="text-lg items-center">0</div>
-          </Link>
-
-          <Link
             to="/camp/inbox"
             className={buttonVariants({
               className: cn([
@@ -94,7 +80,24 @@ export const CampStaticSideBar = () => {
               <Inbox />
               <span className="text-lg"> Inbox</span>
             </div>
-            <div className="text-lg items-center">0</div>
+            <div className="text-lg items-center">
+              {openFriendRequests.length}
+            </div>
+          </Link>
+          <Link
+            to="/camp"
+            className={buttonVariants({
+              className: cn([
+                "flex gap-x-4 justify-between w-full py-6 min-w-fit",
+                currentRoute.routeId === "/camp-layout/camp" && "bg-accent",
+              ]),
+              variant: "ghost",
+            })}
+          >
+            <div className="flex items-center gap-x-4">
+              <Search />
+              <span className="text-lg"> Search camps</span>
+            </div>
           </Link>
         </div>
       </div>
