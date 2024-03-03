@@ -7,6 +7,7 @@ import {
   pgTable,
   uuid,
   boolean,
+  alias,
 } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-typebox";
 import { DatesToString } from "@fireside/utils";
@@ -26,7 +27,7 @@ export const user = pgTable("user", {
   email: text("email").notNull(),
   password: text("password").notNull(),
   role: text("role").$type<"instructor" | "student">().notNull(),
-  createdAt: timestamp("created_at", { mode: "string" })
+  createdAt: timestamp("createdAt", { mode: "string" })
     .$defaultFn(() => new Date().toString())
     .notNull(),
   updatedAt: timestamp("updated_at", { mode: "string" }),
@@ -50,7 +51,7 @@ export const user_to_user = pgTable("friend", {
 export const camp = pgTable("camp", {
   id: uuid("id").defaultRandom().primaryKey(),
   name: text("name").notNull(),
-  createdAt: timestamp("created_at", { mode: "string" })
+  createdAt: timestamp("createdAt", { mode: "string" })
     .$defaultFn(() => new Date().toString())
     .notNull(),
   updatedAt: timestamp("updated_at", { mode: "string" }),
@@ -87,7 +88,7 @@ export const bonfire = pgTable("bonfire", {
     .references(() => camp.id)
     .notNull(),
   name: text("name").notNull(),
-  createdAt: timestamp("created_at", { mode: "string" })
+  createdAt: timestamp("createdAt", { mode: "string" })
     .$defaultFn(() => new Date().toString())
     .notNull(),
   updatedAt: timestamp("updated_at", { mode: "string" }),
@@ -103,7 +104,7 @@ export const userToBonfire = pgTable("userToBonfire", {
   bonfireId: uuid("bonfireId")
     .references(() => bonfire.id)
     .notNull(),
-  joinedAt: timestamp("created_at", { mode: "string" })
+  joinedAt: timestamp("createdAt", { mode: "string" })
     .$defaultFn(() => new Date().toString())
     .notNull(),
 });
@@ -117,6 +118,9 @@ export const friendRequest = pgTable("friendRequest", {
     .references(() => user.id)
     .notNull(),
   deleted: boolean("deleted").default(false),
+  createdAt: timestamp("createdAt", { mode: "string" })
+    .$defaultFn(() => new Date().toString())
+    .notNull(),
 });
 export type FriendRequest = InferSelectModel<typeof friendRequest>;
 
@@ -128,4 +132,10 @@ export const friend = pgTable("friend", {
   userTwoId: uuid("userTwoId")
     .references(() => user.id)
     .notNull(),
+  // problem for later
+  // createdAt: timestamp("createdAt", { mode: "string" })
+  //   .$defaultFn(() => new Date().toString())
+  //   .notNull(),
 });
+
+export type Friend = InferSelectModel<typeof friend>;

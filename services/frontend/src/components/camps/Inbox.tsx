@@ -4,48 +4,57 @@ import { LoadingSpinner } from "../ui/loading";
 import { useDefinedUser } from "./camps-state";
 import {
   useAcceptFriendRequestMutation,
+  useGetFriends,
   useGetUserFriendRequests,
 } from "./friends-state";
 
 export const Inbox = () => {
-  const { friendRequests } = useGetUserFriendRequests();
-  const user = useDefinedUser();
-  const acceptFriendRequestMutation = useAcceptFriendRequestMutation();
+  const { friendRequests, openFriendRequests } = useGetUserFriendRequests();
+
+  // const user = useDefinedUser();
   return (
     <div className="h-full w-full flex flex-col">
       {friendRequests.length === 0 && "No friend request"}
-      {friendRequests.map((friendRequest) => (
-        <div
-          className="w-full border-2 border-accent/50 rounded"
-          key={friendRequest.id}
-        >
-          From:{" "}
-          {user.id === friendRequest.fromUserId ? "Me" : friendRequest.toUserId}
-          To:{" "}
-          {user.id === friendRequest.toUserId ? "Me" : friendRequest.toUserId}
-          <Button
-            onClick={() => {
-              acceptFriendRequestMutation.mutate({
-                requestId: friendRequest.id,
-              });
-            }}
-          >
-            {acceptFriendRequestMutation.isPending ? (
-              <LoadingSpinner />
-            ) : (
-              "Accept Friend Request"
-            )}
-          </Button>
-        </div>
+      {openFriendRequests.map((friendRequest) => (
+        <FriendRequestItem friendRequest={friendRequest} />
       ))}
     </div>
   );
 };
 
 const FriendRequestItem = ({
-  friendRequests,
+  friendRequest,
 }: {
-  friendRequests: FriendRequest;
+  friendRequest: FriendRequest;
 }) => {
-  // retur
+  const acceptFriendRequestMutation = useAcceptFriendRequestMutation();
+  const user = useDefinedUser();
+
+  const from =
+    user.id === friendRequest.fromUserId ? "Me" : friendRequest.fromUserId;
+
+  return (
+    <div
+      className="w-full border-2 border-accent/50 rounded"
+      key={friendRequest.id}
+    >
+      From: {from}
+      To: {user.id === friendRequest.toUserId ? "Me" : friendRequest.toUserId}
+      {from !== "Me" && (
+        <Button
+          onClick={() => {
+            acceptFriendRequestMutation.mutate({
+              requestId: friendRequest.id,
+            });
+          }}
+        >
+          {acceptFriendRequestMutation.isPending ? (
+            <LoadingSpinner />
+          ) : (
+            "Accept Friend Request"
+          )}
+        </Button>
+      )}
+    </div>
+  );
 };
