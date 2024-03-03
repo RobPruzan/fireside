@@ -28,12 +28,22 @@ export const campRouter = ProtectedElysia({ prefix: "/camp" })
             .where(eq(campMember.campId, createdCamp.id))
         )[0].count + 1;
 
-      await db.insert(campMember).values({
-        campId: createdCamp.id,
-        userId: user.id,
-      });
+      const createdCampMember = (
+        await db
+          .insert(campMember)
+          .values({
+            campId: createdCamp.id,
+            userId: user.id,
+          })
+          .returning()
+      )[0];
 
-      return { ...createdCamp, count: createdCampMemberCount };
+      return {
+        ...createdCamp,
+        count: createdCampMemberCount,
+        campMember: createdCampMember,
+        user,
+      };
     },
     {
       body: campSchema,
@@ -68,7 +78,7 @@ export const campRouter = ProtectedElysia({ prefix: "/camp" })
         await db.select().from(camp).where(eq(camp.id, newCampMember.campId))
       )[0];
 
-      return joinedCamp;
+      return { ...joinedCamp, user, campMember: newCampMember };
     },
     {
       // body: campMembersWithoutUserInsertSchema,
@@ -81,7 +91,7 @@ export const campRouter = ProtectedElysia({ prefix: "/camp" })
     db
       .select({
         ...getTableColumns(camp),
-        user: getTableColumns(user),
+        user: cleanedUserCols,
         campMember: getTableColumns(campMember),
       })
       .from(campMember)
@@ -102,4 +112,5 @@ export const campRouter = ProtectedElysia({ prefix: "/camp" })
     return res;
   });
 
+const { token: tk, password: pwd, ...cleanedUserCols } = getTableColumns(user);
 // const getCampsWithCount = ({}:{campId:string,camMember}) => {}

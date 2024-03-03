@@ -43,7 +43,7 @@ export const useCreateCampMutation = (opts?: Opts) => {
   const setModalOpen = useSetAtom(createCampModalOpen);
 
   const { allCampsUpdater } = useAllCamps();
-  const { userCampsUpdater } = useUserCamps();
+  const { userCampsUpdater, camps } = useUserCamps();
 
   const createCampMutation = useMutation({
     mutationKey: ["create-camp"],
@@ -98,14 +98,14 @@ export const useUserCamps = (opts?: Opts) => {
   return {
     camps: campsQuery.data,
     query: campsQuery,
-    userCampsUpdater: makeArrayOptimisticUpdater<FiresideCamp>({
+    userCampsUpdater: makeArrayOptimisticUpdater({
       queryClient,
-      queryKey: options.queryKey,
+      options,
     }),
   };
 };
 
-export const useJoinCampMutation = (opts?: Opts) => {
+export const useJoinCampMutation = () => {
   const { toast } = useToast();
   const { allCampsUpdater } = useAllCamps();
   const { userCampsUpdater } = useUserCamps();
@@ -140,8 +140,6 @@ export const useJoinCampMutation = (opts?: Opts) => {
   return joinCampMutation;
 };
 
-type AllCampItem = FiresideCamp & { count: number };
-
 export const getAllCampsQueryOptions = ({ userId }: { userId: string }) =>
   ({
     queryKey: ["all-camps", userId],
@@ -156,16 +154,16 @@ export const getAllCampsQueryOptions = ({ userId }: { userId: string }) =>
   } satisfies UseQueryOptions);
 export const useAllCamps = () => {
   const user = useDefinedUser();
-  const allCampsQuery = useSuspenseQuery(
-    getAllCampsQueryOptions({ userId: user.id })
-  );
+  const options = getAllCampsQueryOptions({ userId: user.id });
+
+  const allCampsQuery = useSuspenseQuery(options);
 
   return {
     camps: allCampsQuery.data,
     query: allCampsQuery,
-    allCampsUpdater: makeArrayOptimisticUpdater<AllCampItem>({
+    allCampsUpdater: makeArrayOptimisticUpdater({
       queryClient,
-      queryKey: getAllCampsQueryOptions({ userId: user.id }).queryKey,
+      options,
     }),
   };
 };
