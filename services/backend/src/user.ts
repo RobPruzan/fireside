@@ -5,17 +5,22 @@ import {
   getOneYearAheadDate,
   count,
   type User,
+  friendRequest,
+  and,
+  or,
+  friend,
+  getTableColumns,
 } from "@fireside/db";
 
-import { Elysia, t, type CookieOptions } from "elysia";
+import E, { Elysia, t, type CookieOptions } from "elysia";
 import { ProtectedElysia, getDeleteAuthCookie } from "./lib";
 import { StatusMap } from "@fireside/utils/src/constants";
 import { db } from ".";
 
-const getHashedToken = async ({ token }: { token: string }) =>
-  await Bun.password.hash(token, {
-    algorithm: "bcrypt",
-    cost: 12,
+const getHash = async ({ str }: { str: string }) =>
+  await Bun.password.hash(str, {
+    algorithm: "argon2id",
+    timeCost: 3,
   });
 
 const getAuthCookie = ({ token }: { token: string }) =>
@@ -96,14 +101,11 @@ export const userRoute = new Elysia({
         throw new Error("User with email already registered");
       }
 
-      const passwordHash = await Bun.password.hash(ctx.body.password, {
-        algorithm: "bcrypt",
-        cost: 12,
-      });
+      const passwordHash = await getHash({ str: ctx.body.password });
 
       const originalToken = crypto.randomUUID();
 
-      const hashedToken = await getHashedToken({ token: originalToken });
+      const hashedToken = await getHash({ str: originalToken });
 
       const insertedToken = (
         await db
@@ -178,7 +180,7 @@ export const userRoute = new Elysia({
         throw new Error(`Invalid password for ${ctx.body.email}`);
       }
       const originalToken = crypto.randomUUID();
-      const hashedToken = await getHashedToken({ token: originalToken });
+      const hashedToken = await getHash({ str: originalToken });
 
       const insertedToken = (
         await db
@@ -231,6 +233,137 @@ export const userRoute = new Elysia({
 
 export const userProtectedRoute = ProtectedElysia({
   prefix: "/user",
-}).post("/log-out", (ctx) => {
-  ctx.cookie.auth.set(getDeleteAuthCookie());
-});
+})
+  .post("/log-out", (ctx) => {
+    ctx.cookie.auth.set(getDeleteAuthCookie());
+  })
+  .post(
+    "/friends/request/:to",
+    async (ctx) => {
+      const existingRequest = (
+        await db
+          .select()
+          .from(friendRequest)
+          .where(
+            and(
+              or(
+                eq(friendRequest.fromUserId, ctx.user.id),
+                eq(friendRequest.toUserId, ctx.user.id)
+              ),
+              or(
+                eq(friendRequest.fromUserId, ctx.params.to),
+                eq(friendRequest.toUserId, ctx.params.to)
+              )
+            )
+          )
+      ).at(0);
+      if (existingRequest && ctx.user.id === existingRequest.fromUserId) {
+        ctx.set.status = 409;
+        throw new Error("Friend request already sent to user");
+      }
+      if (existingRequest && ctx.user.id === existingRequest.toUserId) {
+        const insertPromise = db.insert(friend).values({
+          userOneId: ctx.user.id,
+          userTwoId: ctx.params.to,
+        });
+        const deleteRequestPromise = db
+          .update(friendRequest)
+          .set({
+            deleted: true,
+          })
+          .where(eq(friendRequest.id, existingRequest.id));
+        await Promise.all([insertPromise, deleteRequestPromise]);
+      }
+
+      const newFriendRequest = (
+        await db
+          .insert(friendRequest)
+          .values({
+            fromUserId: ctx.user.id,
+            toUserId: ctx.params.to,
+          })
+          .returning()
+      )[0];
+
+      return newFriendRequest;
+    },
+    {
+      params: t.Object({
+        to: t.String(),
+      }),
+    }
+  )
+  .get("/friends/request/retrieve", ({ user }) =>
+    db
+      .select()
+      .from(friendRequest)
+      .where(
+        or(
+          eq(friendRequest.fromUserId, user.id),
+          eq(friendRequest.toUserId, user.id)
+        )
+      )
+  )
+  .get("/get-all", () => db.select().from(user))
+  .post(
+    "/friends/request/accept/:requestId",
+    async (ctx) => {
+      const requestToAccept = (
+        await db
+          .select()
+          .from(friendRequest)
+          .where(eq(friendRequest.id, ctx.params.requestId))
+      ).at(0);
+
+      if (!requestToAccept) {
+        ctx.set.status = 400;
+        throw new Error("No friend request with specified id found");
+      }
+
+      if (requestToAccept.toUserId !== ctx.user.id) {
+        ctx.set.status = 401;
+        throw new Error("Cannot accept friend request not sent to you");
+      }
+
+      const createFriendPromise = db
+        .insert(friend)
+        .values({
+          userOneId: requestToAccept.fromUserId,
+          userTwoId: requestToAccept.toUserId,
+        })
+        .returning();
+
+      const deleteRequestPromise = db
+        .update(friendRequest)
+        .set({
+          deleted: true,
+        })
+        .where(eq(friendRequest.id, requestToAccept.id));
+
+      const [createdFriendRows] = await Promise.all([
+        createFriendPromise,
+        deleteRequestPromise,
+      ]);
+
+      const createdFriend = await db
+        .select()
+        .from(user)
+        .where(eq(user.id, createdFriendRows[0].id));
+      return createdFriend[0];
+    },
+    {
+      params: t.Object({
+        requestId: t.String(),
+      }),
+    }
+  )
+  .get("/friends/retrieve", (ctx) =>
+    db
+      .select(getTableColumns(user))
+      .from(friend)
+      .where(eq(friend.id, ctx.user.id))
+      .innerJoin(
+        user,
+        or(eq(friend.userOneId, user.id), eq(user.id, friend.userTwoId))
+      )
+  );

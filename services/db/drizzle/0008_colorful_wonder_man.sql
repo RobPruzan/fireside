@@ -1,0 +1,1 @@
+ALTER TABLE "friendRequest" RENAME COLUMN "delete" TO "deleted";

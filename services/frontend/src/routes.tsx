@@ -29,7 +29,11 @@ import { Explore } from "./components/camps/Explore";
 import { RootCampLayout } from "./components/camps/RootCampLayout";
 import { NavBar } from "./components/camps/NavBar";
 import Landing from "./components/landing/Landing";
-import { LoadingSpinner } from "./components/ui/loading";
+import {
+  LoadingScreen,
+  LoadingSection,
+  LoadingSpinner,
+} from "./components/ui/loading";
 import { createSyncStoragePersister } from "@tanstack/query-sync-storage-persister";
 
 import { Camp } from "./components/camps/Camp";
@@ -37,8 +41,13 @@ import { Friends } from "./components/camps/Friends";
 import {
   getAllCampsQueryOptions,
   getUserCampQueryOptions,
-} from "./components/camps/camp-state";
+} from "./components/camps/camps-state";
 import { Toaster } from "./components/ui/toaster";
+import {
+  getFriendRequestsQueryOptions,
+  usersQueryOptions,
+} from "./components/camps/friends-state";
+import { Inbox } from "./components/camps/Inbox";
 
 export const queryClient = new QueryClient({
   defaultOptions: {
@@ -99,7 +108,7 @@ export const registerPageRoute = createRoute({
   getParentRoute: () => rootLandingLayout,
   path: "/register",
   component: Register,
-  pendingComponent: LoadingSpinner,
+  pendingComponent: LoadingSection,
   loader: async ({ context: { queryClient } }) => {
     const user = await getUser({ queryClient });
     if (user) {
@@ -116,7 +125,7 @@ export const profileRoute = createRoute({
       <Profile />
     </ReactiveAuthRedirect>
   ),
-  pendingComponent: LoadingSpinner,
+  pendingComponent: LoadingSection,
   loader: async ({ context: { queryClient } }) => {
     const user = await getUser({ queryClient });
     if (!user) {
@@ -130,7 +139,7 @@ export const loginPageRoute = createRoute({
   getParentRoute: () => rootLandingLayout,
   path: "/login",
   component: SignUp,
-  pendingComponent: LoadingSpinner,
+  pendingComponent: LoadingSection,
   loader: async ({ context: { queryClient } }) => {
     const user = await getUser({ queryClient });
     if (user) {
@@ -148,6 +157,7 @@ export const campLayoutRoute = createRoute({
     if (!user) {
       throw redirect({ from: "/register", to: "/" });
     }
+
     await Promise.all([
       queryClient.ensureQueryData(
         getUserCampQueryOptions({ userId: user?.id })
@@ -157,11 +167,7 @@ export const campLayoutRoute = createRoute({
 
     return { user };
   },
-  pendingComponent: () => (
-    <div className="h-screen w-screen flex items-center justify-center">
-      <LoadingSpinner />
-    </div>
-  ),
+  pendingComponent: LoadingScreen,
   component: () => (
     <ReactiveAuthRedirect>
       <RootCampLayout />
@@ -190,14 +196,41 @@ export const exploreRoute = createRoute({
 export const friendsRoute = createRoute({
   getParentRoute: () => campLayoutRoute,
   path: "/camp/friends",
+  pendingComponent: LoadingSection,
   loader: async ({ context: { queryClient } }) => {
     const user = await getUser({ queryClient });
     if (!user) {
       throw redirect({ from: "/camp/friends", to: "/login" });
     }
+
+    const friendRequestsPromise = queryClient.ensureQueryData(
+      getFriendRequestsQueryOptions({ userId: user.id })
+    );
+    const getUsersPromise = queryClient.ensureQueryData(usersQueryOptions);
+
+    await Promise.all([friendRequestsPromise, getUsersPromise]);
     return { user };
   },
   component: Friends,
+});
+
+export const inboxRoute = createRoute({
+  getParentRoute: () => campLayoutRoute,
+  path: "/camp/inbox",
+  pendingComponent: LoadingSection,
+  loader: async ({ context: { queryClient } }) => {
+    const user = await getUser({ queryClient });
+    if (!user) {
+      throw redirect({ from: "/camp/friends", to: "/login" });
+    }
+
+    await queryClient.ensureQueryData(
+      getFriendRequestsQueryOptions({ userId: user.id })
+    );
+
+    return { user };
+  },
+  component: Inbox,
 });
 export const campRoute = createRoute({
   getParentRoute: () => campLayoutRoute,
@@ -219,7 +252,12 @@ export const routeTree = rootRoute.addChildren([
     loginPageRoute,
     profileRoute,
   ]),
-  campLayoutRoute.addChildren([exploreRoute, campRoute, friendsRoute]),
+  campLayoutRoute.addChildren([
+    exploreRoute,
+    campRoute,
+    friendsRoute,
+    inboxRoute,
+  ]),
 ]);
 
 export const router = createRouter({

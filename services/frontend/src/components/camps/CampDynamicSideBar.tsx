@@ -24,7 +24,7 @@ import {
   dynamicSideBarOpen,
   useUserCamps,
   useCreateCampMutation,
-} from "./camp-state";
+} from "./camps-state";
 export const CampDynamicSideBar = () => {
   const setSideBarOpen = useSetAtom(dynamicSideBarOpen);
   const [modalOpen, setModalOpen] = useAtom(createCampModalOpen);
@@ -71,7 +71,12 @@ export const CampDynamicSideBar = () => {
                 className="camp-room-name"
               />
               <DialogFooter>
-                <Button variant={"outline"}>Cancel</Button>
+                <Button
+                  onClick={() => setSideBarOpen(false)}
+                  variant={"outline"}
+                >
+                  Cancel
+                </Button>
                 <Button
                   className="min-w-[78px]"
                   onClick={() =>

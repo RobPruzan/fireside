@@ -1,6 +1,6 @@
 import { Input } from "../ui/input";
 import { useState } from "react";
-import { useAllCamps, useJoinCampMutation, useUserCamps } from "./camp-state";
+import { useAllCamps, useJoinCampMutation, useUserCamps } from "./camps-state";
 import { Button } from "../ui/button";
 import { LoadingSpinner } from "../ui/loading";
 import { FiresideCamp } from "@fireside/db";
@@ -39,7 +39,6 @@ export const Explore = () => {
 const ExploreCard = ({ camp }: { camp: FiresideCamp & { count: number } }) => {
   const joinCampMutation = useJoinCampMutation();
   const { camps } = useUserCamps();
-  console.log(camps, camp.id);
   return (
     <div
       key={camp.id}
@@ -62,6 +61,7 @@ const ExploreCard = ({ camp }: { camp: FiresideCamp & { count: number } }) => {
             <span>Joined</span> <CheckCircle className="text-green-500" />
           </div>
         )}
+        <div>{new Date(camp.createdAt).toLocaleString()}</div>
       </div>
     </div>
   );
