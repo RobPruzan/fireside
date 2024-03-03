@@ -15,6 +15,9 @@ importers:
       '@elysiajs/cors':
         specifier: ^0.8.0
         version: 0.8.0(elysia@0.8.17)
+      '@elysiajs/server-timing':
+        specifier: ^0.8.0
+        version: 0.8.0(elysia@0.8.17)
       '@fireside/db':
         specifier: '*'
         version: link:../db
@@ -29,7 +32,7 @@ importers:
         version: 0.1.1(@sinclair/typebox@0.32.14)(drizzle-orm@0.29.3)
       elysia:
         specifier: ^0.8.17
-        version: 0.8.17(@sinclair/typebox@0.32.14)(typescript@5.3.3)
+        version: 0.8.17(@sinclair/typebox@0.32.14)
       typescript:
         specifier: ^5.0.0
         version: 5.3.3
@@ -124,7 +127,7 @@ importers:
         version: 2.1.0
       elysia:
         specifier: ^0.8.17
-        version: 0.8.17(@sinclair/typebox@0.32.14)(typescript@5.3.3)
+        version: 0.8.17(typescript@5.3.3)
       jotai:
         specifier: ^2.7.0
         version: 2.7.0(@types/react@18.2.56)(react@18.2.0)
@@ -443,7 +446,7 @@ packages:
     peerDependencies:
       elysia: '>= 0.8.0'
     dependencies:
-      elysia: 0.8.17(@sinclair/typebox@0.32.14)(typescript@5.3.3)
+      elysia: 0.8.17(@sinclair/typebox@0.32.14)
     dev: false
 
   /@elysiajs/eden@0.8.1(elysia@0.8.17):
@@ -455,8 +458,16 @@ packages:
       '@sinclair/typebox':
         optional: true
     dependencies:
-      elysia: 0.8.17(@sinclair/typebox@0.32.14)(typescript@5.3.3)
+      elysia: 0.8.17(typescript@5.3.3)
       superjson: 2.2.1
+    dev: false
+
+  /@elysiajs/server-timing@0.8.0(elysia@0.8.17):
+    resolution: {integrity: sha512-dGj2rDPjlH05ctD0SnyS3B1QGGtlyz+woi09tB8hTnHovobRdAmqowGdd0bZGvT1wgSOIs1vwZr9EOubf3M60A==}
+    peerDependencies:
+      elysia: '>= 0.8.0'
+    dependencies:
+      elysia: 0.8.17(@sinclair/typebox@0.32.14)
     dev: false
 
   /@esbuild-kit/core-utils@3.3.2:
@@ -2519,7 +2530,7 @@ packages:
     resolution: {integrity: sha512-zjqzx4N7xGdl5468G+vcgzDhaHkaYgVcf9MqgexcTqsl2UHSCmOj/Bi3HAprg4BZCpC7HyD8a6nZl6QAZf72gw==}
     dev: true
 
-  /elysia@0.8.17(@sinclair/typebox@0.32.14)(typescript@5.3.3):
+  /elysia@0.8.17(@sinclair/typebox@0.32.14):
     resolution: {integrity: sha512-hqKHKUxbvlDHnobudtna5nBoGiZ4oa0xdnhynLAJF3+6gTYHAcQ/8/IyxUx5Az5Uy0zTuNiv7m2bIFu7xeMiWg==}
     peerDependencies:
       '@sinclair/typebox': '>= 0.31.0'
@@ -2534,6 +2545,27 @@ packages:
         optional: true
     dependencies:
       '@sinclair/typebox': 0.32.14
+      cookie: 0.6.0
+      eventemitter3: 5.0.1
+      fast-decode-uri-component: 1.0.1
+      fast-querystring: 1.1.2
+      memoirist: 0.1.10
+    dev: false
+
+  /elysia@0.8.17(typescript@5.3.3):
+    resolution: {integrity: sha512-hqKHKUxbvlDHnobudtna5nBoGiZ4oa0xdnhynLAJF3+6gTYHAcQ/8/IyxUx5Az5Uy0zTuNiv7m2bIFu7xeMiWg==}
+    peerDependencies:
+      '@sinclair/typebox': '>= 0.31.0'
+      openapi-types: '>= 12.0.0'
+      typescript: '>= 5.0.0'
+    peerDependenciesMeta:
+      '@sinclair/typebox':
+        optional: true
+      openapi-types:
+        optional: true
+      typescript:
+        optional: true
+    dependencies:
       cookie: 0.6.0
       eventemitter3: 5.0.1
       fast-decode-uri-component: 1.0.1

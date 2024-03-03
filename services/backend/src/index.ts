@@ -4,6 +4,7 @@ import { Elysia } from "elysia";
 import { userProtectedRoute, userRoute } from "./user";
 import { campRouter } from "./camp";
 import { createDB } from "@fireside/db";
+import serverTiming from "@elysiajs/server-timing";
 
 const port = 8080;
 
@@ -13,6 +14,7 @@ const authRoutes = new Elysia().use(campRouter).use(userProtectedRoute);
 const noAuthRoutes = new Elysia().use(userRoute);
 
 const app = new Elysia()
+  .use(serverTiming())
   .use(
     cors({
       credentials: true,
@@ -30,3 +32,4 @@ const app = new Elysia()
 
 console.log(`Running on port ${port}`);
 export type App = typeof app;
+//

@@ -1,12 +1,12 @@
 import { ThemeToggle } from "@/hooks/useTheme";
 import { cn } from "@/lib/utils";
 import { Link } from "@tanstack/react-router";
-import { PanelRight, Search, Settings, User } from "lucide-react";
+import { Inbox, PanelRight, Search, Settings, User } from "lucide-react";
 import { Button, buttonVariants } from "../ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { ProfileDropdown } from "../ProfileDropdown";
 import { useAtom } from "jotai";
-import { dynamicSideBarOpen } from "./camp-state";
+import { dynamicSideBarOpen } from "./camps-state";
 import { useCurrentRoute } from "@/hooks/useCurrentRoute";
 
 export const CampStaticSideBar = () => {
@@ -73,6 +73,24 @@ export const CampStaticSideBar = () => {
             <div className="flex items-center gap-x-4">
               <Search />
               <span className="text-lg"> Search</span>
+            </div>
+            <div className="text-lg items-center">0</div>
+          </Link>
+
+          <Link
+            to="/camp/inbox"
+            className={buttonVariants({
+              className: cn([
+                "flex gap-x-4 justify-between w-full py-6 min-w-fit",
+                currentRoute.routeId === "/camp-layout/camp/inbox" &&
+                  "bg-accent",
+              ]),
+              variant: "ghost",
+            })}
+          >
+            <div className="flex items-center gap-x-4">
+              <Inbox />
+              <span className="text-lg"> Inbox</span>
             </div>
             <div className="text-lg items-center">0</div>
           </Link>

@@ -17,6 +17,8 @@ import {
 import { useSetAtom } from "jotai";
 import { Nullish } from "@fireside/utils";
 import { FiresideCamp } from "@fireside/db";
+import { queryClient } from "@/routes";
+import { makeArrayOptimisticUpdater } from "@/lib/utils";
 
 export const dynamicSideBarOpen = atom(true);
 export const createCampModalOpen = atom(false);
@@ -37,12 +39,11 @@ export const useDefinedUser = (opts?: Opts) => {
 type Opts = { user?: FiresideUser };
 
 export const useCreateCampMutation = (opts?: Opts) => {
-  const queryClient = useQueryClient();
   const { toast } = useToast();
-
-  const user = useDefinedUser(opts);
-
   const setModalOpen = useSetAtom(createCampModalOpen);
+
+  const { allCampsUpdater } = useAllCamps();
+  const { userCampsUpdater } = useUserCamps();
 
   const createCampMutation = useMutation({
     mutationKey: ["create-camp"],
@@ -55,20 +56,8 @@ export const useCreateCampMutation = (opts?: Opts) => {
       return res.data;
     },
     onSuccess: (camp) => {
-      queryClient.setQueryData<Array<FiresideCamp>>(
-        getUserCampQueryOptions({ userId: user.id }).queryKey,
-        (prev) => (prev ? [...prev, camp] : [camp])
-      );
-
-      queryClient.setQueryData<Array<AllCampItem>>(
-        getAllCampsQueryOptions({ userId: user.id }).queryKey,
-        (prev) => (prev ? [...prev, camp] : [camp])
-      );
-
-      // queryClient.setQueryData<Array<FiresideCamp>>(
-      //   getUserCampQueryOptions({ userId: user.id }).queryKey,
-      //   (prev) => [...(prev ?? []), camp]
-      // );
+      userCampsUpdater((prev) => (prev ? [...prev, camp] : [camp]));
+      allCampsUpdater((prev) => (prev ? [...prev, camp] : [camp]));
       setModalOpen(false);
     },
     onError: () =>
@@ -103,16 +92,23 @@ export const useCampsQuery = () => {
 
 export const useUserCamps = (opts?: Opts) => {
   const user = useDefinedUser(opts);
-  const campsQuery = useSuspenseQuery(
-    getUserCampQueryOptions({ userId: user.id })
-  );
-  return { camps: campsQuery.data, query: campsQuery };
+  const options = getUserCampQueryOptions({ userId: user.id });
+
+  const campsQuery = useSuspenseQuery(options);
+  return {
+    camps: campsQuery.data,
+    query: campsQuery,
+    userCampsUpdater: makeArrayOptimisticUpdater<FiresideCamp>({
+      queryClient,
+      queryKey: options.queryKey,
+    }),
+  };
 };
 
 export const useJoinCampMutation = (opts?: Opts) => {
-  const user = useDefinedUser(opts);
   const { toast } = useToast();
-  const queryClient = useQueryClient();
+  const { allCampsUpdater } = useAllCamps();
+  const { userCampsUpdater } = useUserCamps();
   const joinCampMutation = useMutation({
     mutationFn: async (joinCampOpts: { campId: string }) => {
       const res = await client.protected.camp.join[joinCampOpts.campId].post();
@@ -130,22 +126,14 @@ export const useJoinCampMutation = (opts?: Opts) => {
       });
     },
     onSuccess: (joinedCamp) => {
-      queryClient.setQueryData<Array<FiresideCamp>>(
-        getUserCampQueryOptions({ userId: user.id }).queryKey,
-        (prev) => {
-          return !prev ? [joinedCamp] : [...prev, joinedCamp];
-        }
-      );
-      queryClient.setQueryData<Array<AllCampItem>>(
-        getAllCampsQueryOptions({ userId: user.id }).queryKey,
-        (prev) => {
-          return prev?.map((camp) =>
-            camp.id === joinedCamp.id
-              ? { ...camp, count: camp.count + 1 }
-              : camp
-          );
-        }
-      );
+      userCampsUpdater((prev) => {
+        return !prev ? [joinedCamp] : [...prev, joinedCamp];
+      });
+      allCampsUpdater((prev) => {
+        return prev?.map((camp) =>
+          camp.id === joinedCamp.id ? { ...camp, count: camp.count + 1 } : camp
+        );
+      });
     },
   });
 
@@ -172,5 +160,12 @@ export const useAllCamps = () => {
     getAllCampsQueryOptions({ userId: user.id })
   );
 
-  return { camps: allCampsQuery.data, query: allCampsQuery };
+  return {
+    camps: allCampsQuery.data,
+    query: allCampsQuery,
+    allCampsUpdater: makeArrayOptimisticUpdater<AllCampItem>({
+      queryClient,
+      queryKey: getAllCampsQueryOptions({ userId: user.id }).queryKey,
+    }),
+  };
 };

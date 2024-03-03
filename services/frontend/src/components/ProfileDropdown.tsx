@@ -69,10 +69,6 @@ export const ProfileDropdown = () => {
             <DropdownMenu
               open={open}
               onOpenChange={(v) => {
-                // if (logoutMutation.isPending) {
-                //   return;
-                // }
-
                 setOpen(v);
               }}
             >

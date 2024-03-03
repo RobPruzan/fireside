@@ -1,14 +1,29 @@
 import { cn } from "@/lib/utils";
-import { Outlet } from "@tanstack/react-router";
+import { Outlet, useLoaderData, useRouter } from "@tanstack/react-router";
 
 import { CampStaticSideBar } from "./CampStaticSideBar";
 import { CampDynamicSideBar } from "./CampDynamicSideBar";
 import { useAtomValue } from "jotai";
-import { dynamicSideBarOpen } from "./camp-state";
+import { dynamicSideBarOpen } from "./camps-state";
 import { Toaster } from "../ui/toaster";
+import { useEffect } from "react";
+import { friendsRoute } from "@/routes";
 
 export const RootCampLayout = () => {
   const sideBarOpen = useAtomValue(dynamicSideBarOpen);
+
+  const router = useRouter();
+
+  useEffect(() => {
+    router.preloadRoute({
+      to: "/camp/friends",
+      params: {},
+    });
+    router.preloadRoute({
+      to: "/camp/inbox",
+      params: {},
+    });
+  }, []);
 
   return (
     <div className="h-screen w-screen flex">

@@ -1,8 +1,16 @@
 import { Type } from "@sinclair/typebox";
 import { InferSelectModel } from "drizzle-orm";
-import { serial, text, timestamp, pgTable, uuid } from "drizzle-orm/pg-core";
+import {
+  serial,
+  text,
+  timestamp,
+  pgTable,
+  uuid,
+  boolean,
+} from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-typebox";
 import { DatesToString } from "@fireside/utils";
+
 export const getOneYearAheadDate = () => {
   const currentDate = new Date();
   return new Date(
@@ -97,5 +105,27 @@ export const userToBonfire = pgTable("userToBonfire", {
     .notNull(),
   joinedAt: timestamp("created_at", { mode: "string" })
     .$defaultFn(() => new Date().toString())
+    .notNull(),
+});
+
+export const friendRequest = pgTable("friendRequest", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  fromUserId: uuid("fromUserId")
+    .references(() => user.id)
+    .notNull(),
+  toUserId: uuid("toUserId")
+    .references(() => user.id)
+    .notNull(),
+  deleted: boolean("deleted").default(false),
+});
+export type FriendRequest = InferSelectModel<typeof friendRequest>;
+
+export const friend = pgTable("friend", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  userOneId: uuid("userOneId")
+    .references(() => user.id)
+    .notNull(),
+  userTwoId: uuid("userTwoId")
+    .references(() => user.id)
     .notNull(),
 });
