@@ -1,15 +1,14 @@
 import { ThemeToggle } from "@/hooks/useTheme";
 import { useUserQuery } from "@/lib/useUserQuery";
 
-import { Link, useRouterState } from "@tanstack/react-router";
+import { Link, useMatchRoute } from "@tanstack/react-router";
 import { buttonVariants } from "../ui/button";
 import { ProfileDropdown } from "../ProfileDropdown";
 import { cn } from "@/lib/utils";
-import { useCurrentRoute } from "@/hooks/useCurrentRoute";
 
 export const NavBar = () => {
   const user = useUserQuery();
-  const match = useCurrentRoute();
+  const match = useMatchRoute();
 
   return (
     <div className="flex justify-between items-center mx-auto w-full px-10 h-16">
@@ -24,16 +23,12 @@ export const NavBar = () => {
 
         {!user.data && (
           <Link
-            disabled={
-              match.routeId === "/root/login" ||
-              match.routeId === "/root/register"
-            }
+            disabled={match({ to: "/login" }) || match({ to: "/register" })}
             to="/register"
             className={buttonVariants({
               variant: "ghost",
               className: cn([
-                (match.routeId === "/root/login" ||
-                  match.routeId === "/root/register") &&
+                (match({ to: "/login" }) || match({ to: "/register" })) &&
                   "bg-accent",
               ]),
             })}

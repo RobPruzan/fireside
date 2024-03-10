@@ -1,21 +1,20 @@
 import { ThemeToggle } from "@/hooks/useTheme";
 import { cn } from "@/lib/utils";
-import { Link } from "@tanstack/react-router";
+import { Link, useMatchRoute } from "@tanstack/react-router";
 import { Inbox, PanelRight, Search, Settings, User } from "lucide-react";
 import { Button, buttonVariants } from "../ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { ProfileDropdown } from "../ProfileDropdown";
 import { useAtom } from "jotai";
-import { dynamicSideBarOpen, useDefinedUser } from "./camps-state";
-import { useCurrentRoute } from "@/hooks/useCurrentRoute";
+import { dynamicSideBarOpen } from "./camps-state";
 import { useGetFriends, useGetUserFriendRequests } from "./friends-state";
 
 export const CampStaticSideBar = () => {
   const [sideBarOpen, setSideBarOpen] = useAtom(dynamicSideBarOpen);
   const { friends } = useGetFriends();
-  const currentRoute = useCurrentRoute();
+
+  const match = useMatchRoute();
   const { openFriendRequests } = useGetUserFriendRequests();
-  const user = useDefinedUser();
 
   return (
     <>
@@ -52,8 +51,7 @@ export const CampStaticSideBar = () => {
             className={buttonVariants({
               className: cn([
                 "flex gap-x-4 justify-between w-full py-6 min-w-fit",
-                currentRoute.routeId ===
-                  "/root-auth/camp-layout/camp/friends" && "bg-accent",
+                match({ to: "/camp/friends" }) && "bg-accent",
               ]),
               variant: "ghost",
             })}
@@ -70,8 +68,7 @@ export const CampStaticSideBar = () => {
             className={buttonVariants({
               className: cn([
                 "flex gap-x-4 justify-between w-full py-6 min-w-fit",
-                currentRoute.routeId === "/root-auth/camp-layout/camp/inbox" &&
-                  "bg-accent",
+                match({ to: "/camp/inbox" }) && "bg-accent",
               ]),
               variant: "ghost",
             })}
@@ -89,8 +86,7 @@ export const CampStaticSideBar = () => {
             className={buttonVariants({
               className: cn([
                 "flex gap-x-4 justify-between w-full py-6 min-w-fit",
-                currentRoute.routeId === "/root-auth/camp-layout/camp" &&
-                  "bg-accent",
+                match({ to: "/camp" }) && "bg-accent",
               ]),
               variant: "ghost",
             })}
