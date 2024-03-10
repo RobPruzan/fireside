@@ -1,5 +1,5 @@
 import { cn } from "@/lib/utils";
-import { Link } from "@tanstack/react-router";
+import { Link, useMatchRoute } from "@tanstack/react-router";
 import { ChevronLeft, MoreVertical, PlusCircle } from "lucide-react";
 import { useState } from "react";
 import { Button, buttonVariants } from "../ui/button";
@@ -16,8 +16,6 @@ import { Input } from "../ui/input";
 import { Label } from "../ui/label";
 
 import { LoadingSpinner } from "../ui/loading";
-import { hasKey } from "@fireside/utils";
-import { useCurrentRoute } from "@/hooks/useCurrentRoute";
 import { useAtom, useSetAtom } from "jotai";
 import {
   createCampModalOpen,
@@ -31,9 +29,10 @@ export const CampDynamicSideBar = () => {
   const [campSearch, setCampSearch] = useState("");
   const [newCampRoomName, setNewCampRoomName] = useState("");
   const { camps } = useUserCamps();
-  const currentRoute = useCurrentRoute();
+  const match = useMatchRoute();
   const createCampMutation = useCreateCampMutation();
 
+  console.log(match({ to: "/camp/$campId", from: "/camp" }));
   return (
     <>
       <Button
@@ -122,11 +121,10 @@ export const CampDynamicSideBar = () => {
                   className={buttonVariants({
                     className: cn([
                       "py-9 w-full flex justify-between",
-                      currentRoute.routeId ===
-                        "/root-auth/camp-layout/camp/$campId" &&
-                        hasKey(currentRoute.params, "campId") &&
-                        currentRoute.params.campId === camp.id &&
-                        "bg-accent",
+                      match({
+                        to: "/camp/$campId",
+                        params: { campId: camp.id },
+                      }) && "bg-accent",
                     ]),
                     variant: "ghost",
                   })}
