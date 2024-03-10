@@ -14,7 +14,7 @@ export const CampStaticSideBar = () => {
   const [sideBarOpen, setSideBarOpen] = useAtom(dynamicSideBarOpen);
   const { friends } = useGetFriends();
   const currentRoute = useCurrentRoute();
-  const { friendRequests, openFriendRequests } = useGetUserFriendRequests();
+  const { openFriendRequests } = useGetUserFriendRequests();
   const user = useDefinedUser();
 
   return (
@@ -52,8 +52,8 @@ export const CampStaticSideBar = () => {
             className={buttonVariants({
               className: cn([
                 "flex gap-x-4 justify-between w-full py-6 min-w-fit",
-                currentRoute.routeId === "/camp-layout/camp/friends" &&
-                  "bg-accent",
+                currentRoute.routeId ===
+                  "/root-auth/camp-layout/camp/friends" && "bg-accent",
               ]),
               variant: "ghost",
             })}
@@ -70,7 +70,7 @@ export const CampStaticSideBar = () => {
             className={buttonVariants({
               className: cn([
                 "flex gap-x-4 justify-between w-full py-6 min-w-fit",
-                currentRoute.routeId === "/camp-layout/camp/inbox" &&
+                currentRoute.routeId === "/root-auth/camp-layout/camp/inbox" &&
                   "bg-accent",
               ]),
               variant: "ghost",
@@ -89,7 +89,8 @@ export const CampStaticSideBar = () => {
             className={buttonVariants({
               className: cn([
                 "flex gap-x-4 justify-between w-full py-6 min-w-fit",
-                currentRoute.routeId === "/camp-layout/camp" && "bg-accent",
+                currentRoute.routeId === "/root-auth/camp-layout/camp" &&
+                  "bg-accent",
               ]),
               variant: "ghost",
             })}

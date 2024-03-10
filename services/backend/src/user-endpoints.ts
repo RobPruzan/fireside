@@ -11,6 +11,7 @@ import {
   aliasedTable,
   token,
   friend,
+  sql,
   // alias,
 } from "@fireside/db";
 

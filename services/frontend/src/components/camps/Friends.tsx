@@ -68,11 +68,6 @@ const SearchFriendItem = ({
       key={externalUser.id}
     >
       <div>{externalUser.email}</div>
-      {/* {externalUser.hasFriendRequest && (
-        <div className="flex">
-          Request sent <Check className="text-green-500" />
-        </div>
-      )} */}
       {run(() => {
         switch (externalUser.status) {
           case "is-friend": {

@@ -17,9 +17,9 @@ import { CircleUser } from "lucide-react";
 import { Button } from "./ui/button";
 import { useNavigate } from "@tanstack/react-router";
 
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "./ui/use-toast";
-import { queryClient } from "@/routes";
+
 import { client } from "@/edenClient";
 import { useState } from "react";
 //
@@ -27,6 +27,7 @@ export const ProfileDropdown = () => {
   const user = useUserQuery();
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
+  const queryClient = useQueryClient()
   const logoutMutation = useMutation({
     mutationFn: async () => {
       const res = await client.protected.user["log-out"].post();
