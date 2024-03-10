@@ -73,20 +73,3 @@ export const getNotMeUser = ({
 
   return null;
 };
-
-export const getNotMeUserId = ({
-  users,
-  mainUserId,
-}: {
-  users: { userOneId: string; userTwoId: string };
-  mainUserId: string;
-}) => {
-  if (users.userOneId === mainUserId) {
-    return users.userTwoId;
-  }
-  if (users.userTwoId === mainUserId) {
-    return users.userOneId;
-  }
-
-  return null;
-};
