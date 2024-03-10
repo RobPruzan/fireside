@@ -43,7 +43,7 @@ export const useCreateCampMutation = () => {
   const setModalOpen = useSetAtom(createCampModalOpen);
 
   const { allCampsUpdater } = useAllCamps();
-  const { userCampsUpdater, camps } = useUserCamps();
+  const { userCampsUpdater } = useUserCamps();
 
   const createCampMutation = useMutation({
     mutationKey: ["create-camp"],
