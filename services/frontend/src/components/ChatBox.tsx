@@ -11,9 +11,9 @@ function Chat(){
       const res = await client.user.chat.post({
         
           // id: ,/*No clue on how to get the  id */,
-          displayName: client.user.username,/* idk how to get the users id/dispalyName */
+          displayName: client.user.username,// idk how to get the users id/dispalyName 
           roomName: "Default", // Replace with the actual room name
-          chatMessage: message,
+          chatMessage: message
         
       });
     }
