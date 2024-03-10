@@ -1,6 +1,5 @@
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { Outlet } from "@tanstack/react-router";
-import { Toaster } from "../ui/toaster";
 import { NavBar } from "../camps/NavBar";
 
 export const RootLandingLayout = () => {

@@ -1,9 +1,8 @@
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { Setter } from "@/types/utils";
 import { Moon, Sun } from "lucide-react";
 import { createContext, useContext, useEffect, useState } from "react";
-
-export type Setter<T> = React.Dispatch<React.SetStateAction<T>>;
 
 type Theme = "dark" | "light";
 
