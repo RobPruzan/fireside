@@ -11,7 +11,6 @@ import {
 export const Inbox = () => {
   const { friendRequests, openFriendRequests } = useGetUserFriendRequests();
 
-  // const user = useDefinedUser();
   return (
     <div className="h-full w-full flex flex-col">
       {friendRequests.length === 0 && "No friend request"}

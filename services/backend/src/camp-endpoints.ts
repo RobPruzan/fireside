@@ -81,7 +81,6 @@ export const campRouter = ProtectedElysia({ prefix: "/camp" })
       return { ...joinedCamp, user, campMember: newCampMember };
     },
     {
-      // body: campMembersWithoutUserInsertSchema,
       params: t.Object({
         campId: t.String(),
       }),

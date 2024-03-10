@@ -122,7 +122,8 @@ export const CampDynamicSideBar = () => {
                   className={buttonVariants({
                     className: cn([
                       "py-9 w-full flex justify-between",
-                      currentRoute.routeId === "/camp-layout/camp/$campId" &&
+                      currentRoute.routeId ===
+                        "/root-auth/camp-layout/camp/$campId" &&
                         hasKey(currentRoute.params, "campId") &&
                         currentRoute.params.campId === camp.id &&
                         "bg-accent",

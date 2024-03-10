@@ -25,15 +25,15 @@ export const NavBar = () => {
         {!user.data && (
           <Link
             disabled={
-              match.routeId === "/layout/login" ||
-              match.routeId === "/layout/register"
+              match.routeId === "/root/login" ||
+              match.routeId === "/root/register"
             }
             to="/register"
             className={buttonVariants({
               variant: "ghost",
               className: cn([
-                (match.routeId === "/layout/login" ||
-                  match.routeId === "/layout/register") &&
+                (match.routeId === "/root/login" ||
+                  match.routeId === "/root/register") &&
                   "bg-accent",
               ]),
             })}

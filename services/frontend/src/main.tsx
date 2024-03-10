@@ -1,15 +1,29 @@
 import "./index.css";
 import React from "react";
 import ReactDOM from "react-dom/client";
-import { edenTreaty } from "@elysiajs/eden";
 import { z } from "zod";
-import type { App } from "@fireside/backend";
 
 import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client";
-import { RouterProvider } from "@tanstack/react-router";
+import { RouterProvider, createRouter } from "@tanstack/react-router";
 import { ThemeProvider } from "./hooks/useTheme";
 
-import { persister, queryClient, router } from "./routes";
+import {
+  campLayoutRoute,
+  exploreRoute,
+  campRoute,
+  friendsRoute,
+  inboxRoute,
+} from "./routes/camp-routes";
+import {
+  rootRoute,
+  rootLandingLayout,
+  rootLandingRoute,
+  registerPageRoute,
+  loginPageRoute,
+  profileRoute,
+} from "./routes/root-routes";
+import { persister, queryClient } from "./query";
+import { authRootLayout } from "./routes/layouts";
 
 const envSchema = z.object(
   {
@@ -28,6 +42,38 @@ envSchema.parse({
 
 declare global {
   interface ImportMetaEnv extends z.infer<typeof envSchema> {}
+}
+
+const routeTree = rootRoute.addChildren([
+  rootLandingLayout.addChildren([
+    rootLandingRoute,
+    registerPageRoute,
+    loginPageRoute,
+    profileRoute,
+  ]),
+  authRootLayout.addChildren([
+    campLayoutRoute.addChildren([
+      exploreRoute,
+      campRoute,
+      friendsRoute,
+      inboxRoute,
+    ]),
+  ]),
+]);
+
+const router = createRouter({
+  routeTree,
+  defaultPreload: "intent",
+  defaultPreloadStaleTime: 0,
+  context: {
+    queryClient,
+  },
+});
+
+declare module "@tanstack/react-router" {
+  interface Register {
+    router: typeof router;
+  }
 }
 
 ReactDOM.createRoot(document.getElementById("root")!).render(

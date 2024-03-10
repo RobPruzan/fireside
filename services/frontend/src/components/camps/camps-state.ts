@@ -17,7 +17,7 @@ import {
 import { useSetAtom } from "jotai";
 import { Nullish } from "@fireside/utils";
 import { FiresideCamp } from "@fireside/db";
-import { queryClient } from "@/routes";
+
 import { makeArrayOptimisticUpdater } from "@/lib/utils";
 
 export const dynamicSideBarOpen = atom(true);
@@ -38,7 +38,7 @@ export const useDefinedUser = (opts?: Opts) => {
 
 type Opts = { user?: FiresideUser };
 
-export const useCreateCampMutation = (opts?: Opts) => {
+export const useCreateCampMutation = () => {
   const { toast } = useToast();
   const setModalOpen = useSetAtom(createCampModalOpen);
 
@@ -93,7 +93,7 @@ export const useCampsQuery = () => {
 export const useUserCamps = (opts?: Opts) => {
   const user = useDefinedUser(opts);
   const options = getUserCampQueryOptions({ userId: user.id });
-
+  const queryClient = useQueryClient();
   const campsQuery = useSuspenseQuery(options);
   return {
     camps: campsQuery.data,
@@ -155,6 +155,7 @@ export const getAllCampsQueryOptions = ({ userId }: { userId: string }) =>
 export const useAllCamps = () => {
   const user = useDefinedUser();
   const options = getAllCampsQueryOptions({ userId: user.id });
+  const queryClient = useQueryClient();
 
   const allCampsQuery = useSuspenseQuery(options);
 

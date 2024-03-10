@@ -1,8 +1,8 @@
 import cors from "@elysiajs/cors";
 
 import { Elysia } from "elysia";
-import { userProtectedRoute, userRoute } from "./user";
-import { campRouter } from "./camp";
+import { userProtectedRoute, userRoute } from "./user-endpoints";
+import { campRouter } from "./camp-endpoints";
 import { createDB } from "@fireside/db";
 import serverTiming from "@elysiajs/server-timing";
 
