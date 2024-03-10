@@ -7,7 +7,6 @@ import { useAtomValue } from "jotai";
 import { dynamicSideBarOpen } from "./camps-state";
 import { Toaster } from "../ui/toaster";
 import { useEffect } from "react";
-import { friendsRoute } from "@/routes";
 
 export const RootCampLayout = () => {
   const sideBarOpen = useAtomValue(dynamicSideBarOpen);

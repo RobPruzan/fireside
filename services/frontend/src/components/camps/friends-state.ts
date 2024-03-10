@@ -1,9 +1,3 @@
-// export const useSendFriendRequestMutation = useMutation({
-//   mutationFn: () => {
-//     const newFriendRequest
-//   }
-// })
-
 import { client } from "@/edenClient";
 import {
   UseQueryOptions,
@@ -12,15 +6,9 @@ import {
   useSuspenseQuery,
 } from "@tanstack/react-query";
 import { useDefinedUser } from "./camps-state";
-import {
-  getNotMeUser,
-  getNotMeUserId,
-  makeArrayOptimisticUpdater,
-} from "@/lib/utils";
-import { Friend, FriendRequest } from "@fireside/db";
+import { makeArrayOptimisticUpdater } from "@/lib/utils";
 import { useToast } from "../ui/use-toast";
-import { FiresideUser } from "@/lib/useUserQuery";
-import { InsideArray, InsidePromise, run } from "@fireside/utils";
+import { InsidePromise, run } from "@fireside/utils";
 
 export const getFriendRequestsQueryOptions = ({ userId }: { userId: string }) =>
   ({

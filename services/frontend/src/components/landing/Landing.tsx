@@ -1,5 +1,3 @@
-import React from "react";
-import { useTheme } from "../../hooks/useTheme";
 import { useNavigate } from "@tanstack/react-router";
 
 import { Button } from "../ui/button";

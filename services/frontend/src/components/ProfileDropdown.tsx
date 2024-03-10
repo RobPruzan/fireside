@@ -22,12 +22,12 @@ import { toast } from "./ui/use-toast";
 
 import { client } from "@/edenClient";
 import { useState } from "react";
-//
+
 export const ProfileDropdown = () => {
   const user = useUserQuery();
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
-  const queryClient = useQueryClient()
+  const queryClient = useQueryClient();
   const logoutMutation = useMutation({
     mutationFn: async () => {
       const res = await client.protected.user["log-out"].post();

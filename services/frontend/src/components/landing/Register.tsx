@@ -1,13 +1,10 @@
-import { Link, useNavigate, useRouter } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
-import React, { useEffect } from "react";
-import { useRouteContext } from "../../context/RouteContext";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "../ui/use-toast";
 import { useState } from "react";
 import { Label } from "../ui/label";
-import { User } from "../../../../db/src";
 import { FiresideUser, userQueryOptions } from "@/lib/useUserQuery";
 import { LoadingSpinner } from "../ui/loading";
 import { client } from "@/edenClient";
