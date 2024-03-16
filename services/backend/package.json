@@ -16,12 +16,12 @@
     "typescript": "^5.0.0"
   },
   "dependencies": {
-    "@elysiajs/cors": "^0.8.0",
-    "@elysiajs/server-timing": "^0.8.0",
+    "@elysiajs/cors": "^1.0.0",
+    "@elysiajs/server-timing": "^1.0.0",
     "@fireside/db": "*",
     "@fireside/utils": "*",
     "@sinclair/typebox": "^0.32.14",
     "drizzle-typebox": "^0.1.1",
-    "elysia": "^0.8.17"
+    "elysia": "^1.0.0"
   }
 }

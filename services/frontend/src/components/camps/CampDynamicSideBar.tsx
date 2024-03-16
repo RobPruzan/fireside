@@ -32,7 +32,6 @@ export const CampDynamicSideBar = () => {
   const match = useMatchRoute();
   const createCampMutation = useCreateCampMutation();
 
-  console.log(match({ to: "/camp/$campId", from: "/camp" }));
   return (
     <>
       <Button

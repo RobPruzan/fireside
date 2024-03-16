@@ -13,11 +13,11 @@ importers:
   services/backend:
     dependencies:
       '@elysiajs/cors':
-        specifier: ^0.8.0
-        version: 0.8.0(elysia@0.8.17)
+        specifier: ^1.0.0
+        version: 1.0.0(elysia@1.0.0)
       '@elysiajs/server-timing':
-        specifier: ^0.8.0
-        version: 0.8.0(elysia@0.8.17)
+        specifier: ^1.0.0
+        version: 1.0.0(elysia@1.0.0)
       '@fireside/db':
         specifier: '*'
         version: link:../db
@@ -31,8 +31,8 @@ importers:
         specifier: ^0.1.1
         version: 0.1.1(@sinclair/typebox@0.32.14)(drizzle-orm@0.29.3)
       elysia:
-        specifier: ^0.8.17
-        version: 0.8.17(@sinclair/typebox@0.32.14)
+        specifier: ^1.0.0
+        version: 1.0.0(@sinclair/typebox@0.32.14)(typescript@5.3.3)
       typescript:
         specifier: ^5.0.0
         version: 5.3.3
@@ -75,8 +75,8 @@ importers:
   services/frontend:
     dependencies:
       '@elysiajs/eden':
-        specifier: ^0.8.1
-        version: 0.8.1(elysia@0.8.17)
+        specifier: 1.0.0-rc.5
+        version: 1.0.0-rc.5(elysia@1.0.0)
       '@fireside/backend':
         specifier: '*'
         version: link:../backend
@@ -125,9 +125,6 @@ importers:
       clsx:
         specifier: ^2.1.0
         version: 2.1.0
-      elysia:
-        specifier: ^0.8.17
-        version: 0.8.17(typescript@5.3.3)
       jotai:
         specifier: ^2.7.0
         version: 2.7.0(@types/react@18.2.56)(react@18.2.0)
@@ -441,33 +438,28 @@ packages:
       superjson: 2.2.1
     dev: true
 
-  /@elysiajs/cors@0.8.0(elysia@0.8.17):
-    resolution: {integrity: sha512-NADcOsokALRv4nljA5DYJPJdIJ7iwq+ouV5lH5W+hLgZRMYsfbKShg82QSmxd7BJQFuGSv2dIIF2dfG9ieUyng==}
+  /@elysiajs/cors@1.0.0(elysia@1.0.0):
+    resolution: {integrity: sha512-u3aBCI8dAdAw9XyvkWfTrZRI8pInVx2sfz/Mw9jk+274y4iw1kvmRS9tUDEbD/uN5BLINnQSkAhCgFILo/yjug==}
     peerDependencies:
-      elysia: '>= 0.8.0'
+      elysia: '>= 1.0.0'
     dependencies:
-      elysia: 0.8.17(@sinclair/typebox@0.32.14)
+      elysia: 1.0.0(@sinclair/typebox@0.32.14)(typescript@5.3.3)
     dev: false
 
-  /@elysiajs/eden@0.8.1(elysia@0.8.17):
-    resolution: {integrity: sha512-YzvcIANyzdxWqaXBYjVN/Y9hqaIDQwF3jc7rUMqVLVo+zOd3eTn8zruNEWcumA6n+rJujqqMYanrOD3pUolOtg==}
+  /@elysiajs/eden@1.0.0-rc.5(elysia@1.0.0):
+    resolution: {integrity: sha512-vbkDnzwjRbwuhEdFalgHbxSyYuM/WiStk+P9xpBoaXiGont30EQlGyRq4I+t2NQOTthJTa9JPAGEIC/Hp47Edg==}
     peerDependencies:
-      '@sinclair/typebox': '*'
-      elysia: '>= 0.8.0'
-    peerDependenciesMeta:
-      '@sinclair/typebox':
-        optional: true
+      elysia: '>= 1.0.0-rc.0'
     dependencies:
-      elysia: 0.8.17(typescript@5.3.3)
-      superjson: 2.2.1
+      elysia: 1.0.0(@sinclair/typebox@0.32.14)(typescript@5.3.3)
     dev: false
 
-  /@elysiajs/server-timing@0.8.0(elysia@0.8.17):
-    resolution: {integrity: sha512-dGj2rDPjlH05ctD0SnyS3B1QGGtlyz+woi09tB8hTnHovobRdAmqowGdd0bZGvT1wgSOIs1vwZr9EOubf3M60A==}
+  /@elysiajs/server-timing@1.0.0(elysia@1.0.0):
+    resolution: {integrity: sha512-8NNgnnv/7waYimuUHup34WoOGLBcKOi5g1gBXX4fOx7ivYQUgfklqsYvhW2HA/6UCqXLEmtndsLD0I2YNap91A==}
     peerDependencies:
-      elysia: '>= 0.8.0'
+      elysia: '>= 1.0.0'
     dependencies:
-      elysia: 0.8.17(@sinclair/typebox@0.32.14)
+      elysia: 1.0.0(@sinclair/typebox@0.32.14)(typescript@5.3.3)
     dev: false
 
   /@esbuild-kit/core-utils@3.3.2:
@@ -2334,6 +2326,7 @@ packages:
     engines: {node: '>=12.13'}
     dependencies:
       is-what: 4.1.16
+    dev: true
 
   /cross-spawn@7.0.3:
     resolution: {integrity: sha512-iRDPJKUPVEND7dHPO8rkbOnPpyDygcDFtWjpeWNCgy8WP2rXcxXL8TskReQl6OrB2G7+UJrags1q15Fudc7G6w==}
@@ -2530,15 +2523,13 @@ packages:
     resolution: {integrity: sha512-zjqzx4N7xGdl5468G+vcgzDhaHkaYgVcf9MqgexcTqsl2UHSCmOj/Bi3HAprg4BZCpC7HyD8a6nZl6QAZf72gw==}
     dev: true
 
-  /elysia@0.8.17(@sinclair/typebox@0.32.14):
-    resolution: {integrity: sha512-hqKHKUxbvlDHnobudtna5nBoGiZ4oa0xdnhynLAJF3+6gTYHAcQ/8/IyxUx5Az5Uy0zTuNiv7m2bIFu7xeMiWg==}
+  /elysia@1.0.0(@sinclair/typebox@0.32.14)(typescript@5.3.3):
+    resolution: {integrity: sha512-l1f0Zx9vypy9i29e3cEpEurW8Ii7YUNnwzr325QzCHH0lyBozGYa40Lzz1+2oKt2RPcAjs1tzkjChrhT5B9R/w==}
     peerDependencies:
       '@sinclair/typebox': '>= 0.31.0'
       openapi-types: '>= 12.0.0'
       typescript: '>= 5.0.0'
     peerDependenciesMeta:
-      '@sinclair/typebox':
-        optional: true
       openapi-types:
         optional: true
       typescript:
@@ -2549,28 +2540,6 @@ packages:
       eventemitter3: 5.0.1
       fast-decode-uri-component: 1.0.1
       fast-querystring: 1.1.2
-      memoirist: 0.1.10
-    dev: false
-
-  /elysia@0.8.17(typescript@5.3.3):
-    resolution: {integrity: sha512-hqKHKUxbvlDHnobudtna5nBoGiZ4oa0xdnhynLAJF3+6gTYHAcQ/8/IyxUx5Az5Uy0zTuNiv7m2bIFu7xeMiWg==}
-    peerDependencies:
-      '@sinclair/typebox': '>= 0.31.0'
-      openapi-types: '>= 12.0.0'
-      typescript: '>= 5.0.0'
-    peerDependenciesMeta:
-      '@sinclair/typebox':
-        optional: true
-      openapi-types:
-        optional: true
-      typescript:
-        optional: true
-    dependencies:
-      cookie: 0.6.0
-      eventemitter3: 5.0.1
-      fast-decode-uri-component: 1.0.1
-      fast-querystring: 1.1.2
-      memoirist: 0.1.10
       typescript: 5.3.3
     dev: false
 
@@ -3121,6 +3090,7 @@ packages:
   /is-what@4.1.16:
     resolution: {integrity: sha512-ZhMwEosbFJkA0YhFnNDgTM4ZxDRsS6HqTo7qsZM08fehyRYIYa0yHu5R6mgo1n/8MgaPBXiPimPD77baVFYg+A==}
     engines: {node: '>=12.13'}
+    dev: true
 
   /isexe@2.0.0:
     resolution: {integrity: sha512-RHxMLp9lnKHGHRng9QFhRCMbYAcVpn69smSGcq3f36xjgVVWThj4qqLbTLlq7Ssj8B+fIQ1EuCEGI2lKsyQeIw==}
@@ -3272,10 +3242,6 @@ packages:
       react: ^16.5.1 || ^17.0.0 || ^18.0.0
     dependencies:
       react: 18.2.0
-    dev: false
-
-  /memoirist@0.1.10:
-    resolution: {integrity: sha512-k2ARHDrSzqeQAWrgvE2NgNj7p5c1LkeFI1VizklJWDXAOTgq7m8mtl0v6W1mVawFNe3DH0hb4BdA91y3vwbqvw==}
     dev: false
 
   /memoizee@0.4.15:
@@ -3890,6 +3856,7 @@ packages:
     engines: {node: '>=16'}
     dependencies:
       copy-anything: 3.0.5
+    dev: true
 
   /supports-color@5.5.0:
     resolution: {integrity: sha512-QjVjwdXIt408MIiAqCX4oUKsgU2EqAGzs2Ppkm4aQYbjm+ZEWEcW4SfFNTr4uMNZma0ey4f5lgLrkB0aX0QMow==}

@@ -152,7 +152,7 @@ export const userRoute = new Elysia({
       });
 
       delete ctx.cookie["auth"];
-      ctx.cookie["auth"].add(cookie);
+      ctx.cookie["auth"].set(cookie);
       ctx.set.status = 200;
       return cleanUser(newUser);
     },
@@ -215,7 +215,7 @@ export const userRoute = new Elysia({
         throw new Error("Could not create user");
       }
 
-      ctx.cookie["auth"].add(getAuthCookie({ token: originalToken }));
+      ctx.cookie["auth"].set(getAuthCookie({ token: originalToken }));
       ctx.set.status = 200;
       return {
         kind: "success" as const,
@@ -230,7 +230,7 @@ export const userRoute = new Elysia({
     }
   )
   .post("/is-logged-in", async ({ cookie: { auth }, set }) => {
-    const isAuthResult = await getSession({ authToken: auth.get() });
+    const isAuthResult = await getSession({ authToken: auth.value });
     set.status = 200;
     return isAuthResult;
   });

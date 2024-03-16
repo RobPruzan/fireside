@@ -10,10 +10,10 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@elysiajs/eden": "^0.8.1",
+    "@elysiajs/eden": "1.0.0-rc.5",
     "@fireside/backend": "*",
-    "@fireside/utils": "*",
     "@fireside/db": "*",
+    "@fireside/utils": "*",
     "@radix-ui/react-avatar": "^1.0.4",
     "@radix-ui/react-dialog": "^1.0.5",
     "@radix-ui/react-dropdown-menu": "^2.0.6",
@@ -27,7 +27,6 @@
     "@tanstack/react-router": "^1.16.6",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.0",
-    "elysia": "^0.8.17",
     "jotai": "^2.7.0",
     "lucide-react": "^0.334.0",
     "react": "^18.2.0",
