@@ -18,6 +18,7 @@ const app = new Elysia()
   .use(
     cors({
       credentials: true,
+      origin: /^http:\/\/localhost:5173$/,
       allowedHeaders: ["Origin, X-Requested-With, Content-Type, Accept"],
     })
   )
@@ -32,3 +33,4 @@ const app = new Elysia()
 
 console.log(`Running on port ${port}`);
 export type App = typeof app;
+//

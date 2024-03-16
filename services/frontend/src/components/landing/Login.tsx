@@ -7,7 +7,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { FiresideUser, userQueryOptions } from "@/lib/useUserQuery";
 import { LoadingSpinner } from "../ui/loading";
 import { useToast } from "../ui/use-toast";
-import { client } from "@/edenClient";
+import { client, dataOrThrow } from "@/edenClient";
 
 function SignUp() {
   const navigate = useNavigate({ from: "/login" });
@@ -21,15 +21,13 @@ function SignUp() {
     mutationFn: async (loginInfo: typeof userInfo) => {
       const res = await client.user.login.post(loginInfo);
 
-      if (res.error) {
-        throw new Error(res.error.value);
-      }
+      const data = dataOrThrow(res);
 
-      switch (res.data.kind) {
+      switch (data.kind) {
         case "success": {
           queryClient.setQueryData<FiresideUser>(
             userQueryOptions.queryKey,
-            () => res.data.user
+            () => data.user
           );
           navigate({ to: "/camp" });
           return;

@@ -20,7 +20,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "./ui/use-toast";
 
-import { client } from "@/edenClient";
+import { client, dataOrThrow } from "@/edenClient";
 import { useState } from "react";
 
 export const ProfileDropdown = () => {
@@ -30,12 +30,7 @@ export const ProfileDropdown = () => {
   const queryClient = useQueryClient();
   const logoutMutation = useMutation({
     mutationFn: async () => {
-      const res = await client.protected.user["log-out"].post();
-      if (res.error) {
-        throw new Error(res.error.value);
-      }
-
-      return res.data;
+      return dataOrThrow(await client.protected.user["log-out"].post());
     },
     onSuccess: () => {
       setOpen(false);
