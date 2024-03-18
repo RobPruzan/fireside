@@ -32,7 +32,7 @@ export const Camp = () => {
     refetchInterval: 5000,
   };
 
-  const messagesQuery = useSuspenseQuery(options);
+  const messagesQuery = useSuspenseQuery<CampMessage[]>(options);
   const queryClient = useQueryClient();
 
   const setMessages = makeArrayOptimisticUpdater({
@@ -59,7 +59,7 @@ export const Camp = () => {
       });
     },
     onSuccess: ({ data }) => {
-      setMessages((prev: CampMessage[]) => [...prev, data]);
+      setMessages((prev) => [...prev, data]);
     },
   });
 
