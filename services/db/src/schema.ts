@@ -61,6 +61,26 @@ export type FiresideCamp = InferSelectModel<typeof camp>;
 
 export const campSchema = createInsertSchema(camp);
 
+export const campMessage = pgTable("campMessage", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  userId: uuid("userId")
+    .notNull()
+    .references(() => user.id),
+  campId: uuid("campId")
+    .notNull()
+    .references(() => camp.id),
+  message: text("message").notNull(),
+  createdAt: timestamp("createdAt", { mode: "string" })
+    .$defaultFn(() => new Date().toString())
+    .notNull(),
+});
+
+export type CampMessage = InferSelectModel<typeof campMessage>;
+
+export const campMessageInsertSchema = createInsertSchema(campMessage, {
+  userId: Type.Optional(Type.Never()),
+});
+
 export const campMember = pgTable("campMember", {
   id: uuid("id").defaultRandom().primaryKey(),
   campId: uuid("camp_id")
@@ -139,3 +159,5 @@ export const friend = pgTable("friend", {
 });
 
 export type Friend = InferSelectModel<typeof friend>;
+
+//

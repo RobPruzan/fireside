@@ -33,7 +33,7 @@ const envSchema = z.object(
     errorMap: (error) => ({
       message: `Missing environment variable ${error.path.join(".")}`,
     }),
-  }
+  },
 );
 
 envSchema.parse({
@@ -88,5 +88,5 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
         <RouterProvider router={router} />
       </PersistQueryClientProvider>
     </ThemeProvider>
-  </React.StrictMode>
+  </React.StrictMode>,
 );

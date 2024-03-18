@@ -22,7 +22,7 @@ export const dataOrThrow = <T>(response: SimpleResponse<T>) => {
 };
 
 export const promiseDataOrThrow = async <T>(
-  response: Promise<SimpleResponse<T>>
+  response: Promise<SimpleResponse<T>>,
 ) => {
   const awaitedPromise = await response;
   if (awaitedPromise.error?.value) {

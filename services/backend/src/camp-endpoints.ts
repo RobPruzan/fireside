@@ -9,12 +9,36 @@ import {
   count,
   sql,
   and,
+  campMessageInsertSchema,
+  campMessage,
 } from "@fireside/db";
 import { ProtectedElysia } from "./lib";
 import { db } from ".";
 import { t } from "elysia";
 
 export const campRouter = ProtectedElysia({ prefix: "/camp" })
+.get(
+  "/fetch/messages/:campId",
+  async ({user, params}) => {
+      return db.select().from(campMessage).where(eq(campMessage.campId, params.campId))
+
+  },
+  {
+    params: t.Object({
+      campId: t.String(),
+    }),
+  }
+)
+ 
+  .post(
+    "/create/message",
+    async ({ user,body }) => {
+      return (await db.insert(campMessage).values({...body, userId: user.id}).returning())[0];
+    },
+    {
+      body: campMessageInsertSchema,
+    }
+  )
   .post(
     "/create",
     async ({ body, user }) => {

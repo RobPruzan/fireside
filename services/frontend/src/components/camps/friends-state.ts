@@ -6,7 +6,7 @@ import {
   useSuspenseQuery,
 } from "@tanstack/react-query";
 import { useDefinedUser } from "./camps-state";
-import { makeArrayOptimisticUpdater } from "@/lib/utils";
+import { makeOptimisticUpdater } from "@/lib/utils";
 import { useToast } from "../ui/use-toast";
 import { InsidePromise, run } from "@fireside/utils";
 
@@ -38,7 +38,7 @@ export const useGetUserFriendRequests = () => {
           )
       ),
     query: requestsQuery,
-    optimisticFriendRequestsUpdater: makeArrayOptimisticUpdater({
+    optimisticFriendRequestsUpdater: makeOptimisticUpdater({
       queryClient,
       options,
     }),
@@ -134,7 +134,7 @@ export const useGetUsers = () => {
       }),
     })),
     query: usersQuery,
-    optimisticUsersUpdater: makeArrayOptimisticUpdater({
+    optimisticUsersUpdater: makeOptimisticUpdater({
       queryClient,
       options: usersQueryOptions,
     }),
@@ -160,7 +160,7 @@ export const useGetFriends = () => {
   return {
     friends: friendsQuery.data ?? [],
     query: friendsQuery,
-    optimisticFriendsUpdate: makeArrayOptimisticUpdater({
+    optimisticFriendsUpdate: makeOptimisticUpdater({
       queryClient,
       options,
     }),

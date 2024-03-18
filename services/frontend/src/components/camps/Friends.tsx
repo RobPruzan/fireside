@@ -38,7 +38,7 @@ export const Friends = () => {
                 friend={currentFriend}
               />
             );
-          })
+          }),
         )}
       </div>
     </div>
