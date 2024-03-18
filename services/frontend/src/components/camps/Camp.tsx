@@ -8,14 +8,9 @@ import { toast } from "../ui/use-toast";
 import { client } from "@/edenClient";
 import { useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { makeArrayOptimisticUpdater } from "@/lib/utils";
-import { useAtomValue, useSetAtom } from "jotai";
-import { dynamicSideBarOpen } from "./camps-state";
-import { SidebarOpen } from "lucide-react";
 
 export const Camp = () => {
   const [userMessage, setUserMessage] = useState<string>("");
-  const sideBarOpen = useAtomValue(dynamicSideBarOpen);
-
   const { campId } = useParams({ from: "/root-auth/camp-layout/camp/$campId" });
 
   type MessageData = {
@@ -64,11 +59,9 @@ export const Camp = () => {
       });
     },
     onSuccess: ({ data }) => {
-      setMessages((prev) => [...prev, data]);
+      setMessages((prev: CampMessage[]) => [...prev, data]);
     },
   });
-
-  console.log("OPEN?: ", sideBarOpen);
 
   return (
     <div className="flex flex-col w-full h-full">

@@ -7,7 +7,7 @@ import { useState } from "react";
 import { Label } from "../ui/label";
 import { FiresideUser, userQueryOptions } from "@/lib/useUserQuery";
 import { LoadingSpinner } from "../ui/loading";
-import { client } from "@/edenClient";
+import { client, dataOrThrow } from "@/edenClient";
 
 type CreateUserInfo = {
   email: string;
@@ -20,12 +20,7 @@ function Register() {
   const queryClient = useQueryClient();
   const createUserMutation = useMutation({
     mutationFn: async (createOpts: CreateUserInfo) => {
-      const res = await client.user.create.post(createOpts);
-
-      if (res.error) {
-        throw new Error(res.error.value);
-      }
-      return res;
+      return dataOrThrow(await client.user.create.post(createOpts));
     },
     onError: (e) => {
       toast({
@@ -34,7 +29,7 @@ function Register() {
         description: e.message,
       });
     },
-    onSuccess: ({ data }) => {
+    onSuccess: (data) => {
       queryClient.setQueryData<FiresideUser>(
         userQueryOptions.queryKey,
         () => data
