@@ -7,7 +7,7 @@ import { useMutation } from "@tanstack/react-query";
 import { toast } from "../ui/use-toast";
 import { client, promiseDataOrThrow } from "@/edenClient";
 import { useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
-import { makeArrayOptimisticUpdater } from "@/lib/utils";
+import { makeOptimisticUpdater } from "@/lib/utils";
 
 export const Camp = () => {
   const [userMessage, setUserMessage] = useState<string>("");
@@ -26,7 +26,7 @@ export const Camp = () => {
           .messages({
             campId: campId,
           })
-          .get(),
+          .get()
       ),
     refetchInterval: 5000,
   };
@@ -34,7 +34,7 @@ export const Camp = () => {
   const messagesQuery = useSuspenseQuery(options);
   const queryClient = useQueryClient();
 
-  const setMessages = makeArrayOptimisticUpdater({
+  const setMessages = makeOptimisticUpdater({
     options,
     queryClient,
   });
