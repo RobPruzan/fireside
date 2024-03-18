@@ -46,7 +46,7 @@ export const CampDynamicSideBar = () => {
       </Button>
       <div className="flex flex-col w-full h-1/6">
         <div className="h-1/2 flex items-start justify-start pt-5 pl-5 ">
-          <span className="text-3xl font-semibold ">Camp rooms</span>
+          <span className="text-3xl font-semibold ">Camp Rooms</span>
         </div>
         <div className="flex h-1/2 border-b-2 gap-x-2 border-accent/50 px-5 py-2 justify-start w-full">
           <Dialog open={modalOpen} onOpenChange={(open) => setModalOpen(open)}>

@@ -63,4 +63,5 @@ export const campRoute = createRoute({
   getParentRoute: () => campLayoutRoute,
   path: "/camp/$campId",
   component: Camp,
+  pendingComponent: LoadingSection,
 });

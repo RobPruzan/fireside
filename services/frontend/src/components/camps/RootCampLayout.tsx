@@ -37,7 +37,7 @@ export const RootCampLayout = () => {
       >
         <CampDynamicSideBar />
       </div>
-      <div className="flex w-3/6 h-full">
+      <div className={cn(["flex h-full"], sideBarOpen ? "w-[55%]" : "w-[85%]")}>
         <Outlet />
       </div>
     </div>

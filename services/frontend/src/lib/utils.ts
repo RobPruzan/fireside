@@ -24,7 +24,7 @@ export const makeArrayOptimisticUpdater =
   }) =>
   (
     stateOrUpdater:
-      | TQueryFnResult
+      | Array<TQueryFnResult>
       | ((prev: Array<TQueryFnResult>) => Array<TQueryFnResult>)
   ) => {
     if (typeof stateOrUpdater === "function") {
