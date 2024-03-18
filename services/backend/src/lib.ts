@@ -17,7 +17,7 @@ export const ProtectedElysia = <T extends string>({
     prefix: `/protected${prefix}`,
     name: "auth-middleware",
   }).derive(async ({ cookie: { auth }, set }) => {
-    const session = await getSession({ authToken: auth.get() });
+    const session = await getSession({ authToken: auth.value });
     if (session.kind === "not-logged-in") {
       set.status = 401;
       throw new Error("must be logged in");
@@ -26,6 +26,34 @@ export const ProtectedElysia = <T extends string>({
     set.status = 200;
     return { user: session.user };
   });
+// #TODO
+// export const ProtectedElysia = <T extends string>({
+//   prefix,
+// }: {
+//   prefix: `/${T}`;
+// }) =>
+//   new Elysia({
+//     prefix: `/protected${prefix}`,
+//     name: "auth-middleware",
+//   })
+//     .derive(async ({ cookie: { auth } }) => {
+//       // console.log("got res");
+//       const session = await getSession({ authToken: auth.value });
+
+//       return { session: session };
+//     })
+//     .onBeforeHandle({ as: "local" }, async ({ session, error }) => {
+//       if (session.kind === "not-logged-in") {
+//         return error("Unauthorized");
+//       }
+//       // console.log("got session", session);
+//       return true;
+//     })
+//     .derive(({ session }) => {
+//       console.log("done deriving");
+
+//       return { user: session.user! };
+//     });
 
 export const getDeleteAuthCookie = () =>
   ({

@@ -1,4 +1,4 @@
-import { client } from "@/edenClient";
+import { client, dataOrThrow, promiseDataOrThrow } from "@/edenClient";
 import {
   UseQueryOptions,
   useMutation,
@@ -13,15 +13,11 @@ import { InsidePromise, run } from "@fireside/utils";
 export const getFriendRequestsQueryOptions = ({ userId }: { userId: string }) =>
   ({
     queryKey: ["friend-requests", userId],
-    queryFn: async () => {
-      const res = await client.protected.user.friends.request.retrieve.get();
-      if (res.error) {
-        throw new Error(res.error.value);
-      }
-      return res.data;
-    },
+    queryFn: () =>
+      promiseDataOrThrow(client.protected.user.friends.request.retrieve.get()),
     enabled: !!userId,
   } satisfies UseQueryOptions);
+
 export const useGetUserFriendRequests = () => {
   const user = useDefinedUser();
   const queryClient = useQueryClient();
@@ -58,16 +54,12 @@ export const useMakeFriendRequestMutation = () => {
   const { optimisticFriendsUpdate } = useGetFriends();
 
   const makeFriendRequestMutation = useMutation({
-    mutationFn: async (makeFriendRequestOpts: { to: string }) => {
-      const res = await client.protected.user.friends.request[
-        makeFriendRequestOpts.to
-      ].post();
-      if (res.error) {
-        throw new Error(res.error.value);
-      }
-
-      return res.data;
-    },
+    mutationFn: (makeFriendRequestOpts: { to: string }) =>
+      promiseDataOrThrow(
+        client.protected.user.friends
+          .request({ to: makeFriendRequestOpts.to })
+          .post()
+      ),
     onError: (e) =>
       toast({
         variant: "destructive",
@@ -113,14 +105,7 @@ export const useMakeFriendRequestMutation = () => {
 
 export const usersQueryOptions = {
   queryKey: ["get-users"],
-  queryFn: async () => {
-    const res = await client.protected.user["get-all"].get();
-    if (res.error) {
-      throw new Error(res.error.value);
-    }
-
-    return res.data;
-  },
+  queryFn: () => promiseDataOrThrow(client.protected.user["get-all"].get()),
 } satisfies UseQueryOptions;
 
 export const useGetUsers = () => {
@@ -159,15 +144,8 @@ export const useGetUsers = () => {
 export const getFriendsQueryOptions = ({ userId }: { userId: string }) =>
   ({
     queryKey: ["friends", userId],
-    queryFn: async () => {
-      const res = await client.protected.user.friends.retrieve.get();
-
-      if (res.error) {
-        throw new Error(res.error.value);
-      }
-
-      return res.data;
-    },
+    queryFn: () =>
+      promiseDataOrThrow(client.protected.user.friends.retrieve.get()),
   } satisfies UseQueryOptions);
 
 export const useGetFriends = () => {
@@ -197,16 +175,12 @@ export const useAcceptFriendRequestMutation = () => {
   const { optimisticFriendRequestsUpdater } = useGetUserFriendRequests();
   const user = useDefinedUser();
   const acceptFriendRequestMutation = useMutation({
-    mutationFn: async ({ requestId }: { requestId: string }) => {
-      const res = await client.protected.user.friends.request.accept[
-        requestId
-      ].post();
-      if (res.error) {
-        throw new Error(res.error.value);
-      }
-
-      return res.data;
-    },
+    mutationFn: ({ requestId }: { requestId: string }) =>
+      promiseDataOrThrow(
+        client.protected.user.friends.request
+          .accept({ requestId: requestId })
+          .post()
+      ),
 
     onError: (e) => {
       toast({

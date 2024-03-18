@@ -1,12 +1,14 @@
 import { atom } from "jotai";
 import {
   UseQueryOptions,
+  UseSuspenseQueryOptions,
+  queryOptions,
   useMutation,
   useQuery,
   useQueryClient,
   useSuspenseQuery,
 } from "@tanstack/react-query";
-import { client, dataOrThrow, promiseDataOrThrow } from "@/edenClient";
+import { client } from "@/edenClient";
 import { useToast } from "../ui/use-toast";
 
 import {
@@ -19,12 +21,38 @@ import { Nullish } from "@fireside/utils";
 import { FiresideCamp } from "@fireside/db";
 
 import { makeArrayOptimisticUpdater } from "@/lib/utils";
+import { AnyRoute, RegisteredRouter, RoutePaths, LinkProps,Link } from "@tanstack/react-router";
+
+import { RefAttributes } from "react";
 
 export const dynamicSideBarOpen = atom(true);
 export const createCampModalOpen = atom(false);
 
+// export const MenuItem = <
+//   TRouteTree extends AnyRoute = RegisteredRouter["routeTree"],
+//   TFrom extends RoutePaths<TRouteTree> | string = string,
+//   TTo extends string = "",
+//   TMaskFrom extends RoutePaths<TRouteTree> | string = TFrom,
+//   TMaskTo extends string = "",
+// >(
+//   props: LinkProps<TRouteTree, TFrom, TTo, TMaskFrom, TMaskTo> &
+//     RefAttributes<HTMLAnchorElement> & {
+//       label: string;
+//     }
+// ) => (
+//   <Link
+//     {...props}
+//     className="pb-0.5"
+//     activeProps={{ className: "border-b-[3px] border-primary " }}
+//     activeOptions={{ exact: false, includeHash: true, includeSearch: true }}
+//   >
+//     {props.label}
+//   </Link>
+// );
+
 export const useDefinedUser = (opts?: Opts) => {
   const user = useSuspenseQuery(userQueryOptions).data;
+
 
   const shouldBeDefinedUser = opts?.user ?? user;
   if (!shouldBeDefinedUser) {
@@ -50,7 +78,7 @@ export const useCreateCampMutation = () => {
     mutationFn: async (createOps: { name: string }) => {
       const res = await client.protected.camp.create.post(createOps);
       if (res.error) {
-        throw Error(JSON.stringify(res.error.value));
+        throw Error(res.error.value);
       }
 
       return res.data;
@@ -76,7 +104,7 @@ export const getUserCampQueryOptions = ({
     queryFn: async () => {
       const res = await client.protected.camp.retrieve.me.get();
       if (res.error) {
-        throw new Error(JSON.stringify(res.error.value));
+        throw new Error(res.error.value);
       }
       return res.data;
     },
@@ -110,10 +138,14 @@ export const useJoinCampMutation = () => {
   const { allCampsUpdater } = useAllCamps();
   const { userCampsUpdater } = useUserCamps();
   const joinCampMutation = useMutation({
-    mutationFn: async (joinCampOpts: { campId: string }) =>
-      promiseDataOrThrow(
-        client.protected.camp.join({ campId: joinCampOpts.campId }).post()
-      ),
+    mutationFn: async (joinCampOpts: { campId: string }) => {
+      const res = await client.protected.camp.join[joinCampOpts.campId].post();
+      if (res.error) {
+        throw new Error(res.error.value);
+      }
+
+      return res.data;
+    },
     onError: (e) => {
       toast({
         variant: "destructive",
@@ -139,8 +171,14 @@ export const useJoinCampMutation = () => {
 export const getAllCampsQueryOptions = ({ userId }: { userId: string }) =>
   ({
     queryKey: ["all-camps", userId],
-    queryFn: async () =>
-      promiseDataOrThrow(client.protected.camp.retrieve.get()),
+    queryFn: async () => {
+      const res = await client.protected.camp.retrieve.get();
+      if (res.error) {
+        throw new Error(res.error.value);
+      }
+
+      return res.data;
+    },
   } satisfies UseQueryOptions);
 export const useAllCamps = () => {
   const user = useDefinedUser();
