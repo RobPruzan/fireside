@@ -29,7 +29,7 @@ export const useDefinedUser = (opts?: Opts) => {
   const shouldBeDefinedUser = opts?.user ?? user;
   if (!shouldBeDefinedUser) {
     throw new Error(
-      "Must ensure at route level user is authorized, or provide a non null user as an argument"
+      "Must ensure at route level user is authorized, or provide a non null user as an argument",
     );
   }
 
@@ -82,7 +82,7 @@ export const getUserCampQueryOptions = ({
     },
     queryKey: ["camps", userId],
     enabled: !!userId,
-  } satisfies UseQueryOptions);
+  }) satisfies UseQueryOptions;
 
 export const useCampsQuery = () => {
   const user = useUserQuery();
@@ -112,7 +112,7 @@ export const useJoinCampMutation = () => {
   const joinCampMutation = useMutation({
     mutationFn: async (joinCampOpts: { campId: string }) =>
       promiseDataOrThrow(
-        client.protected.camp.join({ campId: joinCampOpts.campId }).post()
+        client.protected.camp.join({ campId: joinCampOpts.campId }).post(),
       ),
     onError: (e) => {
       toast({
@@ -127,7 +127,7 @@ export const useJoinCampMutation = () => {
       });
       allCampsUpdater((prev) => {
         return prev?.map((camp) =>
-          camp.id === joinedCamp.id ? { ...camp, count: camp.count + 1 } : camp
+          camp.id === joinedCamp.id ? { ...camp, count: camp.count + 1 } : camp,
         );
       });
     },
@@ -141,7 +141,7 @@ export const getAllCampsQueryOptions = ({ userId }: { userId: string }) =>
     queryKey: ["all-camps", userId],
     queryFn: async () =>
       promiseDataOrThrow(client.protected.camp.retrieve.get()),
-  } satisfies UseQueryOptions);
+  }) satisfies UseQueryOptions;
 export const useAllCamps = () => {
   const user = useDefinedUser();
   const options = getAllCampsQueryOptions({ userId: user.id });

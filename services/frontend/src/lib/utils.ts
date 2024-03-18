@@ -11,7 +11,7 @@ export function cn(...inputs: ClassValue[]) {
 export const makeArrayOptimisticUpdater =
   <
     TQueryFNResult,
-    TQueryFnResult = InsideArray<InsidePromise<TQueryFNResult>>
+    TQueryFnResult = InsideArray<InsidePromise<TQueryFNResult>>,
   >({
     queryClient,
     options,
@@ -25,7 +25,7 @@ export const makeArrayOptimisticUpdater =
   (
     stateOrUpdater:
       | Array<TQueryFnResult>
-      | ((prev: Array<TQueryFnResult>) => Array<TQueryFnResult>)
+      | ((prev: Array<TQueryFnResult>) => Array<TQueryFnResult>),
   ) => {
     if (typeof stateOrUpdater === "function") {
       queryClient.setQueryData(options.queryKey, stateOrUpdater);
@@ -47,7 +47,7 @@ export const makeOptimisticUpdater =
     };
   }) =>
   (
-    stateOrUpdater: TQueryFnResult | ((prev: TQueryFnResult) => TQueryFnResult)
+    stateOrUpdater: TQueryFnResult | ((prev: TQueryFnResult) => TQueryFnResult),
   ) => {
     if (typeof stateOrUpdater === "function") {
       queryClient.setQueryData(options.queryKey, stateOrUpdater);

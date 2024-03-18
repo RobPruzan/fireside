@@ -42,7 +42,7 @@ export const friendsRoute = createRoute({
   loader: async ({ context: { queryClient, user } }) =>
     Promise.all([
       queryClient.ensureQueryData(
-        getFriendRequestsQueryOptions({ userId: user.id })
+        getFriendRequestsQueryOptions({ userId: user.id }),
       ),
       queryClient.ensureQueryData(usersQueryOptions),
     ]),
@@ -55,7 +55,7 @@ export const inboxRoute = createRoute({
   pendingComponent: LoadingSection,
   loader: async ({ context: { queryClient, user } }) =>
     queryClient.ensureQueryData(
-      getFriendRequestsQueryOptions({ userId: user.id })
+      getFriendRequestsQueryOptions({ userId: user.id }),
     ),
   component: Inbox,
 });

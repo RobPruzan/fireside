@@ -103,12 +103,12 @@ export const CampDynamicSideBar = () => {
         <div className="flex flex-col overflow-y-auto h-full w-full p-5 gap-y-1">
           {camps
             .filter((camp) =>
-              camp.name.toLowerCase().includes(campSearch.toLowerCase())
+              camp.name.toLowerCase().includes(campSearch.toLowerCase()),
             )
             .toSorted(
               (a, b) =>
                 new Date(b.createdAt).getTime() -
-                new Date(a.createdAt).getTime()
+                new Date(a.createdAt).getTime(),
             )
             .map((camp) => (
               <div className="flex w-full items-center gap-x-2" key={camp.id}>

@@ -5,7 +5,7 @@ import { useState } from "react";
 import { CampMessage } from "@fireside/db";
 import { useMutation } from "@tanstack/react-query";
 import { toast } from "../ui/use-toast";
-import { client } from "@/edenClient";
+import { client, promiseDataOrThrow } from "@/edenClient";
 import { useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { makeArrayOptimisticUpdater } from "@/lib/utils";
 
@@ -20,15 +20,14 @@ export const Camp = () => {
 
   const options = {
     queryKey: ["messages"],
-    queryFn: async () => {
-      const res = await client.protected.camp.fetch.messages[campId].get();
-
-      if (res.error) {
-        throw new Error(res.error.value);
-      }
-
-      return res.data;
-    },
+    queryFn: () =>
+      promiseDataOrThrow(
+        client.protected.camp.fetch
+          .messages({
+            campId: campId,
+          })
+          .get(),
+      ),
     refetchInterval: 5000,
   };
 
@@ -43,14 +42,8 @@ export const Camp = () => {
   const messages = messagesQuery.data;
 
   const createMessageMutation = useMutation({
-    mutationFn: async (message: MessageData) => {
-      const res = await client.protected.camp.create.message.post(message);
-
-      if (res.error) {
-        throw new Error(res.error.value);
-      }
-      return res;
-    },
+    mutationFn: (message: MessageData) =>
+      promiseDataOrThrow(client.protected.camp.create.message.post(message)),
     onError: (e) => {
       toast({
         variant: "destructive",
@@ -58,7 +51,7 @@ export const Camp = () => {
         description: e.message,
       });
     },
-    onSuccess: ({ data }) => {
+    onSuccess: (data) => {
       setMessages((prev: CampMessage[]) => [...prev, data]);
     },
   });
