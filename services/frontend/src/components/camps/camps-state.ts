@@ -18,7 +18,7 @@ import { useSetAtom } from "jotai";
 import { Nullish } from "@fireside/utils";
 import { FiresideCamp } from "@fireside/db";
 
-import { makeArrayOptimisticUpdater } from "@/lib/utils";
+import { makeOptimisticUpdater } from "@/lib/utils";
 
 export const dynamicSideBarOpen = atom(true);
 export const createCampModalOpen = atom(false);
@@ -98,7 +98,7 @@ export const useUserCamps = (opts?: Opts) => {
   return {
     camps: campsQuery.data,
     query: campsQuery,
-    userCampsUpdater: makeArrayOptimisticUpdater({
+    userCampsUpdater: makeOptimisticUpdater({
       queryClient,
       options,
     }),
@@ -152,7 +152,7 @@ export const useAllCamps = () => {
   return {
     camps: allCampsQuery.data,
     query: allCampsQuery,
-    allCampsUpdater: makeArrayOptimisticUpdater({
+    allCampsUpdater: makeOptimisticUpdater({
       queryClient,
       options,
     }),

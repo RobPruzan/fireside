@@ -27,7 +27,7 @@ function SignUp() {
         case "success": {
           queryClient.setQueryData<FiresideUser>(
             userQueryOptions.queryKey,
-            () => data.user
+            () => data.user,
           );
           navigate({ to: "/camp" });
           return;

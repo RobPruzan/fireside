@@ -21,7 +21,13 @@ import { Nullish } from "@fireside/utils";
 import { FiresideCamp } from "@fireside/db";
 
 import { makeArrayOptimisticUpdater } from "@/lib/utils";
-import { AnyRoute, RegisteredRouter, RoutePaths, LinkProps,Link } from "@tanstack/react-router";
+import {
+  AnyRoute,
+  RegisteredRouter,
+  RoutePaths,
+  LinkProps,
+  Link,
+} from "@tanstack/react-router";
 
 import { RefAttributes } from "react";
 
@@ -53,11 +59,10 @@ export const createCampModalOpen = atom(false);
 export const useDefinedUser = (opts?: Opts) => {
   const user = useSuspenseQuery(userQueryOptions).data;
 
-
   const shouldBeDefinedUser = opts?.user ?? user;
   if (!shouldBeDefinedUser) {
     throw new Error(
-      "Must ensure at route level user is authorized, or provide a non null user as an argument"
+      "Must ensure at route level user is authorized, or provide a non null user as an argument",
     );
   }
 
@@ -110,7 +115,7 @@ export const getUserCampQueryOptions = ({
     },
     queryKey: ["camps", userId],
     enabled: !!userId,
-  } satisfies UseQueryOptions);
+  }) satisfies UseQueryOptions;
 
 export const useCampsQuery = () => {
   const user = useUserQuery();
@@ -159,7 +164,7 @@ export const useJoinCampMutation = () => {
       });
       allCampsUpdater((prev) => {
         return prev?.map((camp) =>
-          camp.id === joinedCamp.id ? { ...camp, count: camp.count + 1 } : camp
+          camp.id === joinedCamp.id ? { ...camp, count: camp.count + 1 } : camp,
         );
       });
     },
@@ -179,7 +184,7 @@ export const getAllCampsQueryOptions = ({ userId }: { userId: string }) =>
 
       return res.data;
     },
-  } satisfies UseQueryOptions);
+  }) satisfies UseQueryOptions;
 export const useAllCamps = () => {
   const user = useDefinedUser();
   const options = getAllCampsQueryOptions({ userId: user.id });
