@@ -32,7 +32,7 @@ function Register() {
     onSuccess: (data) => {
       queryClient.setQueryData<FiresideUser>(
         userQueryOptions.queryKey,
-        () => data
+        () => data,
       );
       navigate({ to: "/camp" });
     },

@@ -24,10 +24,10 @@ export const Explore = () => {
         {camps
           .toSorted(
             (a, b) =>
-              new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+              new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
           )
           .filter((camp) =>
-            camp.name.toLowerCase().includes(searchFilter.toLowerCase())
+            camp.name.toLowerCase().includes(searchFilter.toLowerCase()),
           )
           .map((camp) => (
             <ExploreCard key={camp.id} camp={camp} />

@@ -16,7 +16,7 @@ export const getFriendRequestsQueryOptions = ({ userId }: { userId: string }) =>
     queryFn: () =>
       promiseDataOrThrow(client.protected.user.friends.request.retrieve.get()),
     enabled: !!userId,
-  } satisfies UseQueryOptions);
+  }) satisfies UseQueryOptions;
 
 export const useGetUserFriendRequests = () => {
   const user = useDefinedUser();
@@ -34,8 +34,8 @@ export const useGetUserFriendRequests = () => {
         ({ fromUserId }) =>
           !friends.some(
             ({ friend: { userOneId, userTwoId } }) =>
-              fromUserId === userOneId || fromUserId === userTwoId
-          )
+              fromUserId === userOneId || fromUserId === userTwoId,
+          ),
       ),
     query: requestsQuery,
     optimisticFriendRequestsUpdater: makeArrayOptimisticUpdater({
@@ -58,7 +58,7 @@ export const useMakeFriendRequestMutation = () => {
       promiseDataOrThrow(
         client.protected.user.friends
           .request({ to: makeFriendRequestOpts.to })
-          .post()
+          .post(),
       ),
     onError: (e) =>
       toast({
@@ -71,7 +71,7 @@ export const useMakeFriendRequestMutation = () => {
         optimisticFriendsUpdate((prev) => {
           if (
             friendRequests.some(
-              (request) => request.fromUserId === result.otherUser.id
+              (request) => request.fromUserId === result.otherUser.id,
             )
           ) {
             return [...prev, result];
@@ -88,14 +88,14 @@ export const useMakeFriendRequestMutation = () => {
                 deleted: request.deleted
                   ? true
                   : result.existingRequest.id === request.id,
-              }))
+              })),
         );
 
         return;
       }
 
       optimisticFriendRequestsUpdater((prev) =>
-        !prev ? [result.newFriendRequest] : [...prev, result.newFriendRequest]
+        !prev ? [result.newFriendRequest] : [...prev, result.newFriendRequest],
       );
     },
   });
@@ -119,13 +119,13 @@ export const useGetUsers = () => {
       ...externalUser,
       status: run(() => {
         const sentRequest = friendRequests.some(
-          ({ toUserId }) => toUserId === externalUser.id
+          ({ toUserId }) => toUserId === externalUser.id,
         );
 
         const isFriend = friends.some(
           (friend) =>
             friend.otherUser.id === externalUser.id ||
-            friend.user.id === externalUser.id
+            friend.user.id === externalUser.id,
         );
 
         if (isFriend) return "is-friend" as const;
@@ -146,7 +146,7 @@ export const getFriendsQueryOptions = ({ userId }: { userId: string }) =>
     queryKey: ["friends", userId],
     queryFn: () =>
       promiseDataOrThrow(client.protected.user.friends.retrieve.get()),
-  } satisfies UseQueryOptions);
+  }) satisfies UseQueryOptions;
 
 export const useGetFriends = () => {
   const user = useDefinedUser();
@@ -154,7 +154,7 @@ export const useGetFriends = () => {
   const queryClient = useQueryClient();
   const options = getFriendsQueryOptions({ userId: user.id });
   const friendsQuery = useSuspenseQuery(
-    getFriendsQueryOptions({ userId: user.id })
+    getFriendsQueryOptions({ userId: user.id }),
   );
 
   return {
@@ -179,7 +179,7 @@ export const useAcceptFriendRequestMutation = () => {
       promiseDataOrThrow(
         client.protected.user.friends.request
           .accept({ requestId: requestId })
-          .post()
+          .post(),
       ),
 
     onError: (e) => {
@@ -205,7 +205,7 @@ export const useAcceptFriendRequestMutation = () => {
           }
 
           return request;
-        })
+        }),
       );
       toast({
         title: "Request accepted!",
