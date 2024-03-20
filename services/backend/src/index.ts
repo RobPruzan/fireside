@@ -5,6 +5,7 @@ import { userProtectedRoute, userRoute } from "./user-endpoints";
 import { campRouter } from "./camp-endpoints";
 import { createDB } from "@fireside/db";
 import serverTiming from "@elysiajs/server-timing";
+import { friendRoute } from "./friend-endpoints";
 
 const port = 8080;
 
@@ -25,6 +26,7 @@ const app = new Elysia()
   // order matters till v1.0 local scoping can be implemented
   .use(noAuthRoutes)
   .use(authRoutes)
+  .use(friendRoute)
 
   .onError(({ error }) => {
     return error.toString();
@@ -33,4 +35,3 @@ const app = new Elysia()
 
 console.log(`Running on port ${port}`);
 export type App = typeof app;
-//

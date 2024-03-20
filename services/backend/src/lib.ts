@@ -1,6 +1,7 @@
 import type { StatusMap } from "@fireside/utils/src/constants";
 import { Elysia, t, type CookieOptions } from "elysia";
 import { getSession } from "./user-endpoints";
+import type { User } from "@fireside/db";
 
 export const sessionGuard = {
   cookie: t.Cookie({
@@ -77,4 +78,9 @@ export const parseCookie = (cookieString: string): Record<string, string> => {
   });
 
   return cookieData;
+};
+
+export const cleanUser = (user: User) => {
+  const { token, password, ...cleanedUser } = user;
+  return cleanedUser;
 };

@@ -17,23 +17,30 @@ import { db } from ".";
 import { t } from "elysia";
 
 export const campRouter = ProtectedElysia({ prefix: "/camp" })
-.get(
-  "/fetch/messages/:campId",
-  async ({user, params}) => {
-      return db.select().from(campMessage).where(eq(campMessage.campId, params.campId))
+  .get(
+    "/fetch/messages/:campId",
+    async ({ params }) => {
+      return db
+        .select()
+        .from(campMessage)
+        .where(eq(campMessage.campId, params.campId));
+    },
+    {
+      params: t.Object({
+        campId: t.String(),
+      }),
+    }
+  )
 
-  },
-  {
-    params: t.Object({
-      campId: t.String(),
-    }),
-  }
-)
- 
   .post(
     "/create/message",
-    async ({ user,body }) => {
-      return (await db.insert(campMessage).values({...body, userId: user.id}).returning())[0];
+    async ({ user, body }) => {
+      return (
+        await db
+          .insert(campMessage)
+          .values({ ...body, userId: user.id })
+          .returning()
+      )[0];
     },
     {
       body: campMessageInsertSchema,
