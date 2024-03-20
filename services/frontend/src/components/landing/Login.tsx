@@ -19,7 +19,7 @@ function SignUp() {
   const { toast } = useToast();
   const loginMutation = useMutation({
     mutationFn: async (loginInfo: typeof userInfo) => {
-      const res = await client.user.login.post(loginInfo);
+      const res = await client.api.user.login.post(loginInfo);
 
       const data = dataOrThrow(res);
 
@@ -27,7 +27,7 @@ function SignUp() {
         case "success": {
           queryClient.setQueryData<FiresideUser>(
             userQueryOptions.queryKey,
-            () => data.user,
+            () => data.user
           );
           navigate({ to: "/camp" });
           return;

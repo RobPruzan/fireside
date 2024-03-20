@@ -6,7 +6,7 @@ export type FiresideUser = Omit<User, "token" | "password"> | null;
 export const userQueryOptions = {
   queryKey: ["user"],
   queryFn: async () => {
-    const res = await client.user["is-logged-in"].post();
+    const res = await client.api.user["is-logged-in"].post();
 
     if (res.error) {
       throw res.error;

@@ -62,7 +62,7 @@ export const useDefinedUser = (opts?: Opts) => {
   const shouldBeDefinedUser = opts?.user ?? user;
   if (!shouldBeDefinedUser) {
     throw new Error(
-      "Must ensure at route level user is authorized, or provide a non null user as an argument",
+      "Must ensure at route level user is authorized, or provide a non null user as an argument"
     );
   }
 
@@ -81,7 +81,7 @@ export const useCreateCampMutation = () => {
   const createCampMutation = useMutation({
     mutationKey: ["create-camp"],
     mutationFn: async (createOps: { name: string }) => {
-      const res = await client.protected.camp.create.post(createOps);
+      const res = await client.api.protected.camp.create.post(createOps);
       if (res.error) {
         throw Error(res.error.value);
       }
@@ -107,7 +107,7 @@ export const getUserCampQueryOptions = ({
 }) =>
   ({
     queryFn: async () => {
-      const res = await client.protected.camp.retrieve.me.get();
+      const res = await client.api.protected.camp.retrieve.me.get();
       if (res.error) {
         throw new Error(res.error.value);
       }
@@ -115,7 +115,7 @@ export const getUserCampQueryOptions = ({
     },
     queryKey: ["camps", userId],
     enabled: !!userId,
-  }) satisfies UseQueryOptions;
+  } satisfies UseQueryOptions);
 
 export const useCampsQuery = () => {
   const user = useUserQuery();
@@ -144,7 +144,9 @@ export const useJoinCampMutation = () => {
   const { userCampsUpdater } = useUserCamps();
   const joinCampMutation = useMutation({
     mutationFn: async (joinCampOpts: { campId: string }) => {
-      const res = await client.protected.camp.join[joinCampOpts.campId].post();
+      const res = await client.api.protected.camp.join[
+        joinCampOpts.campId
+      ].post();
       if (res.error) {
         throw new Error(res.error.value);
       }
@@ -164,7 +166,7 @@ export const useJoinCampMutation = () => {
       });
       allCampsUpdater((prev) => {
         return prev?.map((camp) =>
-          camp.id === joinedCamp.id ? { ...camp, count: camp.count + 1 } : camp,
+          camp.id === joinedCamp.id ? { ...camp, count: camp.count + 1 } : camp
         );
       });
     },
@@ -177,14 +179,14 @@ export const getAllCampsQueryOptions = ({ userId }: { userId: string }) =>
   ({
     queryKey: ["all-camps", userId],
     queryFn: async () => {
-      const res = await client.protected.camp.retrieve.get();
+      const res = await client.api.protected.camp.retrieve.get();
       if (res.error) {
         throw new Error(res.error.value);
       }
 
       return res.data;
     },
-  }) satisfies UseQueryOptions;
+  } satisfies UseQueryOptions);
 export const useAllCamps = () => {
   const user = useDefinedUser();
   const options = getAllCampsQueryOptions({ userId: user.id });

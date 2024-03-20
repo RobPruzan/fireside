@@ -14,7 +14,7 @@ export const { db } = createDB();
 const authRoutes = new Elysia().use(campRouter).use(userProtectedRoute);
 const noAuthRoutes = new Elysia().use(userRoute);
 
-const app = new Elysia()
+const app = new Elysia({ prefix: "/api" })
   .use(serverTiming())
   .use(
     cors({
@@ -27,10 +27,12 @@ const app = new Elysia()
   .use(noAuthRoutes)
   .use(authRoutes)
   .use(friendRoute)
+  .get("/", () => Bun.file("public/takodachi.png"))
 
   .onError(({ error }) => {
     return error.toString();
   })
+
   .listen(port);
 
 console.log(`Running on port ${port}`);
