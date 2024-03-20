@@ -10,7 +10,7 @@
 
 ### Setting up db
 
-1. `docker-compose up db --build`
+1. `docker-compose -f docker-compose.dev.yaml up db --build`
 2. `cd services/db`
 3. `echo "CONNECTION_STRING=postgres://test_user:test_password@localhost/test_db" > .env`
 4. `pnpm migrate:generate && pnpm migrate:run`
@@ -20,7 +20,7 @@
 1. `cd backend`
 2. `echo "CONNECTION_STRING=postgres://test_user:test_password@db/test_db" > .env`
 3. `cd ../../`
-4. `docker-compose up fireside --build`
+4. `docker-compose -f docker-compose.dev.yaml up fireside --build`
 
 ### Running frontend
 
