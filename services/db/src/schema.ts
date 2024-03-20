@@ -28,7 +28,7 @@ export const user = pgTable("user", {
   password: text("password").notNull(),
   role: text("role").$type<"instructor" | "student">().notNull(),
   createdAt: timestamp("createdAt", { mode: "string" })
-    .$defaultFn(() => new Date().toString())
+    .$defaultFn(() => new Date().toISOString())
     .notNull(),
   updatedAt: timestamp("updated_at", { mode: "string" }),
 });
@@ -38,7 +38,7 @@ export type User = InferSelectModel<typeof user>;
 export const token = pgTable("token", {
   value: text("id").primaryKey(),
   expires: timestamp("expires", { mode: "string" }).$defaultFn(() =>
-    getOneYearAheadDate().toString()
+    getOneYearAheadDate().toISOString()
   ),
 });
 
@@ -52,7 +52,7 @@ export const camp = pgTable("camp", {
   id: uuid("id").defaultRandom().primaryKey(),
   name: text("name").notNull(),
   createdAt: timestamp("createdAt", { mode: "string" })
-    .$defaultFn(() => new Date().toString())
+    .$defaultFn(() => new Date().toISOString())
     .notNull(),
   updatedAt: timestamp("updated_at", { mode: "string" }),
 });
@@ -71,7 +71,7 @@ export const campMessage = pgTable("campMessage", {
     .references(() => camp.id),
   message: text("message").notNull(),
   createdAt: timestamp("createdAt", { mode: "string" })
-    .$defaultFn(() => new Date().toString())
+    .$defaultFn(() => new Date().toISOString())
     .notNull(),
 });
 
@@ -109,7 +109,7 @@ export const bonfire = pgTable("bonfire", {
     .notNull(),
   name: text("name").notNull(),
   createdAt: timestamp("createdAt", { mode: "string" })
-    .$defaultFn(() => new Date().toString())
+    .$defaultFn(() => new Date().toISOString())
     .notNull(),
   updatedAt: timestamp("updated_at", { mode: "string" }),
 });
@@ -125,7 +125,7 @@ export const userToBonfire = pgTable("userToBonfire", {
     .references(() => bonfire.id)
     .notNull(),
   joinedAt: timestamp("createdAt", { mode: "string" })
-    .$defaultFn(() => new Date().toString())
+    .$defaultFn(() => new Date().toISOString())
     .notNull(),
 });
 
@@ -139,7 +139,7 @@ export const friendRequest = pgTable("friendRequest", {
     .notNull(),
   deleted: boolean("deleted").default(false),
   createdAt: timestamp("createdAt", { mode: "string" })
-    .$defaultFn(() => new Date().toString())
+    .$defaultFn(() => new Date().toISOString())
     .notNull(),
 });
 export type FriendRequest = InferSelectModel<typeof friendRequest>;
@@ -154,7 +154,7 @@ export const friend = pgTable("friend", {
     .notNull(),
   // problem for later
   // createdAt: timestamp("createdAt", { mode: "string" })
-  //   .$defaultFn(() => new Date().toString())
+  //   .$defaultFn(() => new Date().toISOString())
   //   .notNull(),
 });
 
