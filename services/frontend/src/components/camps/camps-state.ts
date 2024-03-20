@@ -50,12 +50,13 @@ export const useCreateCampMutation = () => {
 
   const { queryKey: allCampsQueryKey } = useAllCamps();
   const { queryKey: userCampsQueryKey } = useUserCamps();
-  const { setQueryData } = useQueryClient();
+  const queryClient = useQueryClient();
 
   const createCampMutation = useMutation({
     mutationKey: ["create-camp"],
     mutationFn: async (createOps: { name: string }) => {
       const res = await client.api.protected.camp.create.post(createOps);
+      console.log("here?");
       if (res.error) {
         throw Error(JSON.stringify(res.error.value));
       }
@@ -63,16 +64,24 @@ export const useCreateCampMutation = () => {
       return res.data;
     },
     onSuccess: (camp) => {
-      setQueryData(userCampsQueryKey, (prev) =>
+      console.log("hi", userCampsQueryKey);
+      queryClient.setQueryData(userCampsQueryKey, (prev) =>
         prev ? [...prev, camp] : [camp]
       );
-      setQueryData(allCampsQueryKey, (prev) =>
+      console.log("blug");
+      queryClient.setQueryData(allCampsQueryKey, (prev) =>
         prev ? [...prev, camp] : [camp]
       );
       setModalOpen(false);
     },
-    onError: () =>
-      toast({ title: "Failed to create camp", variant: "destructive" }),
+    onError: (e) => {
+      toast({
+        title: "Failed to create camp",
+        variant: "destructive",
+        description: e.message + "\n" + e.stack,
+      });
+      console.error(e);
+    },
   });
 
   return createCampMutation;
@@ -104,12 +113,10 @@ export const useCampsQuery = () => {
 export const useUserCamps = (opts?: Opts) => {
   const user = useDefinedUser(opts);
   const options = getUserCampQueryOptions({ userId: user.id });
-  const queryClient = useQueryClient();
   const campsQuery = useSuspenseQuery(options);
   return {
     camps: campsQuery.data,
     query: campsQuery,
-
     queryKey: options.queryKey,
   };
 };
@@ -119,7 +126,7 @@ export const useJoinCampMutation = () => {
   const { queryKey: campsQueryKey } = useAllCamps();
   const { queryKey: userCampsQueryKey } = useUserCamps();
 
-  const { setQueryData } = useQueryClient();
+  const queryClient = useQueryClient();
   const joinCampMutation = useMutation({
     mutationFn: async (joinCampOpts: { campId: string }) =>
       promiseDataOrThrow(
@@ -133,10 +140,10 @@ export const useJoinCampMutation = () => {
       });
     },
     onSuccess: (joinedCamp) => {
-      setQueryData(userCampsQueryKey, (prev) => {
+      queryClient.setQueryData(userCampsQueryKey, (prev) => {
         return !prev ? [joinedCamp] : [...prev, joinedCamp];
       });
-      setQueryData(campsQueryKey, (prev) => {
+      queryClient.setQueryData(campsQueryKey, (prev) => {
         return prev?.map((camp) =>
           camp.id === joinedCamp.id ? { ...camp, count: camp.count + 1 } : camp
         );

@@ -48,7 +48,7 @@ export const useMakeFriendRequestMutation = () => {
 
   const { queryKey: getUserFriendRequestsQueryKey, friendRequests } =
     useGetUserFriendRequests();
-  const { setQueryData } = useQueryClient();
+  const queryClient = useQueryClient();
   const { queryKey: getFriendsQueryKey } = useGetFriends();
 
   const makeFriendRequestMutation = useMutation({
@@ -66,7 +66,7 @@ export const useMakeFriendRequestMutation = () => {
       }),
     onSuccess: (result) => {
       if (result.kind === "created-friend") {
-        setQueryData(getFriendsQueryKey, (prev) => {
+        queryClient.setQueryData(getFriendsQueryKey, (prev) => {
           if (
             friendRequests.some(
               (request) => request.fromUserId === result.otherUser.id
@@ -78,7 +78,7 @@ export const useMakeFriendRequestMutation = () => {
           return prev;
         });
 
-        setQueryData(getUserFriendRequestsQueryKey, (prev) =>
+        queryClient.setQueryData(getUserFriendRequestsQueryKey, (prev) =>
           !prev
             ? [result.existingRequest]
             : [...prev, result.existingRequest].map((request) => ({
@@ -92,7 +92,7 @@ export const useMakeFriendRequestMutation = () => {
         return;
       }
 
-      setQueryData(getUserFriendRequestsQueryKey, (prev) =>
+      queryClient.setQueryData(getUserFriendRequestsQueryKey, (prev) =>
         !prev ? [result.newFriendRequest] : [...prev, result.newFriendRequest]
       );
     },
@@ -160,7 +160,7 @@ export const useAcceptFriendRequestMutation = () => {
   const { toast } = useToast();
 
   const { queryKey: getFriendsQueryKey } = useGetFriends();
-  const { setQueryData } = useQueryClient();
+  const queryClient = useQueryClient();
   const { queryKey: friendRequestsQueryKey } = useGetUserFriendRequests();
   const user = useDefinedUser();
   const acceptFriendRequestMutation = useMutation({
@@ -183,10 +183,10 @@ export const useAcceptFriendRequestMutation = () => {
         user.id === data.friend.userOneId
           ? data.friend.userTwoId
           : data.friend.userOneId;
-      setQueryData(getFriendsQueryKey, (prev) =>
+      queryClient.setQueryData(getFriendsQueryKey, (prev) =>
         prev ? [...prev, data] : [data]
       );
-      setQueryData(friendRequestsQueryKey, (prev) =>
+      queryClient.setQueryData(friendRequestsQueryKey, (prev) =>
         (prev ?? []).map((request) => {
           if (createdFriendUserId === request.fromUserId) {
             return {
