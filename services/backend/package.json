@@ -16,9 +16,9 @@
     "typescript": "^5.0.0"
   },
   "dependencies": {
-    "@elysiajs/cors": "^1.0.2",
-    "@elysiajs/server-timing": "^1.0.2",
-    "@elysiajs/static": "^1.0.2",
+    "@elysiajs/cors": "^1.0.0",
+    "@elysiajs/server-timing": "^1.0.0",
+    "@elysiajs/static": "^1.0.0",
     "@fireside/db": "*",
     "@fireside/frontend": "*",
     "@fireside/utils": "*",

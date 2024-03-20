@@ -2,7 +2,7 @@ import { treaty } from "@elysiajs/eden";
 
 import { App } from "@fireside/backend";
 import { Nullish } from "@fireside/utils";
-
+// @ts-expect-error  types are being wonky for some reason
 export const client = treaty<App>(import.meta.env.VITE_API_URL, {
   fetch: {
     credentials: "include",

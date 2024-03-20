@@ -24,22 +24,13 @@ const app = new Elysia()
     })
   )
   .use(serverTiming())
-  // .use(staticPlugin())
-  // .use(
-  //   staticPlugin({
-  //     prefix: "static",
-  //   })
-  // )
   .group("/api", (app) =>
     app
-
       // order matters till v1.0 local scoping can be implemented
       .use(noAuthRoutes)
       .use(authRoutes)
       .use(friendRoute)
   )
-  // .get("/", () => Bun.file("static/index.html"))
-  .use(staticPlugin({ prefix: "/", assets: "./public" }))
   .get("/*", async ({ path }) => {
     const assetFile = Bun.file(
       `./node_modules/@fireside/frontend/dist/assets/${path
