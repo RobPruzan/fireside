@@ -54,7 +54,6 @@ export const Camp = () => {
             setUserMessage("");
           }
         }}
-        placeholder="What's on your mind?"
         value={userMessage}
         onChange={(event) => setUserMessage(event.target.value)}
         className="flex h-[50px]"
