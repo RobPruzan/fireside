@@ -58,7 +58,7 @@ export const Camp = () => {
 
   return (
     <div className="flex flex-col w-full h-full">
-      <div className="flex flex-col w-full h-5/6">
+      <div className="flex flex-col w-full h-[calc(100%-90px)]">
         {messages.map((message, index) => (
           <div key={index} className="message">
             {message.message}
@@ -66,8 +66,7 @@ export const Camp = () => {
         ))}
       </div>
 
-      {/* input */}
-      <div className="flex w-full h-1/6 justify-start items-center pr-4">
+      <div className="flex w-full h-[90px] justify-between items-center p-4">
         <Input
           placeholder="What's on your mind?"
           value={userMessage}
