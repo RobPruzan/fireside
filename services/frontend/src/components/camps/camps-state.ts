@@ -48,8 +48,8 @@ export const useCreateCampMutation = () => {
   const { toast } = useToast();
   const setModalOpen = useSetAtom(createCampModalOpen);
 
-  const { queryKey: allCampsQueryKey } = useAllCamps();
-  const { queryKey: userCampsQueryKey } = useUserCamps();
+  const { allCampsQueryKey: allCampsQueryKey } = useAllCamps();
+  const { userCampsQueryKey: userCampsQueryKey } = useUserCamps();
   const queryClient = useQueryClient();
 
   const createCampMutation = useMutation({
@@ -113,18 +113,18 @@ export const useCampsQuery = () => {
 export const useUserCamps = (opts?: Opts) => {
   const user = useDefinedUser(opts);
   const options = getUserCampQueryOptions({ userId: user.id });
-  const campsQuery = useSuspenseQuery(options);
+  const userCampsQuery = useSuspenseQuery(options);
   return {
-    camps: campsQuery.data,
-    query: campsQuery,
-    queryKey: options.queryKey,
+    camps: userCampsQuery.data,
+    campsQuery: userCampsQuery,
+    userCampsQueryKey: options.queryKey,
   };
 };
 
 export const useJoinCampMutation = () => {
   const { toast } = useToast();
-  const { queryKey: campsQueryKey } = useAllCamps();
-  const { queryKey: userCampsQueryKey } = useUserCamps();
+  const { allCampsQueryKey } = useAllCamps();
+  const { userCampsQueryKey } = useUserCamps();
 
   const queryClient = useQueryClient();
   const joinCampMutation = useMutation({
@@ -143,7 +143,7 @@ export const useJoinCampMutation = () => {
       queryClient.setQueryData(userCampsQueryKey, (prev) => {
         return !prev ? [joinedCamp] : [...prev, joinedCamp];
       });
-      queryClient.setQueryData(campsQueryKey, (prev) => {
+      queryClient.setQueryData(allCampsQueryKey, (prev) => {
         return prev?.map((camp) =>
           camp.id === joinedCamp.id ? { ...camp, count: camp.count + 1 } : camp
         );
@@ -168,8 +168,8 @@ export const useAllCamps = () => {
 
   return {
     camps: allCampsQuery.data,
-    query: allCampsQuery,
-    queryKey: options.queryKey,
+    allCampsQuery,
+    allCampsQueryKey: options.queryKey,
   };
 };
 

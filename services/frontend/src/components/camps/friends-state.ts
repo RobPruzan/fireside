@@ -38,18 +38,18 @@ export const useGetUserFriendRequests = () => {
               fromUserId === userOneId || fromUserId === userTwoId
           )
       ),
-    query: requestsQuery,
-    queryKey: options.queryKey,
+    requestsQuery,
+    requestsQueryKey: options.queryKey,
   };
 };
 
 export const useMakeFriendRequestMutation = () => {
   const { toast } = useToast();
 
-  const { queryKey: getUserFriendRequestsQueryKey, friendRequests } =
+  const { requestsQueryKey: getFriendRequestsQueryKey, friendRequests } =
     useGetUserFriendRequests();
   const queryClient = useQueryClient();
-  const { queryKey: getFriendsQueryKey } = useGetFriends();
+  const { friendsQueryKey: getFriendsQueryKey } = useGetFriends();
 
   const makeFriendRequestMutation = useMutation({
     mutationFn: (makeFriendRequestOpts: { to: string }) =>
@@ -78,7 +78,7 @@ export const useMakeFriendRequestMutation = () => {
           return prev;
         });
 
-        queryClient.setQueryData(getUserFriendRequestsQueryKey, (prev) =>
+        queryClient.setQueryData(getFriendRequestsQueryKey, (prev) =>
           !prev
             ? [result.existingRequest]
             : [...prev, result.existingRequest].map((request) => ({
@@ -92,7 +92,7 @@ export const useMakeFriendRequestMutation = () => {
         return;
       }
 
-      queryClient.setQueryData(getUserFriendRequestsQueryKey, (prev) =>
+      queryClient.setQueryData(getFriendRequestsQueryKey, (prev) =>
         !prev ? [result.newFriendRequest] : [...prev, result.newFriendRequest]
       );
     },
@@ -130,8 +130,8 @@ export const useGetUsers = () => {
         return "no-relation" as const;
       }),
     })),
-    query: usersQuery,
-    queryKey: usersQueryOptions.queryKey,
+    usersQuery,
+    usersQueryKey: usersQueryOptions.queryKey,
   };
 };
 
@@ -151,17 +151,17 @@ export const useGetFriends = () => {
 
   return {
     friends: friendsQuery.data ?? [],
-    query: friendsQuery,
-    queryKey: options.queryKey,
+    friendsQuery,
+    friendsQueryKey: options.queryKey,
   };
 };
 
 export const useAcceptFriendRequestMutation = () => {
   const { toast } = useToast();
 
-  const { queryKey: getFriendsQueryKey } = useGetFriends();
+  const { friendsQueryKey } = useGetFriends();
   const queryClient = useQueryClient();
-  const { queryKey: friendRequestsQueryKey } = useGetUserFriendRequests();
+  const { requestsQueryKey } = useGetUserFriendRequests();
   const user = useDefinedUser();
   const acceptFriendRequestMutation = useMutation({
     mutationFn: ({ requestId }: { requestId: string }) =>
@@ -183,10 +183,10 @@ export const useAcceptFriendRequestMutation = () => {
         user.id === data.friend.userOneId
           ? data.friend.userTwoId
           : data.friend.userOneId;
-      queryClient.setQueryData(getFriendsQueryKey, (prev) =>
+      queryClient.setQueryData(friendsQueryKey, (prev) =>
         prev ? [...prev, data] : [data]
       );
-      queryClient.setQueryData(friendRequestsQueryKey, (prev) =>
+      queryClient.setQueryData(requestsQueryKey, (prev) =>
         (prev ?? []).map((request) => {
           if (createdFriendUserId === request.fromUserId) {
             return {
