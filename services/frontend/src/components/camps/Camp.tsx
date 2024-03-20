@@ -43,7 +43,7 @@ export const Camp = () => {
           )
           .map((messageObj) => (
             <div className="p-4" key={messageObj.id}>
-              {messageObj.message} {new Date(messageObj.createdAt).getTime()}
+              {messageObj.message}
             </div>
           ))}
       </div>
