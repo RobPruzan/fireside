@@ -18,7 +18,7 @@ import { t } from "elysia";
 
 export const campRouter = ProtectedElysia({ prefix: "/camp" })
   .get(
-    "/fetch/messages/:campId",
+    "/message/retrieve/:campId",
     async ({ params }) => {
       return db
         .select()
@@ -33,7 +33,7 @@ export const campRouter = ProtectedElysia({ prefix: "/camp" })
   )
 
   .post(
-    "/create/message",
+    "/message/create",
     async ({ user, body }) => {
       return (
         await db

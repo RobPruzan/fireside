@@ -1,6 +1,7 @@
 import { atom } from "jotai";
 import {
   UseQueryOptions,
+  queryOptions,
   useMutation,
   useQuery,
   useQueryClient,
@@ -16,7 +17,7 @@ import {
 } from "@/lib/useUserQuery";
 import { useSetAtom } from "jotai";
 import { Nullish } from "@fireside/utils";
-import { FiresideCamp } from "@fireside/db";
+import { CampMessage, FiresideCamp } from "@fireside/db";
 
 import { makeOptimisticUpdater } from "@/lib/utils";
 
@@ -157,4 +158,102 @@ export const useAllCamps = () => {
       options,
     }),
   };
+};
+
+export const getMessagesOptions = ({ campId }: { campId: string }) =>
+  queryOptions({
+    queryKey: ["message", campId],
+    queryFn: () =>
+      promiseDataOrThrow(
+        client.protected.camp.message
+          .retrieve({
+            campId,
+          })
+          .get()
+      ),
+    refetchInterval: 5000,
+  });
+
+export const useGetMessages = ({ campId }: { campId: string }) => {
+  const options = {
+    queryKey: ["messages", campId],
+    queryFn: () =>
+      promiseDataOrThrow(
+        client.protected.camp.message
+          .retrieve({
+            campId,
+          })
+          .get()
+      ),
+    refetchInterval: 5000,
+  };
+
+  const messagesQuery = useSuspenseQuery(options);
+  const queryClient = useQueryClient();
+
+  return {
+    messagesQuery,
+    messages: messagesQuery.data,
+    messagesUpdater: makeOptimisticUpdater({
+      options,
+      queryClient,
+    }),
+  };
+};
+
+export const useCreateMessageMutation = ({ campId }: { campId: string }) => {
+  const { toast } = useToast();
+
+  const { messagesUpdater } = useGetMessages({ campId });
+  const user = useDefinedUser();
+
+  const queryClient = useQueryClient();
+
+  const createMessageMutation = useMutation({
+    mutationFn: (messageInfo: { message: string; createdAt: string }) =>
+      promiseDataOrThrow(
+        client.protected.camp.message.create.post({
+          campId,
+          ...messageInfo,
+        })
+      ),
+    onMutate: async (variables) => {
+      const optimisticMessageId = crypto.randomUUID();
+
+      await queryClient.cancelQueries({
+        queryKey: getMessagesOptions({ campId }).queryKey,
+      });
+      messagesUpdater((prev) => [
+        ...prev,
+        {
+          id: optimisticMessageId,
+          campId,
+          userId: user.id,
+          ...variables,
+        },
+      ]);
+
+      const previousMessages = queryClient.getQueryData(
+        getMessagesOptions({ campId }).queryKey
+      );
+      return { optimisticMessageId, previousMessages };
+    },
+
+    onError: (e, _, ctx) => {
+      toast({
+        variant: "destructive",
+        title: "Failed to send message.",
+        description: e.message,
+      });
+
+      messagesUpdater(ctx?.previousMessages ?? []);
+    },
+    onSuccess: (data, _, ctx) => {
+      messagesUpdater((prev) =>
+        [...prev, data].filter(({ id }) => id !== ctx.optimisticMessageId)
+      );
+    },
+  });
+
+  return createMessageMutation;
 };
