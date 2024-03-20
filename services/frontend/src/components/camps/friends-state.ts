@@ -1,17 +1,13 @@
-import { client, dataOrThrow, promiseDataOrThrow } from "@/edenClient";
+import { client, promiseDataOrThrow } from "@/edenClient";
 import {
-  NoInfer,
-  UseQueryOptions,
   queryOptions,
   useMutation,
   useQueryClient,
   useSuspenseQuery,
 } from "@tanstack/react-query";
 import { useDefinedUser } from "./camps-state";
-import { makeOptimisticUpdater } from "@/lib/utils";
 import { useToast } from "../ui/use-toast";
-import { InsidePromise, run } from "@fireside/utils";
-import { userQueryOptions } from "@/lib/useUserQuery";
+import { run } from "@fireside/utils";
 
 export const getFriendRequestsQueryOptions = ({ userId }: { userId: string }) =>
   queryOptions({
