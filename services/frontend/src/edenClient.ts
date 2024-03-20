@@ -40,7 +40,7 @@ export const dataOrThrow = <T>(response: SimpleResponse<T>) => {
 
 export const promiseDataOrThrow = async <T>(
   response: Promise<SimpleResponse<T>>
-) => {
+): Promise<T> => {
   const awaitedPromise = await response;
   if (awaitedPromise.error?.value) {
     throw new Error(JSON.stringify(awaitedPromise.error.value));

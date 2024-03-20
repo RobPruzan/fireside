@@ -48,8 +48,9 @@ export const useCreateCampMutation = () => {
   const { toast } = useToast();
   const setModalOpen = useSetAtom(createCampModalOpen);
 
-  const { allCampsUpdater } = useAllCamps();
-  const { userCampsUpdater } = useUserCamps();
+  const { queryKey: allCampsQueryKey } = useAllCamps();
+  const { queryKey: userCampsQueryKey } = useUserCamps();
+  const { setQueryData } = useQueryClient();
 
   const createCampMutation = useMutation({
     mutationKey: ["create-camp"],
@@ -62,8 +63,12 @@ export const useCreateCampMutation = () => {
       return res.data;
     },
     onSuccess: (camp) => {
-      userCampsUpdater((prev) => (prev ? [...prev, camp] : [camp]));
-      allCampsUpdater((prev) => (prev ? [...prev, camp] : [camp]));
+      setQueryData(userCampsQueryKey, (prev) =>
+        prev ? [...prev, camp] : [camp]
+      );
+      setQueryData(allCampsQueryKey, (prev) =>
+        prev ? [...prev, camp] : [camp]
+      );
       setModalOpen(false);
     },
     onError: () =>
@@ -78,7 +83,7 @@ export const getUserCampQueryOptions = ({
 }: {
   userId: Nullish<string>;
 }) =>
-  ({
+  queryOptions({
     queryFn: async () => {
       const res = await client.api.protected.camp.retrieve.me.get();
       if (res.error) {
@@ -88,7 +93,7 @@ export const getUserCampQueryOptions = ({
     },
     queryKey: ["camps", userId],
     enabled: !!userId,
-  } satisfies UseQueryOptions);
+  });
 
 export const useCampsQuery = () => {
   const user = useUserQuery();
@@ -104,17 +109,17 @@ export const useUserCamps = (opts?: Opts) => {
   return {
     camps: campsQuery.data,
     query: campsQuery,
-    userCampsUpdater: makeOptimisticUpdater({
-      queryClient,
-      options,
-    }),
+
+    queryKey: options.queryKey,
   };
 };
 
 export const useJoinCampMutation = () => {
   const { toast } = useToast();
-  const { allCampsUpdater } = useAllCamps();
-  const { userCampsUpdater } = useUserCamps();
+  const { queryKey: campsQueryKey } = useAllCamps();
+  const { queryKey: userCampsQueryKey } = useUserCamps();
+
+  const { setQueryData } = useQueryClient();
   const joinCampMutation = useMutation({
     mutationFn: async (joinCampOpts: { campId: string }) =>
       promiseDataOrThrow(
@@ -128,10 +133,10 @@ export const useJoinCampMutation = () => {
       });
     },
     onSuccess: (joinedCamp) => {
-      userCampsUpdater((prev) => {
+      setQueryData(userCampsQueryKey, (prev) => {
         return !prev ? [joinedCamp] : [...prev, joinedCamp];
       });
-      allCampsUpdater((prev) => {
+      setQueryData(campsQueryKey, (prev) => {
         return prev?.map((camp) =>
           camp.id === joinedCamp.id ? { ...camp, count: camp.count + 1 } : camp
         );
@@ -143,25 +148,21 @@ export const useJoinCampMutation = () => {
 };
 
 export const getAllCampsQueryOptions = ({ userId }: { userId: string }) =>
-  ({
+  queryOptions({
     queryKey: ["all-camps", userId],
     queryFn: async () =>
       promiseDataOrThrow(client.api.protected.camp.retrieve.get()),
-  } satisfies UseQueryOptions);
+  });
 export const useAllCamps = () => {
   const user = useDefinedUser();
   const options = getAllCampsQueryOptions({ userId: user.id });
-  const queryClient = useQueryClient();
 
   const allCampsQuery = useSuspenseQuery(options);
 
   return {
     camps: allCampsQuery.data,
     query: allCampsQuery,
-    allCampsUpdater: makeOptimisticUpdater({
-      queryClient,
-      options,
-    }),
+    queryKey: options.queryKey,
   };
 };
 

@@ -1,6 +1,8 @@
 import { client, dataOrThrow, promiseDataOrThrow } from "@/edenClient";
 import {
+  NoInfer,
   UseQueryOptions,
+  queryOptions,
   useMutation,
   useQueryClient,
   useSuspenseQuery,
@@ -9,18 +11,18 @@ import { useDefinedUser } from "./camps-state";
 import { makeOptimisticUpdater } from "@/lib/utils";
 import { useToast } from "../ui/use-toast";
 import { InsidePromise, run } from "@fireside/utils";
+import { userQueryOptions } from "@/lib/useUserQuery";
 
 export const getFriendRequestsQueryOptions = ({ userId }: { userId: string }) =>
-  ({
+  queryOptions({
     queryKey: ["friend-requests", userId],
     queryFn: () =>
       promiseDataOrThrow(client.api.protected.friend.request.retrieve.get()),
     enabled: !!userId,
-  } satisfies UseQueryOptions);
+  });
 
 export const useGetUserFriendRequests = () => {
   const user = useDefinedUser();
-  const queryClient = useQueryClient();
   const options = getFriendRequestsQueryOptions({ userId: user.id });
   const requestsQuery = useSuspenseQuery(options);
   const { friends } = useGetFriends();
@@ -37,20 +39,17 @@ export const useGetUserFriendRequests = () => {
           )
       ),
     query: requestsQuery,
-    optimisticFriendRequestsUpdater: makeOptimisticUpdater({
-      queryClient,
-      options,
-    }),
+    queryKey: options.queryKey,
   };
 };
 
 export const useMakeFriendRequestMutation = () => {
   const { toast } = useToast();
 
-  const { optimisticFriendRequestsUpdater, friendRequests } =
+  const { queryKey: getUserFriendRequestsQueryKey, friendRequests } =
     useGetUserFriendRequests();
-
-  const { optimisticFriendsUpdate } = useGetFriends();
+  const { setQueryData } = useQueryClient();
+  const { queryKey: getFriendsQueryKey } = useGetFriends();
 
   const makeFriendRequestMutation = useMutation({
     mutationFn: (makeFriendRequestOpts: { to: string }) =>
@@ -67,19 +66,19 @@ export const useMakeFriendRequestMutation = () => {
       }),
     onSuccess: (result) => {
       if (result.kind === "created-friend") {
-        optimisticFriendsUpdate((prev) => {
+        setQueryData(getFriendsQueryKey, (prev) => {
           if (
             friendRequests.some(
               (request) => request.fromUserId === result.otherUser.id
             )
           ) {
-            return [...prev, result];
+            return [...(prev ?? []), result];
           }
 
           return prev;
         });
 
-        optimisticFriendRequestsUpdater((prev) =>
+        setQueryData(getUserFriendRequestsQueryKey, (prev) =>
           !prev
             ? [result.existingRequest]
             : [...prev, result.existingRequest].map((request) => ({
@@ -93,7 +92,7 @@ export const useMakeFriendRequestMutation = () => {
         return;
       }
 
-      optimisticFriendRequestsUpdater((prev) =>
+      setQueryData(getUserFriendRequestsQueryKey, (prev) =>
         !prev ? [result.newFriendRequest] : [...prev, result.newFriendRequest]
       );
     },
@@ -102,14 +101,13 @@ export const useMakeFriendRequestMutation = () => {
   return makeFriendRequestMutation;
 };
 
-export const usersQueryOptions = {
+export const usersQueryOptions = queryOptions({
   queryKey: ["get-users"],
   queryFn: () => promiseDataOrThrow(client.api.protected.user["get-all"].get()),
-} satisfies UseQueryOptions;
+});
 
 export const useGetUsers = () => {
   const usersQuery = useSuspenseQuery(usersQueryOptions);
-  const queryClient = useQueryClient();
   const { friends } = useGetFriends();
   const { friendRequests } = useGetUserFriendRequests();
   return {
@@ -133,24 +131,19 @@ export const useGetUsers = () => {
       }),
     })),
     query: usersQuery,
-    optimisticUsersUpdater: makeOptimisticUpdater({
-      queryClient,
-      options: usersQueryOptions,
-    }),
+    queryKey: usersQueryOptions.queryKey,
   };
 };
 
 export const getFriendsQueryOptions = ({ userId }: { userId: string }) =>
-  ({
+  queryOptions({
     queryKey: ["friends", userId],
     queryFn: () =>
       promiseDataOrThrow(client.api.protected.friend.retrieve.get()),
-  } satisfies UseQueryOptions);
+  });
 
 export const useGetFriends = () => {
   const user = useDefinedUser();
-
-  const queryClient = useQueryClient();
   const options = getFriendsQueryOptions({ userId: user.id });
   const friendsQuery = useSuspenseQuery(
     getFriendsQueryOptions({ userId: user.id })
@@ -159,19 +152,16 @@ export const useGetFriends = () => {
   return {
     friends: friendsQuery.data ?? [],
     query: friendsQuery,
-    optimisticFriendsUpdate: makeOptimisticUpdater({
-      queryClient,
-      options,
-    }),
+    queryKey: options.queryKey,
   };
 };
 
 export const useAcceptFriendRequestMutation = () => {
   const { toast } = useToast();
 
-  const { optimisticFriendsUpdate } = useGetFriends();
-
-  const { optimisticFriendRequestsUpdater } = useGetUserFriendRequests();
+  const { queryKey: getFriendsQueryKey } = useGetFriends();
+  const { setQueryData } = useQueryClient();
+  const { queryKey: friendRequestsQueryKey } = useGetUserFriendRequests();
   const user = useDefinedUser();
   const acceptFriendRequestMutation = useMutation({
     mutationFn: ({ requestId }: { requestId: string }) =>
@@ -193,9 +183,11 @@ export const useAcceptFriendRequestMutation = () => {
         user.id === data.friend.userOneId
           ? data.friend.userTwoId
           : data.friend.userOneId;
-      optimisticFriendsUpdate((prev) => (prev ? [...prev, data] : [data]));
-      optimisticFriendRequestsUpdater((prev) =>
-        prev.map((request) => {
+      setQueryData(getFriendsQueryKey, (prev) =>
+        prev ? [...prev, data] : [data]
+      );
+      setQueryData(friendRequestsQueryKey, (prev) =>
+        (prev ?? []).map((request) => {
           if (createdFriendUserId === request.fromUserId) {
             return {
               ...request,

@@ -20,7 +20,6 @@ import { useSetAtom } from "jotai";
 import { Nullish } from "@fireside/utils";
 import { FiresideCamp } from "@fireside/db";
 
-import { makeArrayOptimisticUpdater } from "@/lib/utils";
 import {
   AnyRoute,
   RegisteredRouter,
@@ -75,8 +74,10 @@ export const useCreateCampMutation = () => {
   const { toast } = useToast();
   const setModalOpen = useSetAtom(createCampModalOpen);
 
-  const { allCampsUpdater } = useAllCamps();
-  const { userCampsUpdater } = useUserCamps();
+  const { allCampsQueryKey } = useAllCamps();
+  const { campsQueryKey } = useUserCamps();
+
+  const { setQueryData } = useQueryClient();
 
   const createCampMutation = useMutation({
     mutationKey: ["create-camp"],
@@ -89,8 +90,10 @@ export const useCreateCampMutation = () => {
       return res.data;
     },
     onSuccess: (camp) => {
-      userCampsUpdater((prev) => (prev ? [...prev, camp] : [camp]));
-      allCampsUpdater((prev) => (prev ? [...prev, camp] : [camp]));
+      setQueryData(campsQueryKey, (prev) => (prev ? [...prev, camp] : [camp]));
+      setQueryData(allCampsQueryKey, (prev) =>
+        prev ? [...(prev ?? []), camp] : [camp]
+      );
       setModalOpen(false);
     },
     onError: () =>
@@ -105,7 +108,7 @@ export const getUserCampQueryOptions = ({
 }: {
   userId: Nullish<string>;
 }) =>
-  ({
+  queryOptions({
     queryFn: async () => {
       const res = await client.api.protected.camp.retrieve.me.get();
       if (res.error) {
@@ -115,7 +118,7 @@ export const getUserCampQueryOptions = ({
     },
     queryKey: ["camps", userId],
     enabled: !!userId,
-  } satisfies UseQueryOptions);
+  });
 
 export const useCampsQuery = () => {
   const user = useUserQuery();
@@ -127,21 +130,21 @@ export const useUserCamps = (opts?: Opts) => {
   const user = useDefinedUser(opts);
   const options = getUserCampQueryOptions({ userId: user.id });
   const queryClient = useQueryClient();
+
   const campsQuery = useSuspenseQuery(options);
+
   return {
     camps: campsQuery.data,
     query: campsQuery,
-    userCampsUpdater: makeArrayOptimisticUpdater({
-      queryClient,
-      options,
-    }),
+    campsQueryKey: options.queryKey,
   };
 };
 
 export const useJoinCampMutation = () => {
   const { toast } = useToast();
-  const { allCampsUpdater } = useAllCamps();
-  const { userCampsUpdater } = useUserCamps();
+  const { allCampsQueryKey } = useAllCamps();
+  const { campsQueryKey } = useUserCamps();
+  const { setQueryData } = useQueryClient();
   const joinCampMutation = useMutation({
     mutationFn: async (joinCampOpts: { campId: string }) => {
       const res = await client.api.protected.camp.join[
@@ -161,10 +164,10 @@ export const useJoinCampMutation = () => {
       });
     },
     onSuccess: (joinedCamp) => {
-      userCampsUpdater((prev) => {
+      setQueryData(campsQueryKey, (prev) => {
         return !prev ? [joinedCamp] : [...prev, joinedCamp];
       });
-      allCampsUpdater((prev) => {
+      setQueryData(allCampsQueryKey, (prev) => {
         return prev?.map((camp) =>
           camp.id === joinedCamp.id ? { ...camp, count: camp.count + 1 } : camp
         );
@@ -176,7 +179,7 @@ export const useJoinCampMutation = () => {
 };
 
 export const getAllCampsQueryOptions = ({ userId }: { userId: string }) =>
-  ({
+  queryOptions({
     queryKey: ["all-camps", userId],
     queryFn: async () => {
       const res = await client.api.protected.camp.retrieve.get();
@@ -186,7 +189,7 @@ export const getAllCampsQueryOptions = ({ userId }: { userId: string }) =>
 
       return res.data;
     },
-  } satisfies UseQueryOptions);
+  });
 export const useAllCamps = () => {
   const user = useDefinedUser();
   const options = getAllCampsQueryOptions({ userId: user.id });
@@ -197,9 +200,6 @@ export const useAllCamps = () => {
   return {
     camps: allCampsQuery.data,
     query: allCampsQuery,
-    allCampsUpdater: makeArrayOptimisticUpdater({
-      queryClient,
-      options,
-    }),
+    allCampsQueryKey: options.queryKey,
   };
 };
