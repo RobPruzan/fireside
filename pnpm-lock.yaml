@@ -13,13 +13,13 @@ importers:
   services/backend:
     dependencies:
       '@elysiajs/cors':
-        specifier: ^1.0.2
+        specifier: ^1.0.0
         version: 1.0.2(elysia@1.0.7)
       '@elysiajs/server-timing':
-        specifier: ^1.0.2
+        specifier: ^1.0.0
         version: 1.0.2(elysia@1.0.7)
       '@elysiajs/static':
-        specifier: ^1.0.2
+        specifier: ^1.0.0
         version: 1.0.2(elysia@1.0.7)
       '@fireside/db':
         specifier: '*'
