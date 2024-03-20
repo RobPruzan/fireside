@@ -9,7 +9,7 @@ import { LoadingSpinner } from "../ui/loading";
 import { useToast } from "../ui/use-toast";
 import { client, dataOrThrow } from "@/edenClient";
 
-function SignUp() {
+function Login() {
   const navigate = useNavigate({ from: "/login" });
   const [userInfo, setUserInfo] = useState({
     email: "",
@@ -34,7 +34,10 @@ function SignUp() {
         }
       }
     },
-    onError: (e) => toast({ variant: "destructive", title: e.message }),
+    onError: (e) => {
+      console.log({ WHAT: e, hm: e.message });
+      toast({ variant: "destructive", title: e.message });
+    },
   });
   return (
     <div className={`flex flex-col justify-between w-full `}>
@@ -108,4 +111,4 @@ function SignUp() {
   );
 }
 
-export default SignUp;
+export default Login;

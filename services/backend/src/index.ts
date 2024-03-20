@@ -16,6 +16,9 @@ const authRoutes = new Elysia().use(campRouter).use(userProtectedRoute);
 const noAuthRoutes = new Elysia().use(userRoute);
 
 const app = new Elysia()
+  .onBeforeHandle(({ set }) => {
+    set.headers["X-Content-Type-Options"] = "nosniff";
+  })
   .use(
     cors({
       credentials: true,
@@ -31,7 +34,7 @@ const app = new Elysia()
       .use(authRoutes)
       .use(friendRoute)
   )
-  .get("/*", async ({ path }) => {
+  .get("/*", async ({ path, set }) => {
     const assetFile = Bun.file(
       `./node_modules/@fireside/frontend/dist/assets/${path
         .replaceAll("/", "")

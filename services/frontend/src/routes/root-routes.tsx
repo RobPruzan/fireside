@@ -1,5 +1,5 @@
 import Landing from "@/components/landing/Landing";
-import SignUp from "@/components/landing/Login";
+import Login from "@/components/landing/Login";
 import { Profile } from "@/components/landing/Profile";
 import { LoadingSection } from "@/components/ui/loading";
 
@@ -12,6 +12,7 @@ import {
 import Register from "@/components/landing/Register";
 import { NavBar } from "@/components/camps/NavBar";
 import { QueryClient } from "@tanstack/react-query";
+import { Toaster } from "@/components/ui/toaster";
 
 export const rootRoute = createRootRouteWithContext<{
   queryClient: QueryClient;
@@ -25,6 +26,7 @@ export const rootLandingLayout = createRoute({
       <>
         <NavBar />
         <Outlet />
+        <Toaster />
       </>
     );
   },
@@ -53,6 +55,6 @@ export const profileRoute = createRoute({
 export const loginPageRoute = createRoute({
   getParentRoute: () => rootLandingLayout,
   path: "/login",
-  component: SignUp,
+  component: Login,
   pendingComponent: LoadingSection,
 });
