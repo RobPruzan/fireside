@@ -42,15 +42,15 @@ const app = new Elysia()
   .use(staticPlugin({ prefix: "/", assets: "./public" }))
   .get("/*", async ({ path }) => {
     const assetFile = Bun.file(
-      `./static/assets/${path.replaceAll("/", "").replace("assets", "")}`
+      `./node_modules/@fireside/frontend/dist/assets/${path
+        .replaceAll("/", "")
+        .replace("assets", "")}`
     );
-    const publicFile = Bun.file(`./public/${path.replaceAll("/", "")}`);
-    const fallBackFile = Bun.file("./static/index.html");
-    console.log(
-      path,
-      await assetFile.exists(),
-      await publicFile.exists(),
-      await fallBackFile.exists()
+    const publicFile = Bun.file(
+      `./node_modules/@fireside/frontend/dist/${path.replaceAll("/", "")}`
+    );
+    const fallBackFile = Bun.file(
+      "./node_modules/@fireside/frontend/dist/index.html"
     );
     if (await assetFile.exists()) {
       return assetFile;

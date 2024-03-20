@@ -20,9 +20,10 @@
     "@elysiajs/server-timing": "^1.0.2",
     "@elysiajs/static": "^1.0.2",
     "@fireside/db": "*",
+    "@fireside/frontend": "*",
     "@fireside/utils": "*",
     "@sinclair/typebox": "^0.32.14",
     "drizzle-typebox": "^0.1.1",
-    "elysia": "^1.0.2"
+    "elysia": "^1.0.0"
   }
 }
