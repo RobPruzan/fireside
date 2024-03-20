@@ -8,28 +8,6 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-export const makeOptimisticUpdater =
-  <TQueryFNResult, TQueryFnResult = InsidePromise<TQueryFNResult>>({
-    queryClient,
-    options,
-  }: {
-    queryClient: QueryClient;
-    options: {
-      queryFn: () => TQueryFNResult;
-      queryKey: Array<Nullish<string>>;
-    };
-  }) =>
-  (
-    stateOrUpdater: TQueryFnResult | ((prev: TQueryFnResult) => TQueryFnResult)
-  ) => {
-    if (typeof stateOrUpdater === "function") {
-      queryClient.setQueryData(options.queryKey, stateOrUpdater);
-      return;
-    }
-
-    queryClient.setQueryData(options.queryKey, () => stateOrUpdater);
-  };
-
 export const getNotMeUser = ({
   users,
   mainUserId,
