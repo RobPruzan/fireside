@@ -14,7 +14,7 @@ export const getFriendRequestsQueryOptions = ({ userId }: { userId: string }) =>
   ({
     queryKey: ["friend-requests", userId],
     queryFn: () =>
-      promiseDataOrThrow(client.protected.user.friends.request.retrieve.get()),
+      promiseDataOrThrow(client.protected.friend.request.retrieve.get()),
     enabled: !!userId,
   } satisfies UseQueryOptions);
 
@@ -25,7 +25,6 @@ export const useGetUserFriendRequests = () => {
   const requestsQuery = useSuspenseQuery(options);
   const { friends } = useGetFriends();
 
-  type test = InsidePromise<ReturnType<typeof options.queryFn>>;
   return {
     friendRequests: requestsQuery.data ?? [],
     openFriendRequests: (requestsQuery.data ?? [])
@@ -56,9 +55,7 @@ export const useMakeFriendRequestMutation = () => {
   const makeFriendRequestMutation = useMutation({
     mutationFn: (makeFriendRequestOpts: { to: string }) =>
       promiseDataOrThrow(
-        client.protected.user.friends
-          .request({ to: makeFriendRequestOpts.to })
-          .post()
+        client.protected.friend.request({ to: makeFriendRequestOpts.to }).post()
       ),
     onError: (e) =>
       toast({
@@ -144,8 +141,7 @@ export const useGetUsers = () => {
 export const getFriendsQueryOptions = ({ userId }: { userId: string }) =>
   ({
     queryKey: ["friends", userId],
-    queryFn: () =>
-      promiseDataOrThrow(client.protected.user.friends.retrieve.get()),
+    queryFn: () => promiseDataOrThrow(client.protected.friend.retrieve.get()),
   } satisfies UseQueryOptions);
 
 export const useGetFriends = () => {
@@ -177,9 +173,7 @@ export const useAcceptFriendRequestMutation = () => {
   const acceptFriendRequestMutation = useMutation({
     mutationFn: ({ requestId }: { requestId: string }) =>
       promiseDataOrThrow(
-        client.protected.user.friends.request
-          .accept({ requestId: requestId })
-          .post()
+        client.protected.friend.request.accept({ requestId: requestId }).post()
       ),
 
     onError: (e) => {
