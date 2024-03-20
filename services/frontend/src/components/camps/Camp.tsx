@@ -1,13 +1,6 @@
 import { useParams } from "@tanstack/react-router";
 import { Input } from "../ui/input";
-import { Button, buttonVariants } from "../ui/button";
 import { useEffect, useRef, useState } from "react";
-import { CampMessage } from "@fireside/db";
-import { useMutation } from "@tanstack/react-query";
-import { toast } from "../ui/use-toast";
-import { client, promiseDataOrThrow } from "@/edenClient";
-import { useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
-import { makeOptimisticUpdater } from "@/lib/utils";
 import { useCreateMessageMutation, useGetMessages } from "./camps-state";
 
 export const Camp = () => {
@@ -50,6 +43,9 @@ export const Camp = () => {
 
       <Input
         onKeyDown={(e) => {
+          if (userMessage === "") {
+            return;
+          }
           if (e.key === "Enter") {
             createMessageMutation.mutate({
               message: userMessage,
