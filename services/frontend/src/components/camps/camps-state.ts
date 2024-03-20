@@ -20,6 +20,11 @@ import { Nullish } from "@fireside/utils";
 import { CampMessage, FiresideCamp } from "@fireside/db";
 
 import { makeOptimisticUpdater } from "@/lib/utils";
+import {
+  persistQueryClient,
+  persistQueryClientSave,
+} from "@tanstack/react-query-persist-client";
+import { persister, queryClient as globalQueryClient } from "@/query";
 
 export const dynamicSideBarOpen = atom(true);
 export const createCampModalOpen = atom(false);
