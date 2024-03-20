@@ -1,7 +1,7 @@
 services:
   db:
     image: postgres:latest
-    container_name: fireside_db
+    container_name: fireside_db_prod
     environment:
       POSTGRES_DB: test_db
       POSTGRES_USER: test_user
@@ -13,7 +13,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
-      start_period: 30s
+      start_period: 10s
   fireside:
     depends_on:
       db:
@@ -23,6 +23,6 @@ services:
     build:
       context: .
       dockerfile: fireside.Dockerfile
-    container_name: fireside_workspace
+    container_name: fireside_workspace_prod
     ports:
       - 8080:8080
