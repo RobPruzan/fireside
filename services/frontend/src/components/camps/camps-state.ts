@@ -54,7 +54,7 @@ export const useCreateCampMutation = () => {
   const createCampMutation = useMutation({
     mutationKey: ["create-camp"],
     mutationFn: async (createOps: { name: string }) => {
-      const res = await client.protected.camp.create.post(createOps);
+      const res = await client.api.protected.camp.create.post(createOps);
       if (res.error) {
         throw Error(JSON.stringify(res.error.value));
       }
@@ -80,7 +80,7 @@ export const getUserCampQueryOptions = ({
 }) =>
   ({
     queryFn: async () => {
-      const res = await client.protected.camp.retrieve.me.get();
+      const res = await client.api.protected.camp.retrieve.me.get();
       if (res.error) {
         throw new Error(JSON.stringify(res.error.value));
       }
@@ -118,7 +118,7 @@ export const useJoinCampMutation = () => {
   const joinCampMutation = useMutation({
     mutationFn: async (joinCampOpts: { campId: string }) =>
       promiseDataOrThrow(
-        client.protected.camp.join({ campId: joinCampOpts.campId }).post()
+        client.api.protected.camp.join({ campId: joinCampOpts.campId }).post()
       ),
     onError: (e) => {
       toast({
@@ -146,7 +146,7 @@ export const getAllCampsQueryOptions = ({ userId }: { userId: string }) =>
   ({
     queryKey: ["all-camps", userId],
     queryFn: async () =>
-      promiseDataOrThrow(client.protected.camp.retrieve.get()),
+      promiseDataOrThrow(client.api.protected.camp.retrieve.get()),
   } satisfies UseQueryOptions);
 export const useAllCamps = () => {
   const user = useDefinedUser();
@@ -170,7 +170,7 @@ export const getMessagesOptions = ({ campId }: { campId: string }) =>
     queryKey: ["message", campId],
     queryFn: () =>
       promiseDataOrThrow(
-        client.protected.camp.message
+        client.api.protected.camp.message
           .retrieve({
             campId,
           })
@@ -184,7 +184,7 @@ export const useGetMessages = ({ campId }: { campId: string }) => {
     queryKey: ["messages", campId],
     queryFn: () =>
       promiseDataOrThrow(
-        client.protected.camp.message
+        client.api.protected.camp.message
           .retrieve({
             campId,
           })
@@ -217,7 +217,7 @@ export const useCreateMessageMutation = ({ campId }: { campId: string }) => {
   const createMessageMutation = useMutation({
     mutationFn: (messageInfo: { message: string; createdAt: string }) =>
       promiseDataOrThrow(
-        client.protected.camp.message.create.post({
+        client.api.protected.camp.message.create.post({
           campId,
           ...messageInfo,
         })

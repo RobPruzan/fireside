@@ -20,7 +20,7 @@ function Register() {
   const queryClient = useQueryClient();
   const createUserMutation = useMutation({
     mutationFn: async (createOpts: CreateUserInfo) => {
-      return dataOrThrow(await client.user.create.post(createOpts));
+      return dataOrThrow(await client.api.user.create.post(createOpts));
     },
     onError: (e) => {
       toast({
@@ -32,7 +32,7 @@ function Register() {
     onSuccess: (data) => {
       queryClient.setQueryData<FiresideUser>(
         userQueryOptions.queryKey,
-        () => data,
+        () => data
       );
       navigate({ to: "/camp" });
     },

@@ -14,7 +14,7 @@ export const getFriendRequestsQueryOptions = ({ userId }: { userId: string }) =>
   ({
     queryKey: ["friend-requests", userId],
     queryFn: () =>
-      promiseDataOrThrow(client.protected.friend.request.retrieve.get()),
+      promiseDataOrThrow(client.api.protected.friend.request.retrieve.get()),
     enabled: !!userId,
   } satisfies UseQueryOptions);
 
@@ -55,7 +55,9 @@ export const useMakeFriendRequestMutation = () => {
   const makeFriendRequestMutation = useMutation({
     mutationFn: (makeFriendRequestOpts: { to: string }) =>
       promiseDataOrThrow(
-        client.protected.friend.request({ to: makeFriendRequestOpts.to }).post()
+        client.api.protected.friend
+          .request({ to: makeFriendRequestOpts.to })
+          .post()
       ),
     onError: (e) =>
       toast({
@@ -102,7 +104,7 @@ export const useMakeFriendRequestMutation = () => {
 
 export const usersQueryOptions = {
   queryKey: ["get-users"],
-  queryFn: () => promiseDataOrThrow(client.protected.user["get-all"].get()),
+  queryFn: () => promiseDataOrThrow(client.api.protected.user["get-all"].get()),
 } satisfies UseQueryOptions;
 
 export const useGetUsers = () => {
@@ -141,7 +143,8 @@ export const useGetUsers = () => {
 export const getFriendsQueryOptions = ({ userId }: { userId: string }) =>
   ({
     queryKey: ["friends", userId],
-    queryFn: () => promiseDataOrThrow(client.protected.friend.retrieve.get()),
+    queryFn: () =>
+      promiseDataOrThrow(client.api.protected.friend.retrieve.get()),
   } satisfies UseQueryOptions);
 
 export const useGetFriends = () => {
@@ -173,7 +176,9 @@ export const useAcceptFriendRequestMutation = () => {
   const acceptFriendRequestMutation = useMutation({
     mutationFn: ({ requestId }: { requestId: string }) =>
       promiseDataOrThrow(
-        client.protected.friend.request.accept({ requestId: requestId }).post()
+        client.api.protected.friend.request
+          .accept({ requestId: requestId })
+          .post()
       ),
 
     onError: (e) => {
