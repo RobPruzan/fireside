@@ -20,6 +20,6 @@ WORKDIR /code/services/db
 
 WORKDIR /code/services/backend
 
-  RUN bun run build
+RUN bun run build
 RUN chmod +x /code/entrypoint.sh
 ENTRYPOINT [ "/code/entrypoint.sh" ]
