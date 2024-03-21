@@ -16,7 +16,6 @@ FROM oven/bun:1.0.0 AS bun-runtime
 
 COPY --from=build /code /code
 
-WORKDIR /code/services/db
 
 WORKDIR /code/services/backend
 
