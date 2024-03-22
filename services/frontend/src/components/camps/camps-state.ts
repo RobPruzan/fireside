@@ -9,7 +9,7 @@ import {
 import { client, promiseDataOrThrow } from "@/edenClient";
 import { useToast } from "../ui/use-toast";
 import { db } from "@fireside/backend";
-import { campMessageLikes, eq } from "@fireside/db"
+import { campMessageLikes, eq } from "@fireside/db";
 import {
   FiresideUser,
   useUserQuery,
