@@ -1,7 +1,8 @@
 import { useParams } from "@tanstack/react-router";
 import { Input } from "../ui/input";
 import { useEffect, useRef, useState } from "react";
-import { useCreateMessageMutation, useGetMessages,likeMessageMutation } from "./camps-state";
+import { useCreateMessageMutation, useGetMessages,getLikesCountForMessage } from "./camps-state";
+import { client } from "@/edenClient"
 
 export const Camp = () => {
   const [userMessage, setUserMessage] = useState<string>("");
@@ -10,9 +11,12 @@ export const Camp = () => {
   const { messages } = useGetMessages({ campId });
   const scrollRef = useRef<HTMLInputElement | null>(null);
 
+  const [likesCounts, setLikesCounts] = useState<{ [messageId: string]: number }>({});
+
+
   useEffect(() => {
     const lastChild = scrollRef.current?.lastChild!;
-
+    
     if (lastChild instanceof HTMLElement) {
       lastChild.scrollIntoView({
         behavior: "instant",
@@ -20,6 +24,18 @@ export const Camp = () => {
         inline: "nearest",
       });
     }
+  }, [messages]);
+
+  useEffect(() => {
+    const fetchLikesCounts = async () => {
+      const likesCountsObj: { [messageId: string]: number } = {};
+      for (const message of messages) {
+        likesCountsObj[message.id] = await getLikesCountForMessage(message.id);
+      }
+      setLikesCounts(likesCountsObj);
+    };
+
+    fetchLikesCounts();
   }, [messages]);
 
   const createMessageMutation = useCreateMessageMutation({ campId });
@@ -37,7 +53,8 @@ export const Camp = () => {
           .map((messageObj) => (
             <div className="p-4" key={messageObj.id}>
               {messageObj.message}
-              <button onClick={() => likeMessageMutation(campId)}>
+              <span>{likesCounts[messageObj.id]}</span>
+              <button onClick={() => client.api.protected.camp.message.like.post({campId,messageId: messageObj.id})}>
               Like
             </button>
             </div>
