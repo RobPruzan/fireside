@@ -11,6 +11,7 @@ import {
   and,
   campMessageInsertSchema,
   campMessage,
+  campMessageLikes,
 } from "@fireside/db";
 import { ProtectedElysia } from "./lib";
 import { db } from ".";
@@ -46,6 +47,44 @@ export const campRouter = ProtectedElysia({ prefix: "/camp" })
       body: campMessageInsertSchema,
     }
   )
+  
+  .post(
+    "/message/like",
+    async ({user,body}) => {
+      const { messageId } = body;
+
+      //Getting the exisiting likes from the database
+      const existingLike = await db
+        .select()
+        .from(campMessageLikes)
+        .where(and(eq(campMessageLikes.userId, user.id), eq(campMessageLikes.messageId, messageId)));
+      
+      //if the user has already liked the specific post
+      if(existingLike.length > 0){  
+        await db
+        .delete(campMessageLikes)
+        .where(and(eq(campMessageLikes.userId, user.id), eq(campMessageLikes.messageId, messageId)));
+      }else{//If the user hasnt liked the post yet then add them to the database
+        await db
+        .insert(campMessageLikes)
+        .values({ userId: user.id, messageId })
+        .returning();
+      }
+
+    },
+    {
+      body: t.Object({
+        messageId: t.String(),
+      }),
+    }
+
+  )
+
+
+
+
+
+
   .post(
     "/create",
     async ({ body, user }) => {
