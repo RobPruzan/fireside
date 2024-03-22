@@ -70,7 +70,7 @@ export const campRouter = ProtectedElysia({ prefix: "/camp" })
         .values({ userId: user.id, messageId })
         .returning();
       }
-
+      
     },
     {
       body: t.Object({
@@ -81,7 +81,12 @@ export const campRouter = ProtectedElysia({ prefix: "/camp" })
 
   )
 
-
+  .get(
+    "/message/like",
+    async ({user,body}) => {
+      
+    }
+  )
 
 
 
