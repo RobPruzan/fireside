@@ -205,6 +205,9 @@ export const useCreateMessageMutation = ({ campId }: { campId: string }) => {
       await queryClient.cancelQueries({
         queryKey: getMessagesOptions({ campId }).queryKey,
       });
+      const previousMessages = queryClient.getQueryData(
+        getMessagesOptions({ campId }).queryKey
+      );
       queryClient.setQueryData(messagesQueryKey, (prev) => [
         ...(prev ?? []),
         {
@@ -214,9 +217,7 @@ export const useCreateMessageMutation = ({ campId }: { campId: string }) => {
           ...variables,
         },
       ]);
-      const previousMessages = queryClient.getQueryData(
-        getMessagesOptions({ campId }).queryKey
-      );
+
       return { optimisticMessageId, previousMessages };
     },
 
