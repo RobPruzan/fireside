@@ -160,4 +160,13 @@ export const friend = pgTable("friend", {
 
 export type Friend = InferSelectModel<typeof friend>;
 
-//
+
+export const campMessageLikes = pgTable("campMessageLikes", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  userId: uuid("userId")
+    .notNull()
+    .references(() => user.id),
+  messageId: uuid("messageId")
+    .notNull()
+    .references(() => campMessage.id),
+});
