@@ -1,7 +1,7 @@
 import { useParams } from "@tanstack/react-router";
 import { Input } from "../ui/input";
 import { useEffect, useRef, useState } from "react";
-import { useCreateMessageMutation, useGetMessages } from "./camps-state";
+import { useCreateMessageMutation, useGetMessages,likeMessageMutation } from "./camps-state";
 
 export const Camp = () => {
   const [userMessage, setUserMessage] = useState<string>("");
@@ -37,6 +37,9 @@ export const Camp = () => {
           .map((messageObj) => (
             <div className="p-4" key={messageObj.id}>
               {messageObj.message}
+              <button onClick={() => likeMessageMutation(campId)}>
+              Like
+            </button>
             </div>
           ))}
       </div>
