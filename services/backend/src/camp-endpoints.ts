@@ -75,6 +75,7 @@ export const campRouter = ProtectedElysia({ prefix: "/camp" })
     {
       body: t.Object({
         messageId: t.String(),
+        campId: t.String()
       }),
     }
 

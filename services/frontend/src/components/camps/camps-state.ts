@@ -240,3 +240,18 @@ export const useCreateMessageMutation = ({ campId }: { campId: string }) => {
 
   return createMessageMutation;
 };
+
+export const likeMessageMutation = ({ campId }: { campId: string }) => {
+  const { messagesQueryKey } = useGetMessages({ campId });
+  const queryClient = useQueryClient();
+  const mutationFuinction = useMutation({
+    mutationFn: () =>
+        promiseDataOrThrow(messageInfo: { message: string}) =>
+          client.api.protected.camp.message.like.post({
+            campId,
+            ...messageId
+          })
+        )
+  });
+  return mutationFuinction;
+};
