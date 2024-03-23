@@ -158,10 +158,6 @@ export const friend = pgTable("friend", {
   userTwoId: uuid("userTwoId")
     .references(() => user.id)
     .notNull(),
-  createdAt: timestamp("createdAt", { mode: "string" })
-    .$defaultFn(() => new Date().toISOString())
-    .notNull(),
-
   // problem for later
   // createdAt: timestamp("createdAt", { mode: "string" })
   //   .$defaultFn(() => new Date().toISOString())
