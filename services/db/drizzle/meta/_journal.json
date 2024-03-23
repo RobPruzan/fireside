@@ -120,6 +120,13 @@
       "when": 1711216289294,
       "tag": "0016_hard_fixer",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "5",
+      "when": 1711218238742,
+      "tag": "0017_tough_crusher_hogan",
+      "breakpoints": true
     }
   ]
 }

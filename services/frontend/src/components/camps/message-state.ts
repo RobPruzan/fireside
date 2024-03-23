@@ -51,6 +51,7 @@ export const useCreateMessageMutation = ({ campId }: { campId: string }) => {
       message: string;
       createdAt: string;
       parentMessageId: string | null;
+      id: string;
     }) =>
       promiseDataOrThrow(
         client.api.protected.message.create.post({
@@ -59,7 +60,6 @@ export const useCreateMessageMutation = ({ campId }: { campId: string }) => {
         })
       ),
     onMutate: async (variables) => {
-      const optimisticMessageId = crypto.randomUUID();
       await queryClient.cancelQueries({
         queryKey: getMessagesOptions({ campId }).queryKey,
       });
@@ -69,7 +69,6 @@ export const useCreateMessageMutation = ({ campId }: { campId: string }) => {
       queryClient.setQueryData(messagesQueryKey, (prev) => [
         ...(prev ?? []),
         {
-          id: optimisticMessageId,
           campId,
           userId: user.id,
           user,
@@ -77,7 +76,7 @@ export const useCreateMessageMutation = ({ campId }: { campId: string }) => {
         },
       ]);
 
-      return { optimisticMessageId, previousMessages };
+      return { previousMessages };
     },
 
     onError: (e, _, ctx) => {
@@ -88,13 +87,6 @@ export const useCreateMessageMutation = ({ campId }: { campId: string }) => {
       });
 
       queryClient.setQueryData(messagesQueryKey, ctx?.previousMessages ?? []);
-    },
-    onSuccess: (data, _, ctx) => {
-      queryClient.setQueryData(messagesQueryKey, (prev) =>
-        [...(prev ?? []), data].filter(
-          ({ id }) => id !== ctx.optimisticMessageId
-        )
-      );
     },
   });
 
@@ -132,11 +124,15 @@ export const useReactToMessageMutation = ({ campId }: { campId: string }) => {
     mutationFn: ({
       reactionId,
       messageId,
+      id,
     }: {
       reactionId: string;
       messageId: string;
+      id: string;
     }) =>
-      client.api.protected.message.react({ reactionId })({ messageId }).post(),
+      client.api.protected.message.react({ reactionId })({ messageId }).post({
+        id,
+      }),
 
     onMutate: async (variables) => {
       await queryClient.cancelQueries(messageReactionsQueryOptions);
@@ -153,7 +149,7 @@ export const useReactToMessageMutation = ({ campId }: { campId: string }) => {
           ...(prev ?? []),
           {
             campId,
-            id: newReactionId,
+
             createdAt: new Date().toISOString(),
             ...variables,
             userId: user.id,
