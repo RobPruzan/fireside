@@ -405,7 +405,7 @@ const Message = ({
                 </div>
               </div>
             </div>
-            <div className="prose dark:prose-dark max-w-none">
+            <div className="max-w-none break-words ">
               <p>{messageObj.message}</p>
             </div>
           </div>

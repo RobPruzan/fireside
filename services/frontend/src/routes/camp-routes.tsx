@@ -22,6 +22,8 @@ import {
   reactionAssetsOptions,
 } from "@/components/camps/message-state";
 import { Thread } from "@/components/camps/Thread";
+import { promise } from "zod";
+import { getThreadsOptions } from "@/components/camps/thread-state";
 
 export const campLayoutRoute = createRoute({
   getParentRoute: () => authRootLayout,
@@ -82,5 +84,7 @@ export const threadRoute = createRoute({
   getParentRoute: () => campRoute,
   component: Thread,
   path: "/$threadId",
+  loader: ({ context: { queryClient }, params: { threadId, campId } }) =>
+    Promise.all([queryClient.ensureQueryData(getThreadsOptions({ campId }))]),
   pendingComponent: LoadingSection,
 });
