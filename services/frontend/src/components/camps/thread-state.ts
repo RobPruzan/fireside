@@ -6,15 +6,8 @@ import {
   useQueryClient,
   useSuspenseQuery,
 } from "@tanstack/react-query";
-
-export const getThreadMessagesOptions = ({ threadId }: { threadId: string }) =>
-  queryOptions({
-    queryFn: () =>
-      promiseDataOrThrow(
-        client.api.protected.thread({ threadId }).message.retrieve.get()
-      ),
-    queryKey: ["thread-messages", threadId],
-  });
+import { useDefinedUser } from "./camps-state";
+import { useToast } from "../ui/use-toast";
 
 export const getThreadsOptions = ({ campId }: { campId: string }) =>
   queryOptions({
@@ -58,5 +51,78 @@ export const useCreateThread = ({ campId }: { campId: string }) => {
 
   return createThreadMutation;
 };
+export const getThreadMessagesOptions = ({ threadId }: { threadId: string }) =>
+  queryOptions({
+    queryKey: ["thread-messages", threadId],
+    queryFn: () =>
+      promiseDataOrThrow(
+        client.api.protected.thread({ threadId }).message.retrieve.get()
+      ),
+  });
+export const useGetThreadMessages = ({ threadId }: { threadId: string }) => {
+  const options = getThreadMessagesOptions({
+    threadId,
+  });
+  const threadMessagesQuery = useSuspenseQuery(options);
 
-export const useGetThreadMessages = () => {};
+  return {
+    threadsQuery: threadMessagesQuery,
+    threadMessagesQueryKey: options.queryKey,
+    threadMessages: threadMessagesQuery.data,
+  };
+};
+
+export const useCreateThreadMessageMutation = ({
+  threadId,
+}: {
+  threadId: string;
+}) => {
+  const options = getThreadMessagesOptions({
+    threadId,
+  });
+  const user = useDefinedUser();
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+  const createThreadMessageMutation = useMutation({
+    mutationFn: ({
+      message,
+      id,
+      createdAt,
+    }: {
+      message: string;
+      id: string;
+      createdAt: string;
+    }) =>
+      client.api.protected.thread({ threadId }).message.create.post({
+        message,
+        id,
+        createdAt,
+      }),
+
+    onMutate: async (variables) => {
+      await queryClient.cancelQueries(options);
+
+      const previousMessages = queryClient.getQueryData(options.queryKey);
+
+      queryClient.setQueryData(options.queryKey, (prev) => [
+        ...(prev ?? []),
+        {
+          ...variables,
+          userId: user.id,
+          threadId,
+        },
+      ]);
+
+      return { previousMessages };
+    },
+
+    onError: (e, _, ctx) => {
+      toast({
+        title: "Could not send message",
+        description: e.message,
+      });
+    },
+  });
+
+  return createThreadMessageMutation;
+};
