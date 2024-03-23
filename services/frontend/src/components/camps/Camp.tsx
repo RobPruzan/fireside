@@ -44,12 +44,16 @@ import {
   useGetMessageReactions,
   useGetReactionAssets,
   useReactToMessageMutation,
+  useRemoveReactionMutation,
 } from "./message-state";
 import { useDefinedUser } from "./camps-state";
 export const Camp = () => {
   const [userMessage, setUserMessage] = useState<string>("");
   const { campId } = useParams({ from: "/root-auth/camp-layout/camp/$campId" });
   const reactMutation = useReactToMessageMutation({
+    campId,
+  });
+  const removeReactionMutation = useRemoveReactionMutation({
     campId,
   });
   const { messages } = useGetMessages({ campId });
@@ -163,10 +167,11 @@ export const Camp = () => {
                                 <DropdownMenuContent className="w-48 flex flex-wrap gap-2 items-center">
                                   {reactionAssets.map((asset) => (
                                     <Button
+                                      key={asset.id}
                                       onClick={() => {
                                         reactMutation.mutate({
                                           messageId: messageObj.id,
-                                          reactionId: asset.id,
+                                          reactionAssetId: asset.id,
                                           id: crypto.randomUUID(),
                                         });
                                       }}
@@ -188,40 +193,48 @@ export const Camp = () => {
                                   const count: Record<string, number> = {};
 
                                   reactions.forEach((reaction) =>
-                                    count[reaction.reactionId]
-                                      ? (count[reaction.reactionId] =
-                                          count[reaction.reactionId] + 1)
-                                      : (count[reaction.reactionId] = 1)
+                                    count[reaction.reactionAssetId]
+                                      ? (count[reaction.reactionAssetId] =
+                                          count[reaction.reactionAssetId] + 1)
+                                      : (count[reaction.reactionAssetId] = 1)
                                   );
 
                                   return Object.entries(count).map(
-                                    ([reactionId, count]) => {
+                                    ([reactionAssetId, count]) => {
                                       const asset = reactionAssets.find(
-                                        ({ id }) => id === reactionId
+                                        ({ id }) => id === reactionAssetId
                                       )!;
 
-                                      const hasReacted = reactions
+                                      const existingReaction = reactions
                                         .filter(
-                                          ({ reactionId }) =>
-                                            reactionId === asset.id
+                                          ({ reactionAssetId, messageId }) =>
+                                            reactionAssetId === asset.id &&
+                                            messageObj.id === messageId
                                         )
-                                        .some(
+                                        .find(
                                           ({ userId }) => userId === user.id
                                         );
                                       return (
                                         <div className="flex items-center">
                                           <Button
-                                            disabled={hasReacted}
                                             onClick={() => {
+                                              if (existingReaction) {
+                                                removeReactionMutation.mutate({
+                                                  reactionId:
+                                                    existingReaction.id,
+                                                });
+                                                return;
+                                              }
+
                                               reactMutation.mutate({
                                                 messageId: messageObj.id,
-                                                reactionId: asset.id,
+                                                reactionAssetId: asset.id,
                                                 id: crypto.randomUUID(),
                                               });
                                             }}
                                             className={cn([
                                               "h-7 w-7 p-1 ",
-                                              hasReacted && "bg-muted",
+                                              existingReaction && "bg-muted",
                                             ])}
                                             variant={"ghost"}
                                           >
@@ -258,10 +271,11 @@ export const Camp = () => {
                       <ContextMenuSubContent className="w-48 flex flex-wrap gap-2 items-center">
                         {reactionAssets.map((asset) => (
                           <Button
+                            key={asset.id}
                             onClick={() => {
                               reactMutation.mutate({
                                 messageId: messageObj.id,
-                                reactionId: asset.id,
+                                reactionAssetId: asset.id,
                                 id: crypto.randomUUID(),
                               });
                             }}
