@@ -167,14 +167,21 @@ export const useAllCamps = () => {
 export const getMessagesOptions = ({ campId }: { campId: string }) =>
   queryOptions({
     queryKey: ["message", campId],
-    queryFn: () =>
-      promiseDataOrThrow(
+    queryFn: async () => {
+      const res = await client.api.protected.camp.message
+        .retrieve({
+          campId,
+        })
+        .get();
+      console.log({ res });
+      return promiseDataOrThrow(
         client.api.protected.camp.message
           .retrieve({
             campId,
           })
           .get()
-      ),
+      );
+    },
     refetchInterval: 5000,
   });
 
@@ -215,6 +222,7 @@ export const useCreateMessageMutation = ({ campId }: { campId: string }) => {
           id: optimisticMessageId,
           campId,
           userId: user.id,
+          user,
           ...variables,
         },
       ]);
@@ -232,6 +240,7 @@ export const useCreateMessageMutation = ({ campId }: { campId: string }) => {
       queryClient.setQueryData(messagesQueryKey, ctx?.previousMessages ?? []);
     },
     onSuccess: (data, _, ctx) => {
+      console.log("onsuc", data);
       queryClient.setQueryData(messagesQueryKey, (prev) =>
         [...(prev ?? []), data].filter(
           ({ id }) => id !== ctx.optimisticMessageId
