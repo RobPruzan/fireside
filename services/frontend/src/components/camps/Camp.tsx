@@ -165,22 +165,9 @@ export const Camp = () => {
                                   </Button>
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent className="w-48 flex flex-wrap gap-2 items-center">
-                                  {reactionAssets.map((asset) => (
-                                    <Button
-                                      key={asset.id}
-                                      onClick={() => {
-                                        reactMutation.mutate({
-                                          messageId: messageObj.id,
-                                          reactionAssetId: asset.id,
-                                          id: crypto.randomUUID(),
-                                        });
-                                      }}
-                                      variant={"ghost"}
-                                      className="h-7 w-7 p-0"
-                                    >
-                                      <img src={asset.imgSrc} alt={asset.alt} />
-                                    </Button>
-                                  ))}
+                                  <ReactionMenuContent
+                                    messageId={messageObj.id}
+                                  />
                                 </DropdownMenuContent>
                               </DropdownMenu>
                               <div className="flex flex-wrap gap-x-2">
@@ -269,22 +256,7 @@ export const Camp = () => {
                         <SmilePlus size={17} /> Reactions
                       </ContextMenuSubTrigger>
                       <ContextMenuSubContent className="w-48 flex flex-wrap gap-2 items-center">
-                        {reactionAssets.map((asset) => (
-                          <Button
-                            key={asset.id}
-                            onClick={() => {
-                              reactMutation.mutate({
-                                messageId: messageObj.id,
-                                reactionAssetId: asset.id,
-                                id: crypto.randomUUID(),
-                              });
-                            }}
-                            variant={"ghost"}
-                            className="h-7 w-7 p-0"
-                          >
-                            <img src={asset.imgSrc} alt={asset.alt} />
-                          </Button>
-                        ))}
+                        <ReactionMenuContent messageId={messageObj.id} />
                       </ContextMenuSubContent>
                     </ContextMenuSub>
                     <ContextMenuItem className="flex gap-x-2 text-destructive">
@@ -318,4 +290,44 @@ export const Camp = () => {
       />
     </div>
   );
+};
+
+const ReactionMenuContent = ({ messageId }: { messageId: string }) => {
+  const { campId } = useParams({ from: "/root-auth/camp-layout/camp/$campId" });
+  const reactMutation = useReactToMessageMutation({
+    campId,
+  });
+  const { messageReactions } = useGetMessageReactions({ campId });
+  const { reactionAssets } = useGetReactionAssets();
+  const user = useDefinedUser();
+  const reactions = messageReactions.filter(
+    (reaction) => reaction.messageId === messageId
+  );
+
+  return reactionAssets.map((asset) => {
+    const existingReaction = reactions
+      .filter(
+        ({ reactionAssetId, messageId: iterMessageId }) =>
+          reactionAssetId === asset.id && iterMessageId === messageId
+      )
+      .find(({ userId }) => userId === user.id);
+
+    return (
+      <Button
+        disabled={!!existingReaction}
+        key={asset.id}
+        onClick={() => {
+          reactMutation.mutate({
+            messageId,
+            reactionAssetId: asset.id,
+            id: crypto.randomUUID(),
+          });
+        }}
+        variant={"ghost"}
+        className="h-7 w-7 p-0"
+      >
+        <img src={asset.imgSrc} alt={asset.alt} />
+      </Button>
+    );
+  });
 };
