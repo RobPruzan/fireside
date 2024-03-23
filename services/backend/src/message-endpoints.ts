@@ -8,7 +8,7 @@ import {
   userMessageReaction,
   and,
   userMessageReactionInsertSchema,
-  reaction,
+  reactionAsset,
 } from "@fireside/db";
 import { t } from "elysia";
 import { db } from ".";
@@ -62,7 +62,7 @@ export const messageRouter = ProtectedElysia({ prefix: "/message" })
     }
   )
   .post(
-    "/react/:reactionId/:messageId",
+    "/react/:reactionAssetId/:messageId",
     async (ctx) => {
       const userReactionsOnMessage = await db
         .select()
@@ -76,7 +76,7 @@ export const messageRouter = ProtectedElysia({ prefix: "/message" })
 
       if (
         userReactionsOnMessage.some(
-          (reaction) => reaction.reactionId === ctx.params.reactionId
+          (reaction) => reaction.reactionAssetId === ctx.params.reactionAssetId
         )
       ) {
         throw ctx.error("Bad Request");
@@ -89,7 +89,7 @@ export const messageRouter = ProtectedElysia({ prefix: "/message" })
       return db.insert(userMessageReaction).values({
         messageId: ctx.params.messageId,
         userId: ctx.user.id,
-        reactionId: ctx.params.reactionId,
+        reactionAssetId: ctx.params.reactionAssetId,
         id: ctx.body.id,
       });
     },
@@ -118,4 +118,16 @@ export const messageRouter = ProtectedElysia({ prefix: "/message" })
       }),
     }
   )
-  .get("/assets/react", () => db.select().from(reaction));
+  .get("/assets/react", () => db.select().from(reactionAsset))
+  .post(
+    "/react/remove/:reactionId",
+    (ctx) =>
+      db
+        .delete(userMessageReaction)
+        .where(eq(userMessageReaction.id, ctx.params.reactionId)),
+    {
+      params: t.Object({
+        reactionId: t.String(),
+      }),
+    }
+  );

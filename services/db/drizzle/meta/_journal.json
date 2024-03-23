@@ -127,6 +127,20 @@
       "when": 1711218238742,
       "tag": "0017_tough_crusher_hogan",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "5",
+      "when": 1711220519104,
+      "tag": "0018_lame_screwball",
+      "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "5",
+      "when": 1711220537135,
+      "tag": "0019_outstanding_valkyrie",
+      "breakpoints": true
     }
   ]
 }

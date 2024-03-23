@@ -122,17 +122,19 @@ export const useReactToMessageMutation = ({ campId }: { campId: string }) => {
   const { toast } = useToast();
   const reactToMessageMutation = useMutation({
     mutationFn: ({
-      reactionId,
+      reactionAssetId,
       messageId,
       id,
     }: {
-      reactionId: string;
+      reactionAssetId: string;
       messageId: string;
       id: string;
     }) =>
-      client.api.protected.message.react({ reactionId })({ messageId }).post({
-        id,
-      }),
+      client.api.protected.message
+        .react({ reactionAssetId })({ messageId })
+        .post({
+          id,
+        }),
 
     onMutate: async (variables) => {
       await queryClient.cancelQueries(messageReactionsQueryOptions);
@@ -191,4 +193,44 @@ export const useGetReactionAssets = () => {
     reactionAssets: reactionAssetsQuery.data,
     reactionAssetsQuery,
   };
+};
+
+export const useRemoveReactionMutation = ({ campId }: { campId: string }) => {
+  const queryClient = useQueryClient();
+  const messageReactionsQueryOptions = getMessageReactionOptions({
+    campId,
+  });
+  const { toast } = useToast();
+
+  const removeReactionMutation = useMutation({
+    mutationFn: ({ reactionId }: { reactionId: string }) =>
+      client.api.protected.message.react.remove({ reactionId }).post(),
+    onMutate: async (variables) => {
+      await queryClient.cancelQueries(messageReactionsQueryOptions);
+
+      const previousReactions = queryClient.getQueryData(
+        messageReactionsQueryOptions.queryKey
+      );
+
+      queryClient.setQueryData(messageReactionsQueryOptions.queryKey, (prev) =>
+        prev?.filter(({ id }) => id !== variables.reactionId)
+      );
+
+      return { previousReactions };
+    },
+
+    onError: (error, _, ctx) => {
+      toast({
+        title: "Failed to remove reaction",
+        description: error.message,
+      });
+
+      queryClient.setQueryData(
+        messageReactionsQueryOptions.queryKey,
+        ctx?.previousReactions
+      );
+    },
+  });
+
+  return removeReactionMutation;
 };

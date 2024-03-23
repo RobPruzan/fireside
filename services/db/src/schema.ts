@@ -177,8 +177,8 @@ export const userMessageReaction = pgTable("userMessageReaction", {
   createdAt: timestamp("createdAt", { mode: "string" })
     .$defaultFn(() => new Date().toISOString())
     .notNull(),
-  reactionId: uuid("reactionId")
-    .references(() => reaction.id)
+  reactionAssetId: uuid("reactionAssetId")
+    .references(() => reactionAsset.id)
     .notNull(),
 });
 
@@ -189,13 +189,13 @@ export const userMessageReactionInsertSchema = createInsertSchema(
   }
 );
 
-export const reaction = pgTable("reaction", {
+export const reactionAsset = pgTable("reactionAsset", {
   id: uuid("id").defaultRandom().primaryKey(),
   imgSrc: text("imgSrc").notNull(),
   alt: text("alt").notNull(),
 });
 
-export type Reaction = InferSelectModel<typeof reaction>;
+export type Reaction = InferSelectModel<typeof reactionAsset>;
 
 export const emojis = [
   {
