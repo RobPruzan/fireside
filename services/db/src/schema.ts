@@ -1,13 +1,16 @@
-import { Type } from "@sinclair/typebox";
+import { Type as t } from "@sinclair/typebox";
 import { InferSelectModel } from "drizzle-orm";
 import {
   serial,
-  text,
   timestamp,
   pgTable,
   uuid,
   boolean,
   alias,
+  integer,
+  AnyPgTable,
+  AnyPgColumn,
+  text,
 } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-typebox";
 import { DatesToString } from "@fireside/utils";
@@ -73,12 +76,15 @@ export const campMessage = pgTable("campMessage", {
   createdAt: timestamp("createdAt", { mode: "string" })
     .$defaultFn(() => new Date().toISOString())
     .notNull(),
+  parentMessageId: uuid("parentMessageId").references(
+    (): AnyPgColumn => campMessage.id
+  ),
 });
 
 export type CampMessage = InferSelectModel<typeof campMessage>;
 
 export const campMessageInsertSchema = createInsertSchema(campMessage, {
-  userId: Type.Optional(Type.Never()),
+  userId: t.Optional(t.Never()),
 });
 
 export const campMember = pgTable("campMember", {
@@ -92,13 +98,13 @@ export const campMember = pgTable("campMember", {
 });
 
 export const campMembersInsertSchema = createInsertSchema(campMember, {
-  userId: Type.Optional(Type.String()),
+  userId: t.Optional(t.String()),
 });
 
 export const campMembersWithoutUserInsertSchema = createInsertSchema(
   campMember,
   {
-    userId: Type.Optional(Type.String()),
+    userId: t.Optional(t.String()),
   }
 );
 
@@ -152,6 +158,10 @@ export const friend = pgTable("friend", {
   userTwoId: uuid("userTwoId")
     .references(() => user.id)
     .notNull(),
+  createdAt: timestamp("createdAt", { mode: "string" })
+    .$defaultFn(() => new Date().toISOString())
+    .notNull(),
+
   // problem for later
   // createdAt: timestamp("createdAt", { mode: "string" })
   //   .$defaultFn(() => new Date().toISOString())
@@ -160,4 +170,31 @@ export const friend = pgTable("friend", {
 
 export type Friend = InferSelectModel<typeof friend>;
 
-//
+export const userMessageReaction = pgTable("userMessageReaction", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  userId: uuid("userId")
+    .references(() => user.id)
+    .notNull(),
+  messageId: uuid("messageId")
+    .references(() => user.id)
+    .notNull(),
+  createdAt: timestamp("createdAt", { mode: "string" })
+    .$defaultFn(() => new Date().toISOString())
+    .notNull(),
+  reactionId: uuid("reactionId")
+    .references(() => reaction.id)
+    .notNull(),
+});
+
+export const userMessageReactionInsertSchema = createInsertSchema(
+  userMessageReaction,
+  {
+    userId: t.Optional(t.Never()),
+  }
+);
+
+export const reaction = pgTable("reaction", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  imgSrc: text("imgSrc"),
+  alt: text("alt"),
+});

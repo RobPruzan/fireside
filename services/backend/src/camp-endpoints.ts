@@ -17,51 +17,6 @@ import { db } from ".";
 import { t } from "elysia";
 
 export const campRouter = ProtectedElysia({ prefix: "/camp" })
-  .get(
-    "/message/retrieve/:campId",
-    async ({ params }) => {
-      console.log("hit 2");
-      return db
-        .select({
-          ...getTableColumns(campMessage),
-          user: cleanedUserCols,
-        })
-        .from(campMessage)
-        .where(eq(campMessage.campId, params.campId))
-        .innerJoin(user, eq(user.id, campMessage.userId));
-    },
-    {
-      params: t.Object({
-        campId: t.String(),
-      }),
-    }
-  )
-
-  .post(
-    "/message/create",
-    async (ctx) => {
-      const newMessage = (
-        await db
-          .insert(campMessage)
-          .values({ ...ctx.body, userId: ctx.user.id })
-          .returning()
-      )[0];
-      console.log("hit");
-      return (
-        await db
-          .select({
-            ...getTableColumns(campMessage),
-            user: cleanedUserCols,
-          })
-          .from(campMessage)
-          .where(eq(campMessage.id, newMessage.id))
-          .innerJoin(user, eq(campMessage.userId, user.id))
-      )[0];
-    },
-    {
-      body: campMessageInsertSchema,
-    }
-  )
   .post(
     "/create",
     async ({ body, user }) => {

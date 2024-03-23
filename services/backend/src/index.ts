@@ -7,12 +7,17 @@ import { createDB } from "@fireside/db";
 import serverTiming from "@elysiajs/server-timing";
 import { friendRoute } from "./friend-endpoints";
 import staticPlugin from "@elysiajs/static";
+import { messageRouter } from "./message-endpoints";
 
 const port = 8080;
 
 export const { db } = createDB();
 
-const authRoutes = new Elysia().use(campRouter).use(userProtectedRoute);
+const authRoutes = new Elysia()
+  .use(campRouter)
+  .use(userProtectedRoute)
+  .use(friendRoute)
+  .use(messageRouter);
 const noAuthRoutes = new Elysia().use(userRoute);
 
 const app = new Elysia()
@@ -32,7 +37,6 @@ const app = new Elysia()
       // order matters till v1.0 local scoping can be implemented
       .use(noAuthRoutes)
       .use(authRoutes)
-      .use(friendRoute)
   )
   .get("/*", async ({ path }) => {
     const assetFile = Bun.file(
