@@ -191,6 +191,37 @@ export const userMessageReactionInsertSchema = createInsertSchema(
 
 export const reaction = pgTable("reaction", {
   id: uuid("id").defaultRandom().primaryKey(),
-  imgSrc: text("imgSrc"),
-  alt: text("alt"),
+  imgSrc: text("imgSrc").notNull(),
+  alt: text("alt").notNull(),
 });
+
+export const emojis = [
+  {
+    src: "/alien.png",
+    alt: "Alien",
+  },
+  {
+    src: "/check.png",
+    alt: "Check",
+  },
+  {
+    src: "/cool.png",
+    alt: "Cool",
+  },
+  {
+    src: "/party.png",
+    alt: "Party",
+  },
+  {
+    src: "/skull.png",
+    alt: "Skull",
+  },
+  {
+    src: "/smile.png",
+    alt: "Smile",
+  },
+  {
+    src: "/thinking.png",
+    alt: "Thinking",
+  },
+];

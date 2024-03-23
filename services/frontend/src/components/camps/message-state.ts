@@ -180,3 +180,19 @@ export const useReactToMessageMutation = ({ campId }: { campId: string }) => {
 
   return reactToMessageMutation;
 };
+
+export const reactionAssetsOptions = queryOptions({
+  queryKey: ["reactions"],
+  queryFn: () =>
+    promiseDataOrThrow(client.api.protected.message.assets.react.get()),
+});
+
+export const useGetReactionAssets = () => {
+  const reactionAssetsQuery = useSuspenseQuery(reactionAssetsOptions);
+
+  return {
+    reactionAssetsQueryKey: reactionAssetsOptions.queryKey,
+    reactionAssets: reactionAssetsQuery.data,
+    reactionAssetsQuery,
+  };
+};
