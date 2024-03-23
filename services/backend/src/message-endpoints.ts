@@ -90,10 +90,12 @@ export const messageRouter = ProtectedElysia({ prefix: "/message" })
         messageId: ctx.params.messageId,
         userId: ctx.user.id,
         reactionId: ctx.params.reactionId,
+        id: ctx.body.id,
       });
     },
     {
       params: userMessageReactionInsertSchema,
+      body: t.Pick(userMessageReactionInsertSchema, ["id"]),
     }
   )
   .get(

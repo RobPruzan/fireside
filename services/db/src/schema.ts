@@ -172,7 +172,7 @@ export const userMessageReaction = pgTable("userMessageReaction", {
     .references(() => user.id)
     .notNull(),
   messageId: uuid("messageId")
-    .references(() => user.id)
+    .references(() => campMessage.id)
     .notNull(),
   createdAt: timestamp("createdAt", { mode: "string" })
     .$defaultFn(() => new Date().toISOString())
@@ -194,6 +194,8 @@ export const reaction = pgTable("reaction", {
   imgSrc: text("imgSrc").notNull(),
   alt: text("alt").notNull(),
 });
+
+export type Reaction = InferSelectModel<typeof reaction>;
 
 export const emojis = [
   {
