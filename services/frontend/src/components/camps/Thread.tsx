@@ -3,6 +3,7 @@ import { useGetThreads } from "./thread-state";
 import { XIcon } from "lucide-react";
 import { Button, buttonVariants } from "../ui/button";
 import { Input } from "../ui/input";
+import { Textarea } from "../ui/textarea";
 
 export const Thread = () => {
   const { threadId, campId } = useParams({
@@ -13,8 +14,8 @@ export const Thread = () => {
 
   const thread = threads.find((thread) => thread.id === threadId);
   return (
-    <div className="h-full flex flex-col relative">
-      <div className="p-2 flex flex-col h-[calc(100%-50px)]">
+    <div className="h-full  flex flex-col relative px-2">
+      <div className="p-2 flex flex-col h-[calc(100%-85px)]">
         <Link
           to="/camp/$campId"
           params={{
@@ -28,7 +29,7 @@ export const Thread = () => {
           <XIcon />
         </Link>
       </div>
-      <Input className="h-[50px]" />
+      <Textarea className="h-[50px]" />
     </div>
   );
 };

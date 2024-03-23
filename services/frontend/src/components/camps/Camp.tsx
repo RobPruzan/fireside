@@ -1,4 +1,10 @@
-import { Link, Outlet, useParams } from "@tanstack/react-router";
+import {
+  Link,
+  Outlet,
+  useMatch,
+  useMatchRoute,
+  useParams,
+} from "@tanstack/react-router";
 import { Input } from "../ui/input";
 import {
   DropdownMenu,
@@ -6,6 +12,11 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useEffect, useRef, useState } from "react";
+import {
+  ResizableHandle,
+  ResizablePanel,
+  ResizablePanelGroup,
+} from "@/components/ui/resizable";
 import {
   ContextMenu,
   ContextMenuContent,
@@ -43,6 +54,7 @@ import { ThreadIcon } from "../ui/icons/thread";
 import { Thread } from "./Thread";
 import { useGetThreads } from "./thread-state";
 import { toast } from "../ui/use-toast";
+import { Textarea } from "../ui/textarea";
 export const Camp = () => {
   const [userMessage, setUserMessage] = useState<string>("");
   const { campId } = useParams({ from: "/root-auth/camp-layout/camp/$campId" });
@@ -70,64 +82,82 @@ export const Camp = () => {
   }, [messages]);
 
   const createMessageMutation = useCreateMessageMutation({ campId });
-  const user = useDefinedUser();
+  // const user = useDefinedUser();
+  const match = useMatchRoute();
   const [messageWithContextMenuId, setMessageWithContextMenuId] = useState<
     null | string
   >(null);
 
-  return (
-    <div className="flex  w-full h-full px-5 pb-5">
-      <div className="flex flex-col h-full min-w-[50%] w-full px-2">
-        <div className="flex w-full h-[calc(100%-50px)] ">
-          <div
-            ref={scrollRef}
-            className="flex flex-col w-full h-full overflow-y-auto gap-y-3"
-          >
-            {messages
-              .sort(
-                (a, b) =>
-                  new Date(a.createdAt).getTime() -
-                  new Date(b.createdAt).getTime()
-              )
-              .map((messageObj, index) => (
-                <Message
-                  key={messageObj.id}
-                  messageObj={messageObj}
-                  messageWithContextMenuId={messageWithContextMenuId}
-                  setMessageWithContextMenuId={setMessageWithContextMenuId}
-                  order={
-                    index === 0
-                      ? "first"
-                      : index === messages.length - 1
-                      ? "last"
-                      : "middle"
-                  }
-                />
-              ))}
-          </div>
+  const mainMessageSection = (
+    <div className="p-1  flex flex-col h-full  w-full px-2">
+      <div className="flex w-full h-[calc(100%-85px)] ">
+        <div
+          ref={scrollRef}
+          className="flex flex-col w-full h-full overflow-y-auto gap-y-3"
+        >
+          {messages
+            .sort(
+              (a, b) =>
+                new Date(a.createdAt).getTime() -
+                new Date(b.createdAt).getTime()
+            )
+            .map((messageObj, index) => (
+              <Message
+                key={messageObj.id}
+                messageObj={messageObj}
+                messageWithContextMenuId={messageWithContextMenuId}
+                setMessageWithContextMenuId={setMessageWithContextMenuId}
+                order={
+                  index === 0
+                    ? "first"
+                    : index === messages.length - 1
+                    ? "last"
+                    : "middle"
+                }
+              />
+            ))}
         </div>
-
-        <Input
-          onKeyDown={(e) => {
-            if (userMessage === "") {
-              return;
-            }
-            if (e.key === "Enter") {
-              createMessageMutation.mutate({
-                message: userMessage,
-                createdAt: new Date().toISOString(),
-                id: crypto.randomUUID(),
-              });
-              setUserMessage("");
-            }
-          }}
-          value={userMessage}
-          onChange={(event) => setUserMessage(event.target.value)}
-          className="flex h-[50px]"
-        />
       </div>
 
-      <Outlet />
+      <Textarea
+        onKeyDown={(e) => {
+          if (userMessage === "") {
+            return;
+          }
+
+          if (e.key === "Enter" && !e.shiftKey) {
+            createMessageMutation.mutate({
+              message: userMessage,
+              createdAt: new Date().toISOString(),
+              id: crypto.randomUUID(),
+            });
+            setUserMessage("");
+          }
+        }}
+        value={userMessage}
+        onChange={(event) => setUserMessage(event.target.value)}
+        className="flex h-[50px]"
+      />
+    </div>
+  );
+
+  return (
+    <div className="flex  w-full h-full px-5 pb-5">
+      {match({
+        to: "/camp/$campId/$threadId",
+      }) ? (
+        <ResizablePanelGroup direction="horizontal">
+          <ResizablePanel minSize={30} className="h-full w-full">
+            {mainMessageSection}
+          </ResizablePanel>
+          <ResizableHandle withHandle />
+          <ResizablePanel minSize={25} className="p-1  h-full">
+            <Outlet />
+          </ResizablePanel>
+        </ResizablePanelGroup>
+      ) : (
+        mainMessageSection
+      )}
     </div>
   );
 };
@@ -228,7 +258,7 @@ const Message = ({
             ])}
           >
             <div className="flex items-center space-x-4">
-              <div className="flex items-center space-x-2 w-full">
+              <div className="flex items-start space-x-2 w-full">
                 <Avatar className="w-10 h-10 grid place-content-center border">
                   <Image size={20} />
                 </Avatar>
@@ -262,7 +292,7 @@ const Message = ({
                     })}
                   </p>
                   <div className="flex gap-x-1">
-                    <div className="flex items-center justify-center p-1">
+                    <div className="flex items-center justify-center p-1 h-fit">
                       {thread?.id ? (
                         <Link
                           to="/camp/$campId/$threadId"

@@ -58,3 +58,5 @@ export const useCreateThread = ({ campId }: { campId: string }) => {
 
   return createThreadMutation;
 };
+
+export const useGetThreadMessages = () => {};
