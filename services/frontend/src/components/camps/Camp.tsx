@@ -1,8 +1,8 @@
 import { useParams } from "@tanstack/react-router";
 import { Input } from "../ui/input";
 import { useEffect, useRef, useState } from "react";
-import { useCreateMessageMutation, useGetMessages,getLikesCountForMessage } from "./camps-state";
-import { client } from "@/edenClient"
+import { useCreateMessageMutation, useGetMessages } from "./camps-state";
+import { client } from "@/edenClient";
 
 export const Camp = () => {
   const [userMessage, setUserMessage] = useState<string>("");
@@ -13,10 +13,9 @@ export const Camp = () => {
 
   const [likesCounts, setLikesCounts] = useState<{ [messageId: string]: number }>({});
 
-
   useEffect(() => {
-    const lastChild = scrollRef.current?.lastChild!;
-    
+    const lastChild = scrollRef.current?.lastChild;
+
     if (lastChild instanceof HTMLElement) {
       lastChild.scrollIntoView({
         behavior: "instant",
@@ -26,19 +25,27 @@ export const Camp = () => {
     }
   }, [messages]);
 
-  useEffect(() => {
-    const fetchLikesCounts = async () => {
-      const likesCountsObj: { [messageId: string]: number } = {};
-      for (const message of messages) {
-        likesCountsObj[message.id] = await getLikesCountForMessage(message.id);
-      }
-      setLikesCounts(likesCountsObj);
-    };
-
-    fetchLikesCounts();
-  }, [messages]);
-
   const createMessageMutation = useCreateMessageMutation({ campId });
+
+  const handleLike = async (messageId: string) => {
+    const response = await client.api.protected.camp.message.like.post({ campId, messageId });
+    
+    if (response.data !== null && 'totalLikes' in response.data) {
+      const { totalLikes } = response.data;
+      setLikesCounts(prevLikesCounts => ({
+        ...prevLikesCounts,
+        [messageId]: totalLikes
+      }));
+    } else {
+    
+      setLikesCounts(prevLikesCounts => ({
+        ...prevLikesCounts,
+        [messageId]: 0
+      }));
+      console.error('Invalid response format');
+    }
+  };
+
   return (
     <div className="flex flex-col w-full h-full p-5">
       <div
@@ -54,9 +61,9 @@ export const Camp = () => {
             <div className="p-4" key={messageObj.id}>
               {messageObj.message}
               <span>{likesCounts[messageObj.id]}</span>
-              <button onClick={() => client.api.protected.camp.message.like.post({campId,messageId: messageObj.id})}>
-              Like
-            </button>
+              <button onClick={() => handleLike(messageObj.id)}>
+                Like
+              </button>
             </div>
           ))}
       </div>
