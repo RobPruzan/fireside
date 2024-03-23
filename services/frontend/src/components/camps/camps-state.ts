@@ -8,7 +8,8 @@ import {
 } from "@tanstack/react-query";
 import { client, promiseDataOrThrow } from "@/edenClient";
 import { useToast } from "../ui/use-toast";
-
+// import { db } from "@fireside/backend";
+// import { campMessageLikes, eq } from "@fireside/db";
 import {
   FiresideUser,
   useUserQuery,
@@ -241,3 +242,34 @@ export const useCreateMessageMutation = ({ campId }: { campId: string }) => {
 
   return createMessageMutation;
 };
+/*
+export async function getLikesCountForMessage(messageId : string) {
+  try {
+    const likesCount = await db
+      .select()
+      .from(campMessageLikes)
+      .where(eq(campMessageLikes.messageId, messageId))
+
+    return likesCount.length; // Return the count as an integer
+  } catch (error) {
+    console.error('Error getting likes count for message:', error);
+    return 0; // Return 0 if there's an error
+  }
+}*/
+/*
+export const likeMessageMutation = ({ campId }: { campId: string }) => {
+  const { messagesQueryKey } = useGetMessages({ campId });
+  const queryClient = useQueryClient();
+  const mutationFuinction = useMutation({
+    mutationFn: () =>
+        promiseDataOrThrow(messageInfo: { message: string}) =>
+          client.api.protected.camp.message.like.post({
+            campId,
+            ...messageId
+          })
+        )
+  });
+  return mutationFuinction;
+};*/
+
+//randomcomment
