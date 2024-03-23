@@ -50,27 +50,36 @@ export const campRouter = ProtectedElysia({ prefix: "/camp" })
   
   .post(
     "/message/like",
-    async ({user,body}) => {
+    async ({ user, body }) => {
       const { messageId } = body;
-
-      //Getting the exisiting likes from the database
-      const existingLike = await db
+  
+      // Getting the existing likes from the database
+      const existingLikes = await db
         .select()
         .from(campMessageLikes)
         .where(and(eq(campMessageLikes.userId, user.id), eq(campMessageLikes.messageId, messageId)));
-      
-      //if the user has already liked the specific post
-      if(existingLike.length > 0){  
+  
+      let totalLikes = 0;
+  
+      // If the user has already liked the specific post
+      if (existingLikes.length > 0) {
+        // Unlike the post
         await db
-        .delete(campMessageLikes)
-        .where(and(eq(campMessageLikes.userId, user.id), eq(campMessageLikes.messageId, messageId)));
-      }else{//If the user hasnt liked the post yet then add them to the database
+          .delete(campMessageLikes)
+          .where(and(eq(campMessageLikes.userId, user.id), eq(campMessageLikes.messageId, messageId)));
+      } else {
+        // Like the post
         await db
-        .insert(campMessageLikes)
-        .values({ userId: user.id, messageId })
-        .returning();
+          .insert(campMessageLikes)
+          .values({ userId: user.id, messageId })
+          .returning();
+  
+        // Calculate total likes by counting the length of existingLikes array
+        totalLikes = existingLikes.length;
       }
-      
+  
+      // Return total likes
+      return { totalLikes };
     },
     {
       body: t.Object({
@@ -78,17 +87,7 @@ export const campRouter = ProtectedElysia({ prefix: "/camp" })
         messageId: t.String()
       }),
     }
-
   )
-
-  .get(
-    "/message/like",
-    async ({user,body}) => {
-      
-    }
-  )
-
-
 
 
   .post(
