@@ -21,10 +21,15 @@ export const campRouter = ProtectedElysia({ prefix: "/camp" })
   .get(
     "/message/retrieve/:campId",
     async ({ params }) => {
+      console.log("hit 2");
       return db
-        .select()
+        .select({
+          ...getTableColumns(campMessage),
+          user: cleanedUserCols,
+        })
         .from(campMessage)
-        .where(eq(campMessage.campId, params.campId));
+        .where(eq(campMessage.campId, params.campId))
+        .innerJoin(user, eq(user.id, campMessage.userId));
     },
     {
       params: t.Object({
@@ -35,12 +40,23 @@ export const campRouter = ProtectedElysia({ prefix: "/camp" })
 
   .post(
     "/message/create",
-    async ({ user, body }) => {
-      return (
+    async (ctx) => {
+      const newMessage = (
         await db
           .insert(campMessage)
-          .values({ ...body, userId: user.id })
+          .values({ ...ctx.body, userId: ctx.user.id })
           .returning()
+      )[0];
+      console.log("hit");
+      return (
+        await db
+          .select({
+            ...getTableColumns(campMessage),
+            user: cleanedUserCols,
+          })
+          .from(campMessage)
+          .where(eq(campMessage.id, newMessage.id))
+          .innerJoin(user, eq(campMessage.userId, user.id))
       )[0];
     },
     {
@@ -186,5 +202,9 @@ export const campRouter = ProtectedElysia({ prefix: "/camp" })
     return res;
   });
 
-const { token: tk, password: pwd, ...cleanedUserCols } = getTableColumns(user);
+export const {
+  token: tk,
+  password: pwd,
+  ...cleanedUserCols
+} = getTableColumns(user);
 // const getCampsWithCount = ({}:{campId:string,camMember}) => {}

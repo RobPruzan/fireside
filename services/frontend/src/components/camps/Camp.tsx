@@ -11,7 +11,9 @@ export const Camp = () => {
   const { messages } = useGetMessages({ campId });
   const scrollRef = useRef<HTMLInputElement | null>(null);
 
-  const [likesCounts, setLikesCounts] = useState<{ [messageId: string]: number }>({});
+  const [likesCounts, setLikesCounts] = useState<{
+    [messageId: string]: number;
+  }>({});
 
   useEffect(() => {
     const lastChild = scrollRef.current?.lastChild;
@@ -25,32 +27,44 @@ export const Camp = () => {
     }
   }, [messages]);
 
+  //   const isInViewport = (element) => {
+  //     const rect = element.getBoundingClientRect();
+  //     return (
+  //         rect.top >= 0 &&
+  //         rect.left >= 0 &&
+  //         rect.bottom <= (window.innerHeight || document.documentElement.clientHeight) &&
+  //         rect.right <= (window.innerWidth || document.documentElement.clientWidth)
+  //     );
+  // }
+
   const createMessageMutation = useCreateMessageMutation({ campId });
 
   const handleLike = async (messageId: string) => {
-    const response = await client.api.protected.camp.message.like.post({ campId, messageId });
-    
-    if (response.data !== null && 'totalLikes' in response.data) {
+    const response = await client.api.protected.camp.message.like.post({
+      campId,
+      messageId,
+    });
+
+    if (response.data !== null && "totalLikes" in response.data) {
       const { totalLikes } = response.data;
-      setLikesCounts(prevLikesCounts => ({
+      setLikesCounts((prevLikesCounts) => ({
         ...prevLikesCounts,
-        [messageId]: totalLikes
+        [messageId]: totalLikes,
       }));
     } else {
-    
-      setLikesCounts(prevLikesCounts => ({
+      setLikesCounts((prevLikesCounts) => ({
         ...prevLikesCounts,
-        [messageId]: 0
+        [messageId]: 0,
       }));
-      console.error('Invalid response format');
+      console.error("Invalid response format");
     }
   };
 
   return (
-    <div className="flex flex-col w-full h-full p-5">
+    <div className="flex flex-col w-full h-full p-5 gap-y-4">
       <div
         ref={scrollRef}
-        className="flex flex-col w-full h-[calc(100%-50px)] overflow-auto "
+        className="flex flex-col w-full h-[calc(100%-50px)] overflow-auto gap-y-5"
       >
         {messages
           .sort(
@@ -58,12 +72,11 @@ export const Camp = () => {
               new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
           )
           .map((messageObj) => (
-            <div className="p-4" key={messageObj.id}>
-              {messageObj.message}
-              <span>{likesCounts[messageObj.id]}</span>
-              <button onClick={() => handleLike(messageObj.id)}>
-                Like
-              </button>
+            <div className="flex">
+              {messageObj.user.email}
+              <div className="p-4 border-l-2" key={messageObj.id}>
+                {messageObj.message}
+              </div>
             </div>
           ))}
       </div>
