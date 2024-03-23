@@ -34,7 +34,7 @@ const app = new Elysia()
       .use(authRoutes)
       .use(friendRoute)
   )
-  .get("/*", async ({ path, set }) => {
+  .get("/*", async ({ path }) => {
     const assetFile = Bun.file(
       `./node_modules/@fireside/frontend/dist/assets/${path
         .replaceAll("/", "")
