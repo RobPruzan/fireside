@@ -38,7 +38,7 @@ export const Camp = () => {
   }>({});
 
   useEffect(() => {
-    const lastChild = scrollRef.current?.lastChild;
+    const lastChild = scrollRef.current?.lastChild!;
 
     if (lastChild instanceof HTMLElement) {
       lastChild.scrollIntoView({

@@ -1,4 +1,3 @@
-console.log("Before imports " + import.meta.env.VITE_API_URL)
 import "./index.css";
 import React from "react";
 import ReactDOM from "react-dom/client";
@@ -25,7 +24,7 @@ import {
 } from "./routes/root-routes";
 import { persister, queryClient } from "./query";
 import { authRootLayout } from "./routes/layouts";
-console.log("After imports " + import.meta.env.VITE_API_URL)
+
 const envSchema = z.object(
   {
     VITE_API_URL: z.string(),

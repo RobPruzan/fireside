@@ -11,12 +11,11 @@ import {
   and,
   campMessageInsertSchema,
   campMessage,
-  campMessageLikes,
 } from "@fireside/db";
 import { ProtectedElysia } from "./lib";
 import { db } from ".";
 import { t } from "elysia";
-//random Comment
+
 export const campRouter = ProtectedElysia({ prefix: "/camp" })
   .get(
     "/message/retrieve/:campId",
@@ -63,49 +62,6 @@ export const campRouter = ProtectedElysia({ prefix: "/camp" })
       body: campMessageInsertSchema,
     }
   )
-  
-  .post(
-    "/message/like",
-    async ({ user, body }) => {
-      const { messageId } = body;
-  
-      // Getting the existing likes from the database
-      const existingLikes = await db
-        .select()
-        .from(campMessageLikes)
-        .where(and(eq(campMessageLikes.userId, user.id), eq(campMessageLikes.messageId, messageId)));
-  
-      let totalLikes = 0;
-  
-      // If the user has already liked the specific post
-      if (existingLikes.length > 0) {
-        // Unlike the post
-        await db
-          .delete(campMessageLikes)
-          .where(and(eq(campMessageLikes.userId, user.id), eq(campMessageLikes.messageId, messageId)));
-      } else {
-        // Like the post
-        await db
-          .insert(campMessageLikes)
-          .values({ userId: user.id, messageId })
-          .returning();
-  
-        // Calculate total likes by counting the length of existingLikes array
-        totalLikes = existingLikes.length;
-      }
-  
-      // Return total likes
-      return { totalLikes };
-    },
-    {
-      body: t.Object({
-        campId: t.String(),
-        messageId: t.String()
-      }),
-    }
-  )
-
-
   .post(
     "/create",
     async ({ body, user }) => {
