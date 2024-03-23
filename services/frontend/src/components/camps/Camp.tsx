@@ -33,6 +33,7 @@ import {
   useGetMessages,
   useCreateMessageMutation,
   useGetMessageReactions,
+  useGetReactionAssets,
 } from "./message-state";
 export const Camp = () => {
   const [userMessage, setUserMessage] = useState<string>("");
@@ -41,6 +42,7 @@ export const Camp = () => {
   const { messages } = useGetMessages({ campId });
 
   const { messageReactions } = useGetMessageReactions({ campId });
+  const { reactionAssets } = useGetReactionAssets();
   const scrollRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
@@ -59,7 +61,7 @@ export const Camp = () => {
   const [messageWithContextMenuId, setMessageWithContextMenuId] = useState<
     null | string
   >(null);
-
+  console.log({ reactionAssets });
   return (
     <div className="flex flex-col w-full h-full px-5 pb-5">
       <div
@@ -161,8 +163,13 @@ export const Camp = () => {
                     <ContextMenuSubTrigger className="flex gap-x-2">
                       <SmilePlus size={17} /> Reactions
                     </ContextMenuSubTrigger>
-                    <ContextMenuSubContent className="w-48 flex flex-wrap  justify-evenly items-center">
-                      <Button
+                    <ContextMenuSubContent className="w-48 flex flex-wrap gap-2  justify-evenly items-center">
+                      {reactionAssets.map((asset) => (
+                        <Button variant={"ghost"} className="h-8 w-8 p-0">
+                          <img src={asset.imgSrc} alt={asset.alt} />
+                        </Button>
+                      ))}
+                      {/* <Button
                         className="flex items-center w-fit h-fit justify-center"
                         variant={"ghost"}
                       >
@@ -197,7 +204,7 @@ export const Camp = () => {
                         variant={"ghost"}
                       >
                         <Flame size={17} />
-                      </Button>
+                      </Button> */}
                     </ContextMenuSubContent>
                   </ContextMenuSub>
                   <ContextMenuItem className="flex gap-x-2 text-destructive">

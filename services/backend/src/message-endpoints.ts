@@ -8,6 +8,7 @@ import {
   userMessageReaction,
   and,
   userMessageReactionInsertSchema,
+  reaction,
 } from "@fireside/db";
 import { t } from "elysia";
 import { db } from ".";
@@ -114,4 +115,5 @@ export const messageRouter = ProtectedElysia({ prefix: "/message" })
         campId: t.String(),
       }),
     }
-  );
+  )
+  .get("/assets/react", () => db.select().from(reaction));

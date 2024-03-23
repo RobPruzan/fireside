@@ -1,6 +1,6 @@
 import cors from "@elysiajs/cors";
 
-import { Elysia } from "elysia";
+import { Elysia, t } from "elysia";
 import { userProtectedRoute, userRoute } from "./user-endpoints";
 import { campRouter } from "./camp-endpoints";
 import { createDB } from "@fireside/db";
@@ -42,10 +42,13 @@ const app = new Elysia()
     const assetFile = Bun.file(
       `./node_modules/@fireside/frontend/dist/assets/${path
         .replaceAll("/", "")
+        .replaceAll(".", "")
         .replace("assets", "")}`
     );
     const publicFile = Bun.file(
-      `./node_modules/@fireside/frontend/dist/${path.replaceAll("/", "")}`
+      `./node_modules/@fireside/frontend/dist/${path
+        .replaceAll("/", "")
+        .replaceAll(".", "")}`
     );
     const fallBackFile = Bun.file(
       "./node_modules/@fireside/frontend/dist/index.html"
