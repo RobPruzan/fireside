@@ -9,6 +9,7 @@ import {
   and,
   userMessageReactionInsertSchema,
   reactionAsset,
+  campThread,
 } from "@fireside/db";
 import { t } from "elysia";
 import { db } from ".";
@@ -45,17 +46,31 @@ export const messageRouter = ProtectedElysia({ prefix: "/message" })
           .values({ ...ctx.body, userId: ctx.user.id })
           .returning()
       )[0];
-      console.log("hit");
-      return (
+
+      const newThread = (
         await db
-          .select({
-            ...getTableColumns(campMessage),
-            user: cleanedUserCols,
+          .insert(campThread)
+          .values({
+            createdBy: ctx.user.id,
+            parentMessageId: newMessage.id,
+            createdAt: new Date().toISOString(),
           })
-          .from(campMessage)
-          .where(eq(campMessage.id, newMessage.id))
-          .innerJoin(user, eq(campMessage.userId, user.id))
+          .returning()
       )[0];
+
+      return {
+        message: (
+          await db
+            .select({
+              ...getTableColumns(campMessage),
+              user: cleanedUserCols,
+            })
+            .from(campMessage)
+            .where(eq(campMessage.id, newMessage.id))
+            .innerJoin(user, eq(campMessage.userId, user.id))
+        )[0],
+        thread: newThread,
+      };
     },
     {
       body: campMessageInsertSchema,

@@ -1,11 +1,8 @@
-import { useParams } from "@tanstack/react-router";
+import { Link, Outlet, useParams } from "@tanstack/react-router";
 import { Input } from "../ui/input";
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useEffect, useRef, useState } from "react";
@@ -20,24 +17,17 @@ import {
 } from "@/components/ui/context-menu";
 import { cn } from "@/lib/utils";
 import {
-  ArrowDown,
-  ArrowUp,
-  ChevronDownIcon,
-  ChevronUpIcon,
   Edit,
-  Flame,
-  Frown,
   Image,
   MessageCircle,
-  Skull,
-  Smile,
+  MessageCircleIcon,
   SmilePlus,
   Trash,
 } from "lucide-react";
-import { Button } from "../ui/button";
+import { Button, buttonVariants } from "../ui/button";
 import { Avatar } from "../ui/avatar";
 import { run } from "@fireside/utils";
-import { Reaction } from "@fireside/db";
+import { CampMessage } from "@fireside/db";
 import {
   useGetMessages,
   useCreateMessageMutation,
@@ -47,6 +37,12 @@ import {
   useRemoveReactionMutation,
 } from "./message-state";
 import { useDefinedUser } from "./camps-state";
+import { Setter } from "@/types/utils";
+import { FiresideUser } from "@/lib/useUserQuery";
+import { ThreadIcon } from "../ui/icons/thread";
+import { Thread } from "./Thread";
+import { useGetThreads } from "./thread-state";
+import { toast } from "../ui/use-toast";
 export const Camp = () => {
   const [userMessage, setUserMessage] = useState<string>("");
   const { campId } = useParams({ from: "/root-auth/camp-layout/camp/$campId" });
@@ -80,214 +76,58 @@ export const Camp = () => {
   >(null);
 
   return (
-    <div className="flex flex-col w-full h-full px-5 pb-5">
-      <div
-        ref={scrollRef}
-        className="flex flex-col w-full h-[calc(100%-50px)] overflow-y-auto gap-y-3"
-      >
-        {messages
-          .sort(
-            (a, b) =>
-              new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
-          )
-          .map((messageObj, index) => {
-            return (
-              <div
-                key={messageObj.id}
-                className={cn([
-                  "w-full flex ",
-                  index === messages.length - 1 && "pb-4",
-                  index === 0 && "pt-4",
-                ])}
-              >
-                <ContextMenu
-                  onOpenChange={(v) => {
-                    if (v) {
-                      setMessageWithContextMenuId(messageObj.id);
-                      return;
-                    }
+    <div className="flex  w-full h-full px-5 pb-5">
+      <div className="flex flex-col h-full min-w-[50%] w-full px-2">
+        <div className="flex w-full h-[calc(100%-50px)] ">
+          <div
+            ref={scrollRef}
+            className="flex flex-col w-full h-full overflow-y-auto gap-y-3"
+          >
+            {messages
+              .sort(
+                (a, b) =>
+                  new Date(a.createdAt).getTime() -
+                  new Date(b.createdAt).getTime()
+              )
+              .map((messageObj, index) => (
+                <Message
+                  key={messageObj.id}
+                  messageObj={messageObj}
+                  messageWithContextMenuId={messageWithContextMenuId}
+                  setMessageWithContextMenuId={setMessageWithContextMenuId}
+                  order={
+                    index === 0
+                      ? "first"
+                      : index === messages.length - 1
+                      ? "last"
+                      : "middle"
+                  }
+                />
+              ))}
+          </div>
+        </div>
 
-                    setMessageWithContextMenuId(null);
-                  }}
-                >
-                  <ContextMenuTrigger asChild>
-                    <div
-                      className={cn([
-                        "space-y-4 border w-full p-3 rounded-md",
-                        messageWithContextMenuId === messageObj.id &&
-                          "bg-muted",
-                      ])}
-                    >
-                      <div className="flex items-center space-x-4">
-                        <div className="flex items-center space-x-2 w-full">
-                          <Avatar className="w-10 h-10 grid place-content-center border">
-                            <Image size={20} />
-                          </Avatar>
-                          <div className="text-sm font-medium leading-none">
-                            <h3 className="text-base">
-                              {messageObj.user.email}
-                            </h3>
-                            <p className="text-sm text-gray-500 dark:text-gray-400">
-                              Asked{" "}
-                              {run(() => {
-                                const secondsAway =
-                                  (new Date().getTime() -
-                                    new Date(messageObj.createdAt).getTime()) /
-                                  (1000 * 60);
-
-                                if (secondsAway < 60) {
-                                  return "less than a minute ago";
-                                }
-
-                                if (secondsAway < 60 * 60) {
-                                  `${secondsAway / 60}m ago`;
-                                }
-
-                                if (secondsAway < 60 * 60 * 24) {
-                                  `${secondsAway / (60 * 60)}hr ago`;
-                                }
-
-                                if (secondsAway < 60 * 60 * 24 * 7) {
-                                  `${secondsAway / (60 * 60 * 24)}d ago`;
-                                }
-
-                                return "a while ago";
-                              })}
-                            </p>
-                            <div className="flex">
-                              <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                  <Button
-                                    className="h-7 w-7 p-1 -ml-1 mr-4"
-                                    variant={"ghost"}
-                                  >
-                                    <SmilePlus />
-                                  </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent className="w-48 flex flex-wrap gap-2 items-center">
-                                  <ReactionMenuContent
-                                    messageId={messageObj.id}
-                                  />
-                                </DropdownMenuContent>
-                              </DropdownMenu>
-                              <div className="flex flex-wrap gap-x-2">
-                                {run(() => {
-                                  const reactions = messageReactions.filter(
-                                    (reaction) =>
-                                      reaction.messageId === messageObj.id
-                                  );
-
-                                  const count: Record<string, number> = {};
-
-                                  reactions.forEach((reaction) =>
-                                    count[reaction.reactionAssetId]
-                                      ? (count[reaction.reactionAssetId] =
-                                          count[reaction.reactionAssetId] + 1)
-                                      : (count[reaction.reactionAssetId] = 1)
-                                  );
-
-                                  return Object.entries(count).map(
-                                    ([reactionAssetId, count]) => {
-                                      const asset = reactionAssets.find(
-                                        ({ id }) => id === reactionAssetId
-                                      )!;
-
-                                      const existingReaction = reactions
-                                        .filter(
-                                          ({ reactionAssetId, messageId }) =>
-                                            reactionAssetId === asset.id &&
-                                            messageObj.id === messageId
-                                        )
-                                        .find(
-                                          ({ userId }) => userId === user.id
-                                        );
-                                      return (
-                                        <div className="flex items-center">
-                                          <Button
-                                            onClick={() => {
-                                              if (existingReaction) {
-                                                removeReactionMutation.mutate({
-                                                  reactionId:
-                                                    existingReaction.id,
-                                                });
-                                                return;
-                                              }
-
-                                              reactMutation.mutate({
-                                                messageId: messageObj.id,
-                                                reactionAssetId: asset.id,
-                                                id: crypto.randomUUID(),
-                                              });
-                                            }}
-                                            className={cn([
-                                              "h-7 w-7 p-1 ",
-                                              existingReaction && "bg-muted",
-                                            ])}
-                                            variant={"ghost"}
-                                          >
-                                            <img
-                                              src={asset.imgSrc}
-                                              alt={asset.alt}
-                                            />
-                                          </Button>
-                                          {count}
-                                        </div>
-                                      );
-                                    }
-                                  );
-                                })}
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="prose dark:prose-dark max-w-none">
-                        <p>{messageObj.message}</p>
-                      </div>
-                    </div>
-                  </ContextMenuTrigger>
-                  <ContextMenuContent>
-                    <ContextMenuItem className="flex gap-x-2">
-                      <Edit size={17} /> Edit
-                    </ContextMenuItem>
-
-                    <ContextMenuSub>
-                      <ContextMenuSubTrigger className="flex gap-x-2">
-                        <SmilePlus size={17} /> Reactions
-                      </ContextMenuSubTrigger>
-                      <ContextMenuSubContent className="w-48 flex flex-wrap gap-2 items-center">
-                        <ReactionMenuContent messageId={messageObj.id} />
-                      </ContextMenuSubContent>
-                    </ContextMenuSub>
-                    <ContextMenuItem className="flex gap-x-2 text-destructive">
-                      <Trash size={17} /> Delete
-                    </ContextMenuItem>
-                  </ContextMenuContent>
-                </ContextMenu>
-              </div>
-            );
-          })}
+        <Input
+          onKeyDown={(e) => {
+            if (userMessage === "") {
+              return;
+            }
+            if (e.key === "Enter") {
+              createMessageMutation.mutate({
+                message: userMessage,
+                createdAt: new Date().toISOString(),
+                id: crypto.randomUUID(),
+              });
+              setUserMessage("");
+            }
+          }}
+          value={userMessage}
+          onChange={(event) => setUserMessage(event.target.value)}
+          className="flex h-[50px]"
+        />
       </div>
 
-      <Input
-        onKeyDown={(e) => {
-          if (userMessage === "") {
-            return;
-          }
-          if (e.key === "Enter") {
-            createMessageMutation.mutate({
-              message: userMessage,
-              createdAt: new Date().toISOString(),
-              parentMessageId: null,
-              id: crypto.randomUUID(),
-            });
-            setUserMessage("");
-          }
-        }}
-        value={userMessage}
-        onChange={(event) => setUserMessage(event.target.value)}
-        className="flex h-[50px]"
-      />
+      <Outlet />
     </div>
   );
 };
@@ -330,4 +170,234 @@ const ReactionMenuContent = ({ messageId }: { messageId: string }) => {
       </Button>
     );
   });
+};
+
+const Message = ({
+  messageObj,
+  order = "middle",
+  setMessageWithContextMenuId,
+  messageWithContextMenuId,
+}: {
+  messageObj: CampMessage & { user: NonNullable<FiresideUser> };
+  order?: "first" | "last" | "middle";
+  setMessageWithContextMenuId: Setter<string | null>;
+  messageWithContextMenuId: string | null;
+}) => {
+  const { campId } = useParams({ from: "/root-auth/camp-layout/camp/$campId" });
+  const { messageReactions } = useGetMessageReactions({ campId });
+  const { reactionAssets } = useGetReactionAssets();
+  const user = useDefinedUser();
+  const reactMutation = useReactToMessageMutation({
+    campId,
+  });
+  const removeReactionMutation = useRemoveReactionMutation({
+    campId,
+  });
+
+  const { threads } = useGetThreads({ campId });
+
+  const thread = threads.find(
+    (thread) => thread.parentMessageId === messageObj.id
+  );
+  console.log("WHAT", thread);
+
+  return (
+    <div
+      key={messageObj.id}
+      className={cn([
+        "w-full flex ",
+        order === "last" && "pb-4",
+        order === "first" && "pt-4",
+      ])}
+    >
+      <ContextMenu
+        onOpenChange={(v) => {
+          if (v) {
+            setMessageWithContextMenuId(messageObj.id);
+            return;
+          }
+
+          setMessageWithContextMenuId(null);
+        }}
+      >
+        <ContextMenuTrigger asChild>
+          <div
+            className={cn([
+              "space-y-4 border w-full p-3 rounded-md",
+              messageWithContextMenuId === messageObj.id && "bg-muted",
+            ])}
+          >
+            <div className="flex items-center space-x-4">
+              <div className="flex items-center space-x-2 w-full">
+                <Avatar className="w-10 h-10 grid place-content-center border">
+                  <Image size={20} />
+                </Avatar>
+                <div className="text-sm font-medium leading-none">
+                  <h3 className="text-base">{messageObj.user.email}</h3>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                    Asked{" "}
+                    {run(() => {
+                      const secondsAway =
+                        (new Date().getTime() -
+                          new Date(messageObj.createdAt).getTime()) /
+                        (1000 * 60);
+
+                      if (secondsAway < 60) {
+                        return "less than a minute ago";
+                      }
+
+                      if (secondsAway < 60 * 60) {
+                        `${secondsAway / 60}m ago`;
+                      }
+
+                      if (secondsAway < 60 * 60 * 24) {
+                        `${secondsAway / (60 * 60)}hr ago`;
+                      }
+
+                      if (secondsAway < 60 * 60 * 24 * 7) {
+                        `${secondsAway / (60 * 60 * 24)}d ago`;
+                      }
+                      ThreadIcon;
+                      return "a while ago";
+                    })}
+                  </p>
+                  <div className="flex gap-x-1">
+                    <div className="flex items-center justify-center p-1">
+                      {thread?.id ? (
+                        <Link
+                          to="/camp/$campId/$threadId"
+                          params={{
+                            threadId: thread?.id,
+                            campId: campId,
+                          }}
+                          // style={{
+                          //   padding: "4px !important",
+                          // }}
+                          className={buttonVariants({
+                            variant: "ghost",
+
+                            className:
+                              " text-foreground h-fit  py-0 px-0 pb-0 pt-0 pr-0 ",
+                          })}
+                        >
+                          <MessageCircleIcon size={20} />
+                        </Link>
+                      ) : (
+                        <Button
+                          onClick={() => {
+                            toast({
+                              title: "Thread not available yet",
+                              description: "Try again in a few seconds",
+                            });
+                          }}
+                          variant={"ghost"}
+                          className=" text-foreground h-fit py-0 px-0 pb-0 pt-0 pr-0  "
+                        >
+                          <MessageCircleIcon size={20} />
+                        </Button>
+                      )}
+                    </div>
+
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button
+                          className="h-7 w-7 p-1 -ml-1 mr-4"
+                          variant={"ghost"}
+                        >
+                          <SmilePlus />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent className="w-48 flex flex-wrap gap-2 items-center">
+                        <ReactionMenuContent messageId={messageObj.id} />
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                    <div className="flex flex-wrap gap-x-2">
+                      {run(() => {
+                        const reactions = messageReactions.filter(
+                          (reaction) => reaction.messageId === messageObj.id
+                        );
+
+                        const count: Record<string, number> = {};
+
+                        reactions.forEach((reaction) =>
+                          count[reaction.reactionAssetId]
+                            ? (count[reaction.reactionAssetId] =
+                                count[reaction.reactionAssetId] + 1)
+                            : (count[reaction.reactionAssetId] = 1)
+                        );
+
+                        return Object.entries(count).map(
+                          ([reactionAssetId, count]) => {
+                            const asset = reactionAssets.find(
+                              ({ id }) => id === reactionAssetId
+                            )!;
+
+                            const existingReaction = reactions
+                              .filter(
+                                ({ reactionAssetId, messageId }) =>
+                                  reactionAssetId === asset.id &&
+                                  messageId === messageObj.id
+                              )
+                              .find(({ userId }) => userId === user.id);
+                            return (
+                              <div className="flex items-center">
+                                <Button
+                                  onClick={() => {
+                                    if (existingReaction) {
+                                      removeReactionMutation.mutate({
+                                        reactionId: existingReaction.id,
+                                      });
+                                      return;
+                                    }
+
+                                    reactMutation.mutate({
+                                      messageId: messageObj.id,
+                                      reactionAssetId: asset.id,
+                                      id: crypto.randomUUID(),
+                                    });
+                                  }}
+                                  className={cn([
+                                    "h-7 w-7 p-1 ",
+                                    existingReaction && "bg-muted",
+                                  ])}
+                                  variant={"ghost"}
+                                >
+                                  <img src={asset.imgSrc} alt={asset.alt} />
+                                </Button>
+                                {count}
+                              </div>
+                            );
+                          }
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="prose dark:prose-dark max-w-none">
+              <p>{messageObj.message}</p>
+            </div>
+          </div>
+        </ContextMenuTrigger>
+        <ContextMenuContent>
+          <ContextMenuItem className="flex gap-x-2">
+            <Edit size={17} /> Edit
+          </ContextMenuItem>
+
+          <ContextMenuSub>
+            <ContextMenuSubTrigger className="flex gap-x-2">
+              <SmilePlus size={17} /> Reactions
+            </ContextMenuSubTrigger>
+            <ContextMenuSubContent className="w-48 flex flex-wrap gap-2 items-center">
+              <ReactionMenuContent messageId={messageObj.id} />
+            </ContextMenuSubContent>
+          </ContextMenuSub>
+          <ContextMenuItem className="flex gap-x-2 text-destructive">
+            <Trash size={17} /> Delete
+          </ContextMenuItem>
+        </ContextMenuContent>
+      </ContextMenu>
+    </div>
+  );
 };

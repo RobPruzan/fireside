@@ -8,6 +8,7 @@ import {
 import { useToast } from "../ui/use-toast";
 import { useDefinedUser } from "./camps-state";
 import { queryClient } from "@/query";
+import { useGetThreads } from "./thread-state";
 
 export const getMessagesOptions = ({ campId }: { campId: string }) =>
   queryOptions({
@@ -46,11 +47,11 @@ export const useCreateMessageMutation = ({ campId }: { campId: string }) => {
   const { messagesQueryKey } = useGetMessages({ campId });
   const user = useDefinedUser();
   const queryClient = useQueryClient();
+  const { getThreadsQueryKey } = useGetThreads({ campId });
   const createMessageMutation = useMutation({
     mutationFn: (messageInfo: {
       message: string;
       createdAt: string;
-      parentMessageId: string | null;
       id: string;
     }) =>
       promiseDataOrThrow(
@@ -87,6 +88,13 @@ export const useCreateMessageMutation = ({ campId }: { campId: string }) => {
       });
 
       queryClient.setQueryData(messagesQueryKey, ctx?.previousMessages ?? []);
+    },
+
+    onSuccess: (data) => {
+      queryClient.setQueryData(getThreadsQueryKey, (prev) => [
+        ...(prev ?? []),
+        { ...data.thread, campId },
+      ]);
     },
   });
 
