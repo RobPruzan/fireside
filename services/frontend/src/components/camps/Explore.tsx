@@ -12,7 +12,7 @@ export const Explore = () => {
   const [searchFilter, setSearchFilter] = useState("");
   return (
     <div className="w-full flex flex-col justify-center items-center p-5 gap-4 h-screen overflow-y-auto">
-      <div className="h-[10%] flex w-full ">
+      <div className=" flex justify-start w-full ">
         <Input
           placeholder="Search camps"
           className="w-1/2"
@@ -20,14 +20,14 @@ export const Explore = () => {
           onChange={(e) => setSearchFilter(e.target.value)}
         />
       </div>
-      <div className="h-[90%] flex flex-wrap gap-4 overflow-y-auto">
+      <div className="h-full flex flex-wrap gap-4 overflow-y-auto">
         {camps
           .toSorted(
             (a, b) =>
-              new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+              new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
           )
           .filter((camp) =>
-            camp.name.toLowerCase().includes(searchFilter.toLowerCase()),
+            camp.name.toLowerCase().includes(searchFilter.toLowerCase())
           )
           .map((camp) => (
             <ExploreCard key={camp.id} camp={camp} />
