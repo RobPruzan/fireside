@@ -8,6 +8,7 @@ import serverTiming from "@elysiajs/server-timing";
 import { friendRoute } from "./friend-endpoints";
 import staticPlugin from "@elysiajs/static";
 import { messageRouter } from "./message-endpoints";
+import { threadRouter } from "./thread-endpoints";
 
 const port = 8080;
 
@@ -17,7 +18,8 @@ const authRoutes = new Elysia()
   .use(campRouter)
   .use(userProtectedRoute)
   .use(friendRoute)
-  .use(messageRouter);
+  .use(messageRouter)
+  .use(threadRouter);
 const noAuthRoutes = new Elysia().use(userRoute);
 
 const app = new Elysia()

@@ -76,10 +76,45 @@ export const campMessage = pgTable("campMessage", {
   createdAt: timestamp("createdAt", { mode: "string" })
     .$defaultFn(() => new Date().toISOString())
     .notNull(),
-  parentMessageId: uuid("parentMessageId").references(
-    (): AnyPgColumn => campMessage.id
-  ),
 });
+
+export const campThread = pgTable("campThread", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  createdBy: uuid("createdBy")
+    .notNull()
+    .references(() => user.id),
+  parentMessageId: uuid("campMessage")
+    .notNull()
+    .references(() => campMessage.id),
+  createdAt: timestamp("createdAt", { mode: "string" })
+    .$defaultFn(() => new Date().toISOString())
+    .notNull(),
+});
+
+export const campThreadInsertSchema = createInsertSchema(campThread, {
+  createdBy: t.Optional(t.Never()),
+});
+
+export const campThreadMessage = pgTable("campThreadMessage", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  userId: uuid("userId")
+    .notNull()
+    .references(() => user.id),
+  threadId: uuid("threadId")
+    .notNull()
+    .references(() => campThread.id),
+  message: text("message").notNull(),
+  createdAt: timestamp("createdAt", { mode: "string" })
+    .$defaultFn(() => new Date().toISOString())
+    .notNull(),
+});
+
+export const campThreadMessageInsertSchema = createInsertSchema(
+  campThreadMessage,
+  {
+    userId: t.Optional(t.Never()),
+  }
+);
 
 export type CampMessage = InferSelectModel<typeof campMessage>;
 

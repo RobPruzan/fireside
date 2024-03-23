@@ -16,6 +16,12 @@ import { createRoute } from "@tanstack/react-router";
 
 import { authRootLayout } from "./layouts";
 import { Inbox } from "@/components/camps/Inbox";
+import {
+  getMessageReactionOptions,
+  getMessagesOptions,
+  reactionAssetsOptions,
+} from "@/components/camps/message-state";
+import { Thread } from "@/components/camps/Thread";
 
 export const campLayoutRoute = createRoute({
   getParentRoute: () => authRootLayout,
@@ -24,6 +30,7 @@ export const campLayoutRoute = createRoute({
     Promise.all([
       queryClient.ensureQueryData(getUserCampQueryOptions({ userId: user.id })),
       queryClient.ensureQueryData(getAllCampsQueryOptions({ userId: user.id })),
+      queryClient.ensureQueryData(reactionAssetsOptions),
     ]),
   pendingComponent: LoadingScreen,
   component: RootCampLayout,
@@ -42,7 +49,7 @@ export const friendsRoute = createRoute({
   loader: async ({ context: { queryClient, user } }) =>
     Promise.all([
       queryClient.ensureQueryData(
-        getFriendRequestsQueryOptions({ userId: user.id }),
+        getFriendRequestsQueryOptions({ userId: user.id })
       ),
       queryClient.ensureQueryData(usersQueryOptions),
     ]),
@@ -55,13 +62,25 @@ export const inboxRoute = createRoute({
   pendingComponent: LoadingSection,
   loader: async ({ context: { queryClient, user } }) =>
     queryClient.ensureQueryData(
-      getFriendRequestsQueryOptions({ userId: user.id }),
+      getFriendRequestsQueryOptions({ userId: user.id })
     ),
   component: Inbox,
 });
 export const campRoute = createRoute({
   getParentRoute: () => campLayoutRoute,
   path: "/camp/$campId",
+  loader: ({ context: { queryClient }, params: { campId } }) =>
+    Promise.all([
+      queryClient.ensureQueryData(getMessageReactionOptions({ campId })),
+      queryClient.ensureQueryData(getMessagesOptions({ campId })),
+    ]),
   component: Camp,
+  pendingComponent: LoadingSection,
+});
+
+export const threadRoute = createRoute({
+  getParentRoute: () => campRoute,
+  component: Thread,
+  path: "/$threadId",
   pendingComponent: LoadingSection,
 });
