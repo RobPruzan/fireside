@@ -2,7 +2,7 @@ import type { StatusMap } from "@fireside/utils/src/constants";
 import { Elysia, t, type CookieOptions } from "elysia";
 import { getSession } from "./user-endpoints";
 import type { User } from "@fireside/db";
-//Random Comment
+
 export const sessionGuard = {
   cookie: t.Cookie({
     auth: t.String(),
