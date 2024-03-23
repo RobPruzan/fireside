@@ -2,6 +2,7 @@ import { useParams } from "@tanstack/react-router";
 import { Input } from "../ui/input";
 import { useEffect, useRef, useState } from "react";
 import { useCreateMessageMutation, useGetMessages } from "./camps-state";
+import { client } from "@/edenClient";
 
 export const Camp = () => {
   const [userMessage, setUserMessage] = useState<string>("");
@@ -10,8 +11,10 @@ export const Camp = () => {
   const { messages } = useGetMessages({ campId });
   const scrollRef = useRef<HTMLInputElement | null>(null);
 
+  const [likesCounts, setLikesCounts] = useState<{ [messageId: string]: number }>({});
+
   useEffect(() => {
-    const lastChild = scrollRef.current?.lastChild!;
+    const lastChild = scrollRef.current?.lastChild;
 
     if (lastChild instanceof HTMLElement) {
       lastChild.scrollIntoView({
@@ -23,6 +26,26 @@ export const Camp = () => {
   }, [messages]);
 
   const createMessageMutation = useCreateMessageMutation({ campId });
+
+  const handleLike = async (messageId: string) => {
+    const response = await client.api.protected.camp.message.like.post({ campId, messageId });
+    
+    if (response.data !== null && 'totalLikes' in response.data) {
+      const { totalLikes } = response.data;
+      setLikesCounts(prevLikesCounts => ({
+        ...prevLikesCounts,
+        [messageId]: totalLikes
+      }));
+    } else {
+    
+      setLikesCounts(prevLikesCounts => ({
+        ...prevLikesCounts,
+        [messageId]: 0
+      }));
+      console.error('Invalid response format');
+    }
+  };
+
   return (
     <div className="flex flex-col w-full h-full p-5">
       <div
@@ -37,6 +60,10 @@ export const Camp = () => {
           .map((messageObj) => (
             <div className="p-4" key={messageObj.id}>
               {messageObj.message}
+              <span>{likesCounts[messageObj.id]}</span>
+              <button onClick={() => handleLike(messageObj.id)}>
+                Like
+              </button>
             </div>
           ))}
       </div>
