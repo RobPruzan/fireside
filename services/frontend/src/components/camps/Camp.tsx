@@ -29,12 +29,18 @@ import {
 import { Button } from "../ui/button";
 import { Avatar } from "../ui/avatar";
 import { run } from "@fireside/utils";
-import { useGetMessages, useCreateMessageMutation } from "./message-state";
+import {
+  useGetMessages,
+  useCreateMessageMutation,
+  useGetMessageReactions,
+} from "./message-state";
 export const Camp = () => {
   const [userMessage, setUserMessage] = useState<string>("");
   const { campId } = useParams({ from: "/root-auth/camp-layout/camp/$campId" });
 
   const { messages } = useGetMessages({ campId });
+
+  const { messageReactions } = useGetMessageReactions({ campId });
   const scrollRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
@@ -138,9 +144,7 @@ export const Camp = () => {
                           </Button>
                         </div>
 
-                        <div className="w-full">
-                          <MessageCircle />
-                        </div>
+                        <div className="w-full">{/* <MessageCircle /> */}</div>
                       </div>
                     </div>
                     <div className="prose dark:prose-dark max-w-none">

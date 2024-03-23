@@ -177,4 +177,6 @@ export const useReactToMessageMutation = ({ campId }: { campId: string }) => {
       });
     },
   });
+
+  return reactToMessageMutation;
 };
