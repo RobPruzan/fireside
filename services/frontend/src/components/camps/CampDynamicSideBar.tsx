@@ -1,6 +1,6 @@
 import { cn } from "@/lib/utils";
 import { Link, useMatchRoute } from "@tanstack/react-router";
-import { ChevronLeft, MoreVertical, PlusCircle } from "lucide-react";
+import { ChevronLeft, Image, MoreVertical, PlusCircle } from "lucide-react";
 import { useState } from "react";
 import { Button, buttonVariants } from "../ui/button";
 import {
@@ -23,6 +23,7 @@ import {
   useUserCamps,
   useCreateCampMutation,
 } from "./camps-state";
+
 export const CampDynamicSideBar = () => {
   const setSideBarOpen = useSetAtom(dynamicSideBarOpen);
   const [modalOpen, setModalOpen] = useAtom(createCampModalOpen);
@@ -77,11 +78,12 @@ export const CampDynamicSideBar = () => {
                 </Button>
                 <Button
                   className="min-w-[78px]"
-                  onClick={() =>
+                  onClick={() => {
+                    console.log("click");
                     createCampMutation.mutate({
                       name: newCampRoomName,
-                    })
-                  }
+                    });
+                  }}
                 >
                   {createCampMutation.isPending ? <LoadingSpinner /> : "Create"}
                 </Button>
@@ -129,7 +131,8 @@ export const CampDynamicSideBar = () => {
                   })}
                 >
                   <div>
-                    <div className="rounded-full bg-green-200 border-green-100 border h-5 w-5"></div>
+                    {/* <div className="rounded-full bg-green-200 border-green-100 border h-5 w-5"></div> */}
+                    <Image />
                   </div>
                   <div className="flex flex-col">
                     <div>{camp.name}</div>

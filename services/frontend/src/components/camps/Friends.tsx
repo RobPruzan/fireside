@@ -3,11 +3,13 @@ import { useGetFriends, useGetUsers } from "./friends-state";
 import { run } from "@fireside/utils";
 import { SearchFriendItem } from "./SearchFriendItem";
 import { CurrentFriendItem } from "./CurrentFriendItem";
+import { useQueryClient } from "@tanstack/react-query";
 
 export const Friends = () => {
   const { users, usersWithStatus } = useGetUsers();
   const { friends } = useGetFriends();
   const user = useDefinedUser();
+
   return (
     <div className="h-full w-full flex ">
       <div className="flex-col overflow-y-auto w-1/2 gap-y-2">

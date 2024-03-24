@@ -16,6 +16,14 @@ import { createRoute } from "@tanstack/react-router";
 
 import { authRootLayout } from "./layouts";
 import { Inbox } from "@/components/camps/Inbox";
+import {
+  getMessageReactionOptions,
+  getMessagesOptions,
+  reactionAssetsOptions,
+} from "@/components/camps/message-state";
+import { Thread } from "@/components/camps/Thread";
+import { promise } from "zod";
+import { getThreadsOptions } from "@/components/camps/thread-state";
 
 export const campLayoutRoute = createRoute({
   getParentRoute: () => authRootLayout,
@@ -24,6 +32,7 @@ export const campLayoutRoute = createRoute({
     Promise.all([
       queryClient.ensureQueryData(getUserCampQueryOptions({ userId: user.id })),
       queryClient.ensureQueryData(getAllCampsQueryOptions({ userId: user.id })),
+      queryClient.ensureQueryData(reactionAssetsOptions),
     ]),
   pendingComponent: LoadingScreen,
   component: RootCampLayout,
@@ -62,6 +71,20 @@ export const inboxRoute = createRoute({
 export const campRoute = createRoute({
   getParentRoute: () => campLayoutRoute,
   path: "/camp/$campId",
+  loader: ({ context: { queryClient }, params: { campId } }) =>
+    Promise.all([
+      queryClient.ensureQueryData(getMessageReactionOptions({ campId })),
+      queryClient.ensureQueryData(getMessagesOptions({ campId })),
+    ]),
   component: Camp,
+  pendingComponent: LoadingSection,
+});
+
+export const threadRoute = createRoute({
+  getParentRoute: () => campRoute,
+  component: Thread,
+  path: "/$threadId",
+  loader: ({ context: { queryClient }, params: { threadId, campId } }) =>
+    Promise.all([queryClient.ensureQueryData(getThreadsOptions({ campId }))]),
   pendingComponent: LoadingSection,
 });

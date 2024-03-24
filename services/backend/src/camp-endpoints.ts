@@ -17,28 +17,6 @@ import { db } from ".";
 import { t } from "elysia";
 
 export const campRouter = ProtectedElysia({ prefix: "/camp" })
-.get(
-  "/fetch/messages/:campId",
-  async ({user, params}) => {
-      return db.select().from(campMessage).where(eq(campMessage.campId, params.campId))
-
-  },
-  {
-    params: t.Object({
-      campId: t.String(),
-    }),
-  }
-)
- 
-  .post(
-    "/create/message",
-    async ({ user,body }) => {
-      return (await db.insert(campMessage).values({...body, userId: user.id}).returning())[0];
-    },
-    {
-      body: campMessageInsertSchema,
-    }
-  )
   .post(
     "/create",
     async ({ body, user }) => {
@@ -135,5 +113,9 @@ export const campRouter = ProtectedElysia({ prefix: "/camp" })
     return res;
   });
 
-const { token: tk, password: pwd, ...cleanedUserCols } = getTableColumns(user);
+export const {
+  token: tk,
+  password: pwd,
+  ...cleanedUserCols
+} = getTableColumns(user);
 // const getCampsWithCount = ({}:{campId:string,camMember}) => {}

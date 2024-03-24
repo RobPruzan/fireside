@@ -1,13 +1,16 @@
-import { Type } from "@sinclair/typebox";
+import { Type as t } from "@sinclair/typebox";
 import { InferSelectModel } from "drizzle-orm";
 import {
   serial,
-  text,
   timestamp,
   pgTable,
   uuid,
   boolean,
   alias,
+  integer,
+  AnyPgTable,
+  AnyPgColumn,
+  text,
 } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-typebox";
 import { DatesToString } from "@fireside/utils";
@@ -28,7 +31,7 @@ export const user = pgTable("user", {
   password: text("password").notNull(),
   role: text("role").$type<"instructor" | "student">().notNull(),
   createdAt: timestamp("createdAt", { mode: "string" })
-    .$defaultFn(() => new Date().toString())
+    .$defaultFn(() => new Date().toISOString())
     .notNull(),
   updatedAt: timestamp("updated_at", { mode: "string" }),
 });
@@ -38,7 +41,7 @@ export type User = InferSelectModel<typeof user>;
 export const token = pgTable("token", {
   value: text("id").primaryKey(),
   expires: timestamp("expires", { mode: "string" }).$defaultFn(() =>
-    getOneYearAheadDate().toString()
+    getOneYearAheadDate().toISOString()
   ),
 });
 
@@ -52,11 +55,10 @@ export const camp = pgTable("camp", {
   id: uuid("id").defaultRandom().primaryKey(),
   name: text("name").notNull(),
   createdAt: timestamp("createdAt", { mode: "string" })
-    .$defaultFn(() => new Date().toString())
+    .$defaultFn(() => new Date().toISOString())
     .notNull(),
   updatedAt: timestamp("updated_at", { mode: "string" }),
 });
-
 
 export type FiresideCamp = InferSelectModel<typeof camp>;
 
@@ -64,18 +66,61 @@ export const campSchema = createInsertSchema(camp);
 
 export const campMessage = pgTable("campMessage", {
   id: uuid("id").defaultRandom().primaryKey(),
-  userId: uuid('userId').notNull().references(() => user.id),
-  campId: uuid('campId').notNull().references(() => camp.id),
-  message: text('message').notNull(),
+  userId: uuid("userId")
+    .notNull()
+    .references(() => user.id),
+  campId: uuid("campId")
+    .notNull()
+    .references(() => camp.id),
+  message: text("message").notNull(),
   createdAt: timestamp("createdAt", { mode: "string" })
-    .$defaultFn(() => new Date().toString())
+    .$defaultFn(() => new Date().toISOString())
     .notNull(),
-})
+});
 
-export type CampMessage = InferSelectModel<typeof campMessage>
+export const campThread = pgTable("campThread", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  createdBy: uuid("createdBy")
+    .notNull()
+    .references(() => user.id),
+  parentMessageId: uuid("campMessage")
+    .notNull()
+    .references(() => campMessage.id),
+  createdAt: timestamp("createdAt", { mode: "string" })
+    .$defaultFn(() => new Date().toISOString())
+    .notNull(),
+});
 
-export const campMessageInsertSchema = createInsertSchema(campMessage, {userId: Type.Optional(Type.Never()) } )
+export const campThreadInsertSchema = createInsertSchema(campThread, {
+  createdBy: t.Optional(t.Never()),
+});
 
+export const campThreadMessage = pgTable("campThreadMessage", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  userId: uuid("userId")
+    .notNull()
+    .references(() => user.id),
+  threadId: uuid("threadId")
+    .notNull()
+    .references(() => campThread.id),
+  message: text("message").notNull(),
+  createdAt: timestamp("createdAt", { mode: "string" })
+    .$defaultFn(() => new Date().toISOString())
+    .notNull(),
+});
+
+export const campThreadMessageInsertSchema = createInsertSchema(
+  campThreadMessage,
+  {
+    userId: t.Optional(t.Never()),
+  }
+);
+
+export type CampMessage = InferSelectModel<typeof campMessage>;
+
+export const campMessageInsertSchema = createInsertSchema(campMessage, {
+  userId: t.Optional(t.Never()),
+});
 
 export const campMember = pgTable("campMember", {
   id: uuid("id").defaultRandom().primaryKey(),
@@ -88,13 +133,13 @@ export const campMember = pgTable("campMember", {
 });
 
 export const campMembersInsertSchema = createInsertSchema(campMember, {
-  userId: Type.Optional(Type.String()),
+  userId: t.Optional(t.String()),
 });
 
 export const campMembersWithoutUserInsertSchema = createInsertSchema(
   campMember,
   {
-    userId: Type.Optional(Type.String()),
+    userId: t.Optional(t.String()),
   }
 );
 
@@ -105,7 +150,7 @@ export const bonfire = pgTable("bonfire", {
     .notNull(),
   name: text("name").notNull(),
   createdAt: timestamp("createdAt", { mode: "string" })
-    .$defaultFn(() => new Date().toString())
+    .$defaultFn(() => new Date().toISOString())
     .notNull(),
   updatedAt: timestamp("updated_at", { mode: "string" }),
 });
@@ -121,7 +166,7 @@ export const userToBonfire = pgTable("userToBonfire", {
     .references(() => bonfire.id)
     .notNull(),
   joinedAt: timestamp("createdAt", { mode: "string" })
-    .$defaultFn(() => new Date().toString())
+    .$defaultFn(() => new Date().toISOString())
     .notNull(),
 });
 
@@ -135,7 +180,7 @@ export const friendRequest = pgTable("friendRequest", {
     .notNull(),
   deleted: boolean("deleted").default(false),
   createdAt: timestamp("createdAt", { mode: "string" })
-    .$defaultFn(() => new Date().toString())
+    .$defaultFn(() => new Date().toISOString())
     .notNull(),
 });
 export type FriendRequest = InferSelectModel<typeof friendRequest>;
@@ -150,8 +195,78 @@ export const friend = pgTable("friend", {
     .notNull(),
   // problem for later
   // createdAt: timestamp("createdAt", { mode: "string" })
-  //   .$defaultFn(() => new Date().toString())
+  //   .$defaultFn(() => new Date().toISOString())
   //   .notNull(),
 });
 
 export type Friend = InferSelectModel<typeof friend>;
+
+export const userMessageReaction = pgTable("userMessageReaction", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  userId: uuid("userId")
+    .references(() => user.id)
+    .notNull(),
+  messageId: uuid("messageId")
+    .references(() => campMessage.id)
+    .notNull(),
+  createdAt: timestamp("createdAt", { mode: "string" })
+    .$defaultFn(() => new Date().toISOString())
+    .notNull(),
+  reactionAssetId: uuid("reactionAssetId")
+    .references(() => reactionAsset.id)
+    .notNull(),
+});
+
+export const userMessageReactionInsertSchema = createInsertSchema(
+  userMessageReaction,
+  {
+    userId: t.Optional(t.Never()),
+  }
+);
+
+export const reactionAsset = pgTable("reactionAsset", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  imgSrc: text("imgSrc").notNull(),
+  alt: text("alt").notNull(),
+});
+
+export type Reaction = InferSelectModel<typeof reactionAsset>;
+
+export const emojis = [
+  {
+    src: "/alien.png",
+    alt: "Alien",
+  },
+  {
+    src: "/check.png",
+    alt: "Check",
+  },
+  {
+    src: "/cool.png",
+    alt: "Cool",
+  },
+  {
+    src: "/party.png",
+    alt: "Party",
+  },
+  {
+    src: "/skull.png",
+    alt: "Skull",
+  },
+  {
+    src: "/smile.png",
+    alt: "Smile",
+  },
+  {
+    src: "/thinking.png",
+    alt: "Thinking",
+  },
+  {
+    src: "/angry.png",
+    alt: "Angry",
+  },
+  {
+    src: "colossal-peeky.jpg",
+    alt: "Peeky"
+  }
+];

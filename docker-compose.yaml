@@ -1,20 +1,28 @@
 services:
   db:
     image: postgres:latest
-    container_name: fireside_db
+    container_name: fireside_db_prod
     environment:
       POSTGRES_DB: test_db
       POSTGRES_USER: test_user
       POSTGRES_PASSWORD: test_password
     ports:
       - 5432:5432
-
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U test_user -d test_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
   fireside:
+    depends_on:
+      db:
+        condition: service_healthy
+    links:
+      - db
     build:
       context: .
       dockerfile: fireside.Dockerfile
-    container_name: fireside_workspace
+    container_name: fireside_workspace_prod
     ports:
       - 8080:8080
-    volumes:
-      - ./:/code

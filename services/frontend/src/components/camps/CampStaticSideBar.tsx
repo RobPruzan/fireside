@@ -1,7 +1,7 @@
 import { ThemeToggle } from "@/hooks/useTheme";
 import { cn } from "@/lib/utils";
 import { Link, useMatchRoute } from "@tanstack/react-router";
-import { Inbox, PanelRight, Search, Settings, User } from "lucide-react";
+import { Inbox, PanelRight, Search, Settings, Tent, User } from "lucide-react";
 import { Button, buttonVariants } from "../ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { ProfileDropdown } from "../ProfileDropdown";
@@ -92,8 +92,8 @@ export const CampStaticSideBar = () => {
             })}
           >
             <div className="flex items-center gap-x-4">
-              <Search />
-              <span className="text-lg"> Search camps</span>
+              <Tent />
+              <span className="text-lg"> Camps</span>
             </div>
           </Link>
         </div>
