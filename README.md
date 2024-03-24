@@ -12,20 +12,14 @@
 
 1. `docker-compose -f docker-compose.dev.yaml up db --build`
 2. `cd services/db`
-3. `echo "CONNECTION_STRING=postgres://test_user:test_password@localhost:5432/test_db" > .env`
-4. `pnpm migrate:generate && pnpm migrate:run`
+3. `pnpm migrate:generate && pnpm migrate:run`
 
 ### Setting up backend
 
-1. `cd backend`
-2. `echo "CONNECTION_STRING=postgres://test_user:test_password@db/test_db" > .env`
-3. `cd ../../`
-4. `docker-compose -f docker-compose.dev.yaml up fireside --build`
+1. `docker-compose -f docker-compose.dev.yaml up fireside --build`
 
 ### Running frontend
 
 1. `cd frontend`
 2. `pnpm install`
-3. `echo "VITE_API_URL=http://localhost:8080" > .env`
-4. `pnpm run dev`
-5. Open http://localhost:5173/ in browser
+3. `pnpm run dev`
