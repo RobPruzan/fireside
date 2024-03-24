@@ -18,7 +18,9 @@
   "dependencies": {
     "@elysiajs/cors": "^1.0.0",
     "@elysiajs/server-timing": "^1.0.0",
+    "@elysiajs/static": "^1.0.0",
     "@fireside/db": "*",
+    "@fireside/frontend": "*",
     "@fireside/utils": "*",
     "@sinclair/typebox": "^0.32.14",
     "drizzle-typebox": "^0.1.1",

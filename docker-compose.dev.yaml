@@ -1,0 +1,20 @@
+services:
+  db:
+    image: postgres:latest
+    container_name: fireside_db
+    environment:
+      POSTGRES_DB: test_db
+      POSTGRES_USER: test_user
+      POSTGRES_PASSWORD: test_password
+    ports:
+      - 5432:5432
+
+  fireside:
+    build:
+      context: .
+      dockerfile: fireside.dev.Dockerfile
+    container_name: fireside_workspace
+    ports:
+      - 8080:8080
+    volumes:
+      - ./:/code

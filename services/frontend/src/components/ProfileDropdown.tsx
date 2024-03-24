@@ -30,7 +30,7 @@ export const ProfileDropdown = () => {
   const queryClient = useQueryClient();
   const logoutMutation = useMutation({
     mutationFn: async () => {
-      return dataOrThrow(await client.protected.user["log-out"].post());
+      return dataOrThrow(await client.api.protected.user["log-out"].post());
     },
     onSuccess: () => {
       setOpen(false);

@@ -85,6 +85,69 @@
       "when": 1710136328330,
       "tag": "0011_icy_cannonball",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "5",
+      "when": 1711210086680,
+      "tag": "0012_workable_randall_flagg",
+      "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "5",
+      "when": 1711210447416,
+      "tag": "0013_happy_madelyne_pryor",
+      "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "5",
+      "when": 1711210560854,
+      "tag": "0014_glorious_energizer",
+      "breakpoints": true
+    },
+    {
+      "idx": 15,
+      "version": "5",
+      "when": 1711212914088,
+      "tag": "0015_pretty_azazel",
+      "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "5",
+      "when": 1711216289294,
+      "tag": "0016_hard_fixer",
+      "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "5",
+      "when": 1711218238742,
+      "tag": "0017_tough_crusher_hogan",
+      "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "5",
+      "when": 1711220519104,
+      "tag": "0018_lame_screwball",
+      "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "5",
+      "when": 1711220537135,
+      "tag": "0019_outstanding_valkyrie",
+      "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "5",
+      "when": 1711223062062,
+      "tag": "0020_sad_kid_colt",
+      "breakpoints": true
     }
   ]
 }

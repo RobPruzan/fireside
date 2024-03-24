@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/png" href="/assets/logo-BLMYhQnx.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Fireside</title>
+    <script type="module" crossorigin src="/assets/index-C-ht6Tux.js"></script>
+    <link rel="stylesheet" crossorigin href="/assets/index-CAqNGEQb.css">
+  </head>
+  <body>
+    <div id="root"></div>
+    <script>
+      (() => {
+        const mode = localStorage.getItem("theme") ?? "dark";
+        document
+          .getElementsByTagName("body")
+          .item(0)
+          .setAttribute("class", mode);
+      })();
+    </script>
+  </body>
+</html>
