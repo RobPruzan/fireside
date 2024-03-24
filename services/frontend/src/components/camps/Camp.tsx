@@ -121,10 +121,11 @@ export const Camp = () => {
 
       <Textarea
         onKeyDown={(e) => {
-          if (userMessage === "") {
+          if (!userMessage && e.key === "Enter" && !e.shiftKey) {
+            setUserMessage("");
+            e.preventDefault();
             return;
           }
-
           if (e.key === "Enter" && !e.shiftKey) {
             createMessageMutation.mutate({
               message: userMessage,
@@ -132,6 +133,7 @@ export const Camp = () => {
               id: crypto.randomUUID(),
             });
             setUserMessage("");
+            e.preventDefault();
           }
         }}
         value={userMessage}
@@ -229,7 +231,6 @@ const Message = ({
   const thread = threads.find(
     (thread) => thread.parentMessageId === messageObj.id
   );
-  console.log("WHAT", thread);
 
   return (
     <div

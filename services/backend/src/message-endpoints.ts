@@ -20,7 +20,6 @@ export const messageRouter = ProtectedElysia({ prefix: "/message" })
   .get(
     "/retrieve/:campId",
     async ({ params }) => {
-      console.log("hit 2");
       return db
         .select({
           ...getTableColumns(campMessage),
