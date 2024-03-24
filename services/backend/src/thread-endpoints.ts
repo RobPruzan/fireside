@@ -7,10 +7,12 @@ import {
   campThreadMessageInsertSchema,
   eq,
   getTableColumns,
+  user,
 } from "@fireside/db";
 import { ProtectedElysia } from "./lib";
 import { db } from ".";
 import { t } from "elysia";
+import { cleanedUserCols } from "./camp-endpoints";
 
 export const threadRouter = ProtectedElysia({ prefix: "/thread" })
   .post(
@@ -59,8 +61,12 @@ export const threadRouter = ProtectedElysia({ prefix: "/thread" })
     "/:threadId/message/retrieve",
     (ctx) =>
       db
-        .select()
+        .select({
+          ...getTableColumns(campThreadMessage),
+          user: cleanedUserCols,
+        })
         .from(campThreadMessage)
+        .innerJoin(user, eq(user.id, campThreadMessage.userId))
         .where(eq(campThreadMessage.threadId, ctx.params.threadId)),
     {
       params: t.Object({

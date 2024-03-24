@@ -35,7 +35,6 @@ function Login() {
       }
     },
     onError: (e) => {
-      console.log({ WHAT: e, hm: e.message });
       toast({ variant: "destructive", title: e.message });
     },
   });
