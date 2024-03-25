@@ -73,13 +73,14 @@ export const Camp = () => {
   useEffect(() => {
     const lastChild = scrollRef.current?.lastChild!;
     if (lastChild instanceof HTMLElement) {
+      // #TODO don't auto scroll if the user has scrolled up in view port
       lastChild.scrollIntoView({
         behavior: "instant",
         block: "end",
         inline: "nearest",
       });
     }
-  }, [messages]);
+  }, [messages.length]);
 
   const createMessageMutation = useCreateMessageMutation({ campId });
   // const user = useDefinedUser();
