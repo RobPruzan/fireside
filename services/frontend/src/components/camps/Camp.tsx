@@ -122,11 +122,7 @@ export const Camp = () => {
 
       <Textarea
         onKeyDown={(e) => {
-          if (
-            !userMessage.replace("\n", "") &&
-            e.key === "Enter" &&
-            !e.shiftKey
-          ) {
+          if (!userMessage && e.key === "Enter" && !e.shiftKey) {
             setUserMessage("");
             e.preventDefault();
             return;
@@ -139,6 +135,7 @@ export const Camp = () => {
               id: crypto.randomUUID(),
             });
             setUserMessage("");
+            e.preventDefault();
           }
         }}
         value={userMessage}
