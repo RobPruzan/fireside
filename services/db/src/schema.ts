@@ -261,4 +261,8 @@ export const emojis = [
     src: "/thinking.png",
     alt: "Thinking",
   },
+  {
+    src: "/frieren-embarrassed.png",
+    alt: "Frieren Embarrassed",
+  },
 ];
