@@ -6,7 +6,7 @@ import { Button, buttonVariants } from "../ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { ProfileDropdown } from "../ProfileDropdown";
 import { useAtom } from "jotai";
-import { dynamicSideBarOpen } from "./camps-state";
+import { dynamicSideBarOpen, useDefinedUser } from "./camps-state";
 import { useGetFriends, useGetUserFriendRequests } from "./friends-state";
 
 export const CampStaticSideBar = () => {
@@ -15,7 +15,7 @@ export const CampStaticSideBar = () => {
 
   const match = useMatchRoute();
   const { openFriendRequests } = useGetUserFriendRequests();
-
+  const user = useDefinedUser();
   return (
     <>
       <div className="h-[10%]">
@@ -37,12 +37,12 @@ export const CampStaticSideBar = () => {
         </div>
       </div>
       <div className="h-[80%] flex flex-col items-center justify-start w-full">
-        <div className=""></div>
-        <div className="h-1-4 flex items-start">
+        <div className="h-1-4 flex flex-col justify-start items-center gap-y-2">
           <Avatar className="h-14 w-14">
             <AvatarImage src="/joey-boy.jpg" />
             <AvatarFallback />
           </Avatar>
+          <span className="text-lg font-semibold">{user.email}</span>
         </div>
 
         <div className="h-3/4 flex flex-col py-10 w-full gap-y-1">

@@ -3,7 +3,9 @@ import { createDB } from "./db";
 import { emojis, reactionAsset } from "./schema";
 
 (async () => {
-  const { db, sql } = createDB();
+  const { db, sql } = createDB({
+    connString: process.env.CONNECTION_STRING,
+  });
 
   await Promise.all(
     emojis.map(async (emoji) => {

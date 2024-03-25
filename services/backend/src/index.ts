@@ -12,7 +12,9 @@ import { threadRouter } from "./thread-endpoints";
 
 const port = 8080;
 
-export const { db } = createDB();
+export const { db } = createDB({
+  connString: process.env.CONNECTION_STRING!,
+});
 
 const authRoutes = new Elysia()
   .use(campRouter)
@@ -86,4 +88,3 @@ const app = new Elysia()
 
 console.log(`Running on port ${port}`);
 export type App = typeof app;
-//

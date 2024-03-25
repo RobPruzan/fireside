@@ -73,13 +73,14 @@ export const Camp = () => {
   useEffect(() => {
     const lastChild = scrollRef.current?.lastChild!;
     if (lastChild instanceof HTMLElement) {
+      // #TODO don't auto scroll if the user has scrolled up in view port
       lastChild.scrollIntoView({
         behavior: "instant",
         block: "end",
         inline: "nearest",
       });
     }
-  }, [messages]);
+  }, [messages.length]);
 
   const createMessageMutation = useCreateMessageMutation({ campId });
   // const user = useDefinedUser();
@@ -233,7 +234,6 @@ const Message = ({
 
   return (
     <div
-      key={messageObj.id}
       className={cn([
         "w-full flex ",
         order === "last" && "pb-4",
@@ -264,9 +264,16 @@ const Message = ({
                 </Avatar>
                 <div className="text-sm font-medium leading-none">
                   <h3 className="text-base">{messageObj.user.email}</h3>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">
-                    Asked{" "}
-                    {run(() => {
+                  <span className="text-sm text-gray-500 dark:text-gray-400">
+                    <div className="flex gap-x-1">
+                      <span>
+                        {new Date(messageObj.createdAt).toLocaleDateString()}
+                      </span>
+                      <span>
+                        {new Date(messageObj.createdAt).toLocaleTimeString()}
+                      </span>
+                    </div>
+                    {/* {run(() => {
                       const secondsAway =
                         (new Date().getTime() -
                           new Date(messageObj.createdAt).getTime()) /
@@ -289,8 +296,8 @@ const Message = ({
                       }
                       ThreadIcon;
                       return "a while ago";
-                    })}
-                  </p>
+                    })} */}
+                  </span>
                   <div className="flex gap-x-1">
                     <div className="flex items-center justify-center p-1 h-fit">
                       {thread?.id ? (
@@ -307,7 +314,7 @@ const Message = ({
                             variant: "ghost",
 
                             className:
-                              " text-foreground h-fit  py-0 px-0 pb-0 pt-0 pr-0 ",
+                              " text-foreground h-fit  py-0 pl-0 px-0 pb-0 pt-0 pr-0 ",
                           })}
                         >
                           <MessageCircleIcon size={20} />
@@ -321,7 +328,7 @@ const Message = ({
                             });
                           }}
                           variant={"ghost"}
-                          className=" text-foreground h-fit py-0 px-0 pb-0 pt-0 pr-0  "
+                          className=" text-foreground h-fit py-0 pl-0 px-0 pb-0 pt-0 pr-0  "
                         >
                           <MessageCircleIcon size={20} />
                         </Button>
@@ -370,7 +377,7 @@ const Message = ({
                               )
                               .find(({ userId }) => userId === user.id);
                             return (
-                              <div className="flex items-center">
+                              <div key={asset.id} className="flex items-center">
                                 <Button
                                   onClick={() => {
                                     if (existingReaction) {
@@ -387,8 +394,8 @@ const Message = ({
                                     });
                                   }}
                                   className={cn([
-                                    "h-10 w-10 p-1 ",
-                                    existingReaction && "bg-muted",
+                                    "h-9 w-9 p-1 ",
+                                    existingReaction && "bg-muted/50",
                                   ])}
                                   variant={"ghost"}
                                 >
@@ -405,9 +412,7 @@ const Message = ({
                 </div>
               </div>
             </div>
-            <div className="max-w-none break-words ">
-              <p>{messageObj.message}</p>
-            </div>
+            <div className="max-w-none break-words ">{messageObj.message}</div>
           </div>
         </ContextMenuTrigger>
         <ContextMenuContent>
