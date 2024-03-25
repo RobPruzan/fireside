@@ -235,7 +235,6 @@ const Message = ({
 
   return (
     <div
-      key={messageObj.id}
       className={cn([
         "w-full flex ",
         order === "last" && "pb-4",
@@ -266,7 +265,7 @@ const Message = ({
                 </Avatar>
                 <div className="text-sm font-medium leading-none">
                   <h3 className="text-base">{messageObj.user.email}</h3>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                  <span className="text-sm text-gray-500 dark:text-gray-400">
                     <div className="flex gap-x-1">
                       <span>
                         {new Date(messageObj.createdAt).toLocaleDateString()}
@@ -299,7 +298,7 @@ const Message = ({
                       ThreadIcon;
                       return "a while ago";
                     })} */}
-                  </p>
+                  </span>
                   <div className="flex gap-x-1">
                     <div className="flex items-center justify-center p-1 h-fit">
                       {thread?.id ? (
@@ -379,7 +378,7 @@ const Message = ({
                               )
                               .find(({ userId }) => userId === user.id);
                             return (
-                              <div className="flex items-center">
+                              <div key={asset.id} className="flex items-center">
                                 <Button
                                   onClick={() => {
                                     if (existingReaction) {
@@ -414,9 +413,7 @@ const Message = ({
                 </div>
               </div>
             </div>
-            <div className="max-w-none break-words ">
-              <p>{messageObj.message}</p>
-            </div>
+            <div className="max-w-none break-words ">{messageObj.message}</div>
           </div>
         </ContextMenuTrigger>
         <ContextMenuContent>
