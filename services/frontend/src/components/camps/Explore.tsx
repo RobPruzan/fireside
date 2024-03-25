@@ -35,10 +35,7 @@ export const Explore = () => {
 
             <ul className="list-decimal pl-6 space-y-2 text-left">
               <li className="flex items-center gap-2">
-                <PlusCircle
-                  className="mt-1 h-5 w-5 text-accent"
-                  style={{ color: "white" }}
-                />
+                <PlusCircle className="mt-1 h-5 w-5 text-accent" />
                 Press the{" "}
                 <strong>
                   <PlusCircle
@@ -49,18 +46,12 @@ export const Explore = () => {
               </li>
 
               <li className="flex items-start gap-2">
-                <Image
-                  className="mt-1 h-5 w-5 text-accent white"
-                  style={{ color: "white" }}
-                />
+                <Image className="mt-1 h-5 w-5 text-accent" />
                 Once created, your new chatroom will appear on the right
               </li>
 
               <li className="flex items-start gap-2">
-                <DoorOpen
-                  className="mt-1 h-5 w-5 text-accent white"
-                  style={{ color: "white" }}
-                />
+                <DoorOpen className="mt-1 h-5 w-5 text-accent" />
                 To join, click <strong>View</strong>
               </li>
             </ul>
