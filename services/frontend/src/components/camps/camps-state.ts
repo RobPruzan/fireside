@@ -16,6 +16,7 @@ import {
 } from "@/lib/useUserQuery";
 import { useSetAtom } from "jotai";
 import { Nullish } from "@fireside/utils";
+import { redirect } from "@tanstack/react-router";
 
 export const dynamicSideBarOpen = atom(true);
 export const createCampModalOpen = atom(false);

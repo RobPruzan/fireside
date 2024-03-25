@@ -1,5 +1,6 @@
 import { createRoute, redirect, Outlet } from "@tanstack/react-router";
-import { getUser, ReactiveAuthRedirect } from "./route-helpers";
+import { ReactiveAuthRedirect, getUser } from "./route-helpers";
+
 import { rootRoute } from "./root-routes";
 import { LoadingScreen } from "@/components/ui/loading";
 import { Toaster } from "@/components/ui/toaster";
