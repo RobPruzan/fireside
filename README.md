@@ -12,7 +12,7 @@
 
 1. `docker-compose -f docker-compose.dev.yaml up db --build`
 2. `cd services/db`
-3. `pnpm migrate:generate && pnpm migrate:run`
+3. `pnpm migrate:generate && pnpm migrate:run && pnpm seed:emoji`
 
 ### Setting up backend
 
