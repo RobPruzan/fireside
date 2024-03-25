@@ -266,8 +266,15 @@ const Message = ({
                 <div className="text-sm font-medium leading-none">
                   <h3 className="text-base">{messageObj.user.email}</h3>
                   <p className="text-sm text-gray-500 dark:text-gray-400">
-                    Asked{" "}
-                    {run(() => {
+                    <div className="flex gap-x-1">
+                      <span>
+                        {new Date(messageObj.createdAt).toLocaleDateString()}
+                      </span>
+                      <span>
+                        {new Date(messageObj.createdAt).toLocaleTimeString()}
+                      </span>
+                    </div>
+                    {/* {run(() => {
                       const secondsAway =
                         (new Date().getTime() -
                           new Date(messageObj.createdAt).getTime()) /
@@ -290,7 +297,7 @@ const Message = ({
                       }
                       ThreadIcon;
                       return "a while ago";
-                    })}
+                    })} */}
                   </p>
                   <div className="flex gap-x-1">
                     <div className="flex items-center justify-center p-1 h-fit">
