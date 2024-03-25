@@ -6,8 +6,8 @@ import { join } from "path";
 config({ path: join(__dirname, "..", ".env") });
 config({ path: join(__dirname, ".env") });
 
-export const createDB = () => {
-  console.log("conn string we got", process.env.CONNECTION_STRING);
-  const sql = postgres(process.env.CONNECTION_STRING!, { max: 1 });
+export const createDB = ({ connString }: { connString: string }) => {
+  console.log(connString);
+  const sql = postgres(connString, { max: 1 });
   return { db: drizzle(sql), sql };
 };
