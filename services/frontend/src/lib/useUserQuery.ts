@@ -27,7 +27,7 @@ export const userQueryOptions = queryOptions({
       }
     }
   },
-
+  refetchInterval: 2500,
   retryDelay: 10000,
 });
 
