@@ -267,7 +267,7 @@ export const emojis = [
   },
   {
     src: "/punchy.gif",
-    alt: "Punch"
+    alt: "Punch",
   },
   {
     src: "/angry.png",
@@ -301,6 +301,14 @@ export const emojis = [
   },
   {
     src: "/nezuko-jumpin.gif",
+    alt: "Nezuko jumpin",
+  },
+  {
+    src: "/makima.gif",
+    alt: "Nezuko jumpin",
+  },
+  {
+    src: "/power.gif",
     alt: "Nezuko jumpin",
   },
 ];
