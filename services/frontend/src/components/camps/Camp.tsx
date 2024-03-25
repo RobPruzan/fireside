@@ -315,7 +315,7 @@ const Message = ({
                             variant: "ghost",
 
                             className:
-                              " text-foreground h-fit  py-0 px-0 pb-0 pt-0 pr-0 ",
+                              " text-foreground h-fit  py-0 pl-0 px-0 pb-0 pt-0 pr-0 ",
                           })}
                         >
                           <MessageCircleIcon size={20} />
@@ -329,7 +329,7 @@ const Message = ({
                             });
                           }}
                           variant={"ghost"}
-                          className=" text-foreground h-fit py-0 px-0 pb-0 pt-0 pr-0  "
+                          className=" text-foreground h-fit py-0 pl-0 px-0 pb-0 pt-0 pr-0  "
                         >
                           <MessageCircleIcon size={20} />
                         </Button>
