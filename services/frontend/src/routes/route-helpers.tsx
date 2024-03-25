@@ -1,6 +1,11 @@
 import { useDefinedUser } from "@/components/camps/camps-state";
-import { FiresideUser, userQueryOptions } from "@/lib/useUserQuery";
+import {
+  FiresideUser,
+  useUserQuery,
+  userQueryOptions,
+} from "@/lib/useUserQuery";
 import { persister } from "@/query";
+import { user } from "@fireside/db";
 import { QueryClient, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
@@ -18,14 +23,11 @@ export const ReactiveAuthRedirect = ({
 }: {
   children: React.ReactNode;
 }) => {
-  const user = useDefinedUser();
+  const { data: user } = useUserQuery();
   const navigate = useNavigate();
-
-  useEffect(() => {
-    if (!user) {
-      navigate({ to: "/" });
-    }
-  }, [user]);
+  if (!user) {
+    navigate({ to: "/" });
+  }
 
   return <>{children}</>;
 };
