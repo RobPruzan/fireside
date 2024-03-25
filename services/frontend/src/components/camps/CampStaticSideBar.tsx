@@ -38,11 +38,11 @@ export const CampStaticSideBar = () => {
       </div>
       <div className="h-[80%] flex flex-col items-center justify-start w-full">
         <div className="h-1-4 flex flex-col justify-start items-center gap-y-2">
-          <span className="text-lg font-semibold">{user.email}</span>
           <Avatar className="h-14 w-14">
             <AvatarImage src="/joey-boy.jpg" />
             <AvatarFallback />
           </Avatar>
+          <span className="text-lg font-semibold">{user.email}</span>
         </div>
 
         <div className="h-3/4 flex flex-col py-10 w-full gap-y-1">
