@@ -56,7 +56,7 @@ import { useGetThreads } from "./thread-state";
 import { toast } from "../ui/use-toast";
 import { Textarea } from "../ui/textarea";
 export const Camp = () => {
-  const [userMessage, setUserMessage] = useState<string>("");
+  const [userMessage, setUserMessage] = useState("");
   const { campId } = useParams({ from: "/root-auth/camp-layout/camp/$campId" });
   const reactMutation = useReactToMessageMutation({
     campId,
@@ -122,7 +122,13 @@ export const Camp = () => {
 
       <Textarea
         onKeyDown={(e) => {
-          if (userMessage === "") {
+          if (
+            !userMessage.replace("\n", "") &&
+            e.key === "Enter" &&
+            !e.shiftKey
+          ) {
+            setUserMessage("");
+            e.preventDefault();
             return;
           }
 

@@ -47,7 +47,7 @@ export const Thread = () => {
         inline: "nearest",
       });
     }
-  }, [threadMessages]);
+  }, [threadMessages.length]);
 
   return (
     <div className="h-full  flex flex-col  px-2">
@@ -98,7 +98,7 @@ export const Thread = () => {
       </div>
       <Textarea
         onChange={(e) => setCurrentMessage(e.target.value)}
-        value={currentMessage ?? ""}
+        value={currentMessage}
         onKeyDown={(e) => {
           if (!currentMessage && e.key === "Enter" && !e.shiftKey) {
             setCurrentMessage("");
