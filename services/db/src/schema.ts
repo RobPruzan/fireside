@@ -265,4 +265,29 @@ export const emojis = [
     src: "/frieren-embarrassed.png",
     alt: "Frieren Embarrassed",
   },
+  {
+    src: "/fern.png",
+    alt: "Fern smile",
+  },
+  {
+    src: "/bocchi-bruh.png",
+    alt: "Bocchi bruh",
+  },
+  {
+    src: "/frieren-mimiced.png",
+    alt: "Frieren mimiced",
+  },
+  {
+    src: "/nobora-smirk.png",
+    alt: "Nobora smirk",
+  },
+
+  {
+    src: "/gojo-breathing.gif",
+    alt: "Gojo breathing",
+  },
+  {
+    src: "/nezuko-jumpin.gif",
+    alt: "Nezuko jumpin",
+  },
 ];
