@@ -78,7 +78,7 @@ export const userRoute = new Elysia({
   .post(
     "/create",
     async (ctx) => {
-      if (ctx.body.password !== ctx.body.password) {
+      if (ctx.body.password !== ctx.body.confirmedPassword) {
         throw new Error("Pass and confirmed password not equal");
       }
 
@@ -231,7 +231,13 @@ export const userRoute = new Elysia({
 export const userProtectedRoute = ProtectedElysia({
   prefix: "/user",
 })
-  .post("/log-out", (ctx) => {
+  .post("/log-out", async (ctx) => {
+    await db
+      .update(user)
+      .set({
+        token: null,
+      })
+      .where(eq(user.id, ctx.user.id));
     ctx.cookie.auth.set(getDeleteAuthCookie());
   })
   .get("/get-all", () => db.select().from(user));
