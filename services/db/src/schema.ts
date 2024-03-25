@@ -266,8 +266,8 @@ export const emojis = [
     alt: "Angry",
   },
   {
-    src: "colossal-peeky.jpg",
-    alt: "Peeky",
+    src: "./colossal-peeky.jpg",
+    alt: "Peeky titan",
   },
   { src: "/frieren-embarrassed.png", alt: "Frieren Embarrassed" },
   {
