@@ -124,7 +124,12 @@ export const CampDynamicSideBar = () => {
                       match({
                         to: "/camp/$campId",
                         params: { campId: camp.id },
-                      }) && "bg-accent",
+                      }) ||
+                        (match({
+                          to: "/camp/$campId/$threadId",
+                          params: { campId: camp.id },
+                        }) &&
+                          "bg-accent"),
                     ]),
                     variant: "ghost",
                   })}
