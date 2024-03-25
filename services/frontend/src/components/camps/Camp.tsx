@@ -395,8 +395,8 @@ const Message = ({
                                     });
                                   }}
                                   className={cn([
-                                    "h-7 w-7 p-1 ",
-                                    existingReaction && "bg-muted",
+                                    "h-9 w-9 p-1 ",
+                                    existingReaction && "bg-muted/50",
                                   ])}
                                   variant={"ghost"}
                                 >
