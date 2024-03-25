@@ -1,9 +1,9 @@
 import { client, promiseDataOrThrow } from "@/edenClient";
 import {
-  queryOptions,
   useSuspenseQuery,
   useQueryClient,
   useMutation,
+  queryOptions,
 } from "@tanstack/react-query";
 import { useToast } from "../ui/use-toast";
 import { useDefinedUser } from "./camps-state";
@@ -19,8 +19,6 @@ export const getMessagesOptions = ({ campId }: { campId: string }) =>
           campId,
         })
         .get();
-      console.log({ res });
-
       return promiseDataOrThrow(
         client.api.protected.message
           .retrieve({
@@ -29,7 +27,7 @@ export const getMessagesOptions = ({ campId }: { campId: string }) =>
           .get()
       );
     },
-    refetchInterval: 5000,
+    refetchInterval: 1500,
   });
 
 export const useGetMessages = ({ campId }: { campId: string }) => {
@@ -103,6 +101,7 @@ export const useCreateMessageMutation = ({ campId }: { campId: string }) => {
 
 export const getMessageReactionOptions = ({ campId }: { campId: string }) =>
   queryOptions({
+    refetchInterval: 1500,
     queryKey: ["message-reactions", campId],
     queryFn: () =>
       promiseDataOrThrow(

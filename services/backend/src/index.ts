@@ -40,29 +40,41 @@ const app = new Elysia()
       .use(noAuthRoutes)
       .use(authRoutes)
   )
-  .get("/*", async ({ path }) => {
+  .get("/*", async ({ path, set }) => {
     const assetFile = Bun.file(
       `./node_modules/@fireside/frontend/dist/assets/${path
         .replaceAll("/", "")
-        .replaceAll(".", "")
+        .replaceAll("..", "")
         .replace("assets", "")}`
     );
     const publicFile = Bun.file(
       `./node_modules/@fireside/frontend/dist/${path
         .replaceAll("/", "")
-        .replaceAll(".", "")}`
+        .replaceAll("..", "")}`
     );
     const fallBackFile = Bun.file(
       "./node_modules/@fireside/frontend/dist/index.html"
     );
+
     if (await assetFile.exists()) {
+      set.headers["Content-Type"] = assetFile.type;
+      // if (assetFile.name?.includes(".css" ||  publicFile.type === "javascript")) {
+
+      // }
+      // if (assetFile.name?.includes(".js")) {
+      //   set.headers["Content-Type"] = publicFile.type
+      // }
+      // if (assetFile.name?.includes(".html")) {
+      //   set.headers["Content-Type"] = publicFile.type
+      // }
       return assetFile;
     }
 
     if (await publicFile.exists()) {
+      set.headers["Content-Type"] = publicFile.type;
       return publicFile;
     }
-
+    set.headers["Content-Type"] = fallBackFile.type;
     return fallBackFile;
   })
 
