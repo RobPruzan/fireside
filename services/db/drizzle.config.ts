@@ -4,6 +4,7 @@ export default {
   out: "./drizzle",
   driver: "pg",
   dbCredentials: {
-    connectionString: process.env.CONNECTION_STRING,
+    connectionString:
+      "postgresql://test_user:test_password@localhost:5432/test_db",
   },
 } satisfies Config;
