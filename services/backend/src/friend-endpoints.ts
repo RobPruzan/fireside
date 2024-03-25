@@ -203,7 +203,7 @@ export const friendRoute = ProtectedElysia({ prefix: "/friend" })
       return {
         friend: createdFriendRows[0],
         user: ctx.user,
-        otherUser: createdFriend[0],
+        otherUser: cleanUser(createdFriend[0]),
       };
     },
     {

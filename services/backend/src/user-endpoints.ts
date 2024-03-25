@@ -12,6 +12,7 @@ import { Elysia, t, type CookieOptions } from "elysia";
 import { ProtectedElysia, getDeleteAuthCookie } from "./lib";
 
 import { db } from ".";
+import { cleanedUserCols } from "./camp-endpoints";
 
 const getHash = ({ str }: { str: string }) =>
   Bun.password.hash(str, {
@@ -240,4 +241,4 @@ export const userProtectedRoute = ProtectedElysia({
       .where(eq(user.id, ctx.user.id));
     ctx.cookie.auth.set(getDeleteAuthCookie());
   })
-  .get("/get-all", () => db.select().from(user));
+  .get("/get-all", () => db.select(cleanedUserCols).from(user));
