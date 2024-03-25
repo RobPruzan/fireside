@@ -121,15 +121,15 @@ export const CampDynamicSideBar = () => {
                   className={buttonVariants({
                     className: cn([
                       "py-9 w-full flex justify-between",
-                      match({
+                      (match({
                         to: "/camp/$campId",
                         params: { campId: camp.id },
                       }) ||
-                        (match({
+                        match({
                           to: "/camp/$campId/$threadId",
                           params: { campId: camp.id },
-                        }) &&
-                          "bg-accent"),
+                        })) &&
+                        "bg-accent",
                     ]),
                     variant: "ghost",
                   })}
