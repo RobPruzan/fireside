@@ -305,10 +305,10 @@ export const emojis = [
   },
   {
     src: "/makima.gif",
-    alt: "Nezuko jumpin",
+    alt: "Makima",
   },
   {
     src: "/power.gif",
-    alt: "Nezuko jumpin",
+    alt: "Power",
   },
 ];
