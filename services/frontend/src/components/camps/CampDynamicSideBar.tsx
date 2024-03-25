@@ -141,9 +141,10 @@ export const CampDynamicSideBar = () => {
                   </div>
                   <div className="relative w-1/4 flex items-center justify-end"></div>
                 </Link>
-                <Button className="h-full p-0" variant={"ghost"}>
+                {/* <Button className="h-full p-0" variant={"ghost"}>
                   <MoreVertical />
-                </Button>
+                </Button> */}
+                {/* comment out till we add functionality */}
               </div>
             ))}
         </div>
