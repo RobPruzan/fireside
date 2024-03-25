@@ -121,6 +121,7 @@ export const Camp = () => {
       </div>
 
       <Textarea
+        placeholder="Send a question..."
         onKeyDown={(e) => {
           if (!userMessage && e.key === "Enter" && !e.shiftKey) {
             setUserMessage("");
