@@ -262,9 +262,14 @@ export const emojis = [
     alt: "Thinking",
   },
   {
-    src: "/frieren-embarrassed.png",
-    alt: "Frieren Embarrassed",
+    src: "/angry.png",
+    alt: "Angry",
   },
+  {
+    src: "colossal-peeky.jpg",
+    alt: "Peeky",
+  },
+  { src: "/frieren-embarrassed.png", alt: "Frieren Embarrassed" },
   {
     src: "/fern.png",
     alt: "Fern smile",
