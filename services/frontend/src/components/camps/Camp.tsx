@@ -234,7 +234,6 @@ const Message = ({
   const thread = threads.find(
     (thread) => thread.parentMessageId === messageObj.id
   );
-  console.log("WHAT", thread);
 
   return (
     <div
