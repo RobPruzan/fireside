@@ -262,6 +262,14 @@ export const emojis = [
     alt: "Thinking",
   },
   {
+    src: "/dats-fire.jpg",
+    alt: "Fire",
+  },
+  {
+    src: "/punchy.gif",
+    alt: "Punch"
+  },
+  {
     src: "/angry.png",
     alt: "Angry",
   },
