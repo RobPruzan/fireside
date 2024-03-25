@@ -79,7 +79,6 @@ export const CampDynamicSideBar = () => {
                 <Button
                   className="min-w-[78px]"
                   onClick={() => {
-                    console.log("click");
                     createCampMutation.mutate({
                       name: newCampRoomName,
                     });

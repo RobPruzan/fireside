@@ -47,7 +47,7 @@ export const useCreateCampMutation = () => {
     mutationKey: ["create-camp"],
     mutationFn: async (createOps: { name: string }) => {
       const res = await client.api.protected.camp.create.post(createOps);
-      console.log("here?");
+
       if (res.error) {
         throw Error(JSON.stringify(res.error.value));
       }
@@ -55,11 +55,10 @@ export const useCreateCampMutation = () => {
       return res.data;
     },
     onSuccess: (camp) => {
-      console.log("hi", userCampsQueryKey);
       queryClient.setQueryData(userCampsQueryKey, (prev) =>
         prev ? [...prev, camp] : [camp]
       );
-      console.log("blug");
+
       queryClient.setQueryData(allCampsQueryKey, (prev) =>
         prev ? [...prev, camp] : [camp]
       );

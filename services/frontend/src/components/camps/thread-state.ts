@@ -53,6 +53,7 @@ export const useCreateThread = ({ campId }: { campId: string }) => {
 };
 export const getThreadMessagesOptions = ({ threadId }: { threadId: string }) =>
   queryOptions({
+    refetchInterval: 1500,
     queryKey: ["thread-messages", threadId],
     queryFn: () =>
       promiseDataOrThrow(
@@ -109,6 +110,7 @@ export const useCreateThreadMessageMutation = ({
         {
           ...variables,
           userId: user.id,
+          user,
           threadId,
         },
       ]);
