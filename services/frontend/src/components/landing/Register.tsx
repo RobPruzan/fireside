@@ -130,13 +130,12 @@ function Register() {
               {createUserMutation.isPending ? <LoadingSpinner /> : "Continue"}
             </Button>
           </div>
-          <div>
-            {" "}
+          <div className="flex justify-center mt-4">
             <Link
-              className="text-primary text-sm hover:text-primary/80 mt-4"
+              className="font-300 text-sm hover:text-primary/80"
               to="/login"
             >
-              Already have an account?
+              Already have an account? Login here
             </Link>
           </div>
         </div>

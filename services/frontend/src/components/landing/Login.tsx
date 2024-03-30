@@ -96,12 +96,12 @@ function Login() {
               {loginMutation.isPending ? <LoadingSpinner /> : "Continue"}
             </Button>
           </div>
-          <div>
+          <div className="flex justify-center mt-4">
             <Link
-              className="text-primary text-sm hover:text-primary/80 mt-3"
+              className="text-sm hover:text-primary/80 mt-3"
               to="/register"
             >
-              Don't have an account?
+              Don't have an account? Register here
             </Link>
           </div>
         </div>

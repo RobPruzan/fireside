@@ -11,7 +11,7 @@ export const NavBar = () => {
   const match = useMatchRoute();
 
   return (
-    <div className="flex justify-between items-center mx-auto w-full px-10 h-16">
+    <div className="flex justify-between items-center mx-auto w-full px-20 h-20">
       <Link to="/" className="flex items-center">
         <img src={"/bonfire.png"} alt="Logo" className="h-8 w-8 mr-2" />
         <span className={`text-xl`}>Fireside</span>

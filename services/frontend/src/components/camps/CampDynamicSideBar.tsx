@@ -46,60 +46,18 @@ export const CampDynamicSideBar = () => {
       </Button>
       <div className="flex flex-col w-full h-1/6">
         <div className="h-1/2 flex items-start justify-start pt-5 pl-5 ">
-          <span className="text-3xl font-semibold ">Camp Rooms</span>
+          <span className="text-3xl font-semibold ">Campsites</span>
         </div>
-        <div className="flex h-1/2 border-b-2 gap-x-2 border-accent/50 px-5 py-2 justify-start w-full">
-          <Dialog open={modalOpen} onOpenChange={(open) => setModalOpen(open)}>
-            <DialogTrigger asChild>
-              <Button
-                className="w-full text-lg flex gap-x-3 justify-center items-center"
-                variant={"ghost"}
-              >
-                <PlusCircle />
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Create camp room</DialogTitle>
-                <DialogDescription></DialogDescription>
-              </DialogHeader>
-              <Label htmlFor="camp-room-name">Name</Label>
-              <Input
-                value={newCampRoomName}
-                onChange={(e) => setNewCampRoomName(e.target.value)}
-                className="camp-room-name"
-              />
-              <DialogFooter>
-                <Button
-                  onClick={() => setSideBarOpen(false)}
-                  variant={"outline"}
-                >
-                  Cancel
-                </Button>
-                <Button
-                  className="min-w-[78px]"
-                  onClick={() => {
-                    createCampMutation.mutate({
-                      name: newCampRoomName,
-                    });
-                  }}
-                >
-                  {createCampMutation.isPending ? <LoadingSpinner /> : "Create"}
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
-        </div>
-      </div>
-      <div className=" flex flex-col justify-start items-center h-5/6">
         <div className="w-full flex justify-star p-5">
           <Input
             value={campSearch}
             onChange={(e) => setCampSearch(e.target.value)}
-            placeholder="Search my camps"
+            placeholder="Search your Campsites"
             className="w-full min-[50px]"
           />
         </div>
+      </div>
+      <div className=" flex flex-col justify-start items-center h-5/6">
 
         <div className="flex flex-col overflow-y-auto h-full w-full p-5 gap-y-1">
           {camps
@@ -152,6 +110,44 @@ export const CampDynamicSideBar = () => {
                 {/* comment out till we add functionality */}
               </div>
             ))}
+          <div className="flex h-1/2 gap-x-2 border-accent/50 px-5 py-2 justify-start w-full">
+            <Dialog open={modalOpen} onOpenChange={(open) => setModalOpen(open)}>
+              <DialogTrigger asChild>
+                <Button
+                  className="w-full text-lg flex gap-x-3 justify-center items-center"
+                  variant={"ghost"}
+                >
+                  <PlusCircle /> 
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Create a campsite!</DialogTitle>
+                  <DialogDescription>
+                  </DialogDescription>
+                </DialogHeader>
+                <Label htmlFor="camp-room-name">Name</Label>
+                <Input
+                  value={newCampRoomName}
+                  onChange={(e) => setNewCampRoomName(e.target.value)}
+                  className="camp-room-name"
+                />
+                <DialogFooter>
+                  <Button
+                    className="min-w-[78px]"
+                    onClick={() => {
+                      createCampMutation.mutate({
+                        name: newCampRoomName,
+                      });
+                    }}
+                  >
+                    {createCampMutation.isPending ? <LoadingSpinner /> : "Create"}
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+          </div>
+
         </div>
       </div>
     </>
