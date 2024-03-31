@@ -282,7 +282,6 @@ const MessageSection = memo(({ campId }: { campId: string }) => {
         <Textarea
           placeholder="Send a question..."
           onKeyDown={(e) => {
-            console.log("keydown");
             if (!userMessage && e.key === "Enter" && !e.shiftKey) {
               setUserMessage("");
               e.preventDefault();
@@ -340,7 +339,7 @@ const ReactionMenuContent = memo(
     const reactions = messageReactions.filter(
       (reaction) => reaction.messageId === messageId
     );
-    console.log("are u running?");
+
     return reactionAssets.map((asset) => {
       const existingReaction = reactions
         .filter(

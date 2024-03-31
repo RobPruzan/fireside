@@ -9,6 +9,9 @@ import {
   whiteBoardPointInsertSchema,
   whiteBoardMouseInsertSchema,
   whiteBoardMouse,
+  whiteBoardMouseSelectSchema,
+  and,
+  not,
 } from "@fireside/db";
 import { ProtectedElysia } from "./lib";
 import { db } from ".";
@@ -31,13 +34,18 @@ const whiteBoardBodySchema = t.Object({
 
 const messageBodySchema = t.Union([
   whiteBoardBodySchema,
-  whiteBoardMouseInsertSchema,
+  whiteBoardMouseSelectSchema,
 ]);
 
-export type PublishedWhiteBoardPoint = Omit<
-  Static<typeof whiteBoardBodySchema>,
-  "color"
-> & { color: WhiteBoardColor };
+export type WhiteBoardPublish =
+  | Static<typeof whiteBoardMouseSelectSchema>
+  | (Omit<Static<typeof whiteBoardBodySchema>, "color"> & {
+      color: WhiteBoardColor;
+    });
+// export type PublishedWhiteBoardPoint = Omit<
+//   Static<typeof whiteBoardBodySchema>,
+//   "color"
+// > & { color: WhiteBoardColor };
 
 export const whiteboardRoute = ProtectedElysia({ prefix: "/whiteboard" })
   .post(
@@ -91,16 +99,42 @@ export const whiteboardRoute = ProtectedElysia({ prefix: "/whiteboard" })
 
     { params: t.Object({ whiteBoardId: t.String() }) }
   )
+  .get(
+    "/mouse/retrieve/:whiteBoardId",
+    async (ctx) => {
+      const mousePoints = await db
+        .select()
+        .from(whiteBoardMouse)
+        .where(
+          and(
+            eq(whiteBoardMouse.whiteBoardId, ctx.params.whiteBoardId),
+            not(eq(whiteBoardMouse.userId, ctx.user.id))
+          )
+        );
+
+      const dedupedIds = new Set<string>();
+
+      mousePoints.forEach(({ userId }) => {
+        dedupedIds.add(userId);
+      });
+
+      // [...(dedupedIds.values())]
+
+      const newMousePoints = [...dedupedIds].map(
+        (userId) => mousePoints.find((mouse) => mouse.userId === userId)!
+      );
+
+      return newMousePoints;
+    },
+
+    { params: t.Object({ whiteBoardId: t.String() }) }
+  )
   .ws("/ws/:whiteBoardId", {
     params: t.Object({
       whiteBoardId: t.String(),
     }),
     body: messageBodySchema,
     open: (ws) => {
-      console.log(
-        "joined white board",
-        `white-board-${ws.data.params.whiteBoardId}`
-      );
       ws.subscribe(`white-board-${ws.data.params.whiteBoardId}`);
     },
     message: async (ws, data) => {
@@ -129,14 +163,38 @@ export const whiteboardRoute = ProtectedElysia({ prefix: "/whiteboard" })
               whiteBoardPointGroupId: data.whiteBoardPointGroupId,
             })
             .onConflictDoNothing();
-          console.log("publishing", data.id);
+
           ws.publish(`white-board-${ws.data.params.whiteBoardId}`, data);
 
           return;
         }
         case "mouse": {
-          await db.insert(whiteBoardMouse).values(data);
-          ws.publish(`white-board-${ws.data.params.whiteBoardId}`);
+          // await db.insert(whiteBoardMouse).values(data);
+
+          const existingMousePoint = (
+            await db
+              .select()
+              .from(whiteBoardMouse)
+              .where(
+                and(
+                  eq(whiteBoardMouse.userId, ws.data.user.id),
+                  eq(whiteBoardMouse.whiteBoardId, ws.data.params.whiteBoardId)
+                )
+              )
+          ).at(0);
+
+          if (existingMousePoint) {
+            await db
+              .update(whiteBoardMouse)
+              .set({
+                x: data.x,
+                y: data.y,
+              })
+              .where(eq(whiteBoardMouse.id, existingMousePoint.id));
+          } else {
+            await db.insert(whiteBoardMouse).values(data);
+          }
+          ws.publish(`white-board-${ws.data.params.whiteBoardId}`, data);
         }
       }
     },

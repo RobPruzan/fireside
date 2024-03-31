@@ -22,7 +22,7 @@ export const Thread = ({ threadId }: { threadId: string }) => {
   const { messages } = useGetMessages({ campId });
 
   const { threads } = useGetThreads({ campId });
-  console.log({ threadId });
+
   const thread = threads.find((thread) => thread.id === threadId);
 
   const parentMessage = messages.find(
