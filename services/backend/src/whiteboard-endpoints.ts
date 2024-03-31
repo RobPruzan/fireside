@@ -6,6 +6,9 @@ import {
   whiteBoardPointGroup,
   type WhiteBoardPoint,
   type WhiteBoardColor,
+  whiteBoardPointInsertSchema,
+  whiteBoardMouseInsertSchema,
+  whiteBoardMouse,
 } from "@fireside/db";
 import { ProtectedElysia } from "./lib";
 import { db } from ".";
@@ -14,21 +17,32 @@ import { run } from "@fireside/utils";
 export type TransformedWhiteBoardPointGroup = WhiteBoardPoint & {
   color: WhiteBoardColor;
 };
+
+// export const
+const whiteBoardBodySchema = t.Object({
+  id: t.String(),
+  whiteBoardId: t.String(),
+  whiteBoardPointGroupId: t.String(),
+  x: t.Number(),
+  y: t.Number(),
+  color: t.String(),
+  kind: t.Literal("point"),
+});
+
+const messageBodySchema = t.Union([
+  whiteBoardBodySchema,
+  whiteBoardMouseInsertSchema,
+]);
+
+export type PublishedWhiteBoardPoint = Omit<
+  Static<typeof whiteBoardBodySchema>,
+  "color"
+> & { color: WhiteBoardColor };
+
 export const whiteboardRoute = ProtectedElysia({ prefix: "/whiteboard" })
   .post(
     "/create",
     async ({ body }) => {
-      // if (body.id) {
-      //   const existingBoard = await db
-      //     .select()
-      //     .from(whiteBoard)
-      //     .where(eq(whiteBoard.id, body.id));
-
-      //   if (existingBoard.at(0)) {
-      //     return;
-      //   }
-      // }
-
       return (
         await db
           .insert(whiteBoard)
@@ -72,32 +86,16 @@ export const whiteboardRoute = ProtectedElysia({ prefix: "/whiteboard" })
         });
       });
 
-      // const pointGroups: Array<Array<WhiteBoardPoint>> =
-      //   Object.values(pointGroupToPoints);
-
       return Object.values(pointGroupToPoints);
     },
-    // .from(whiteBoard)
 
-    // .where(eq(whiteBoard.id, params.whiteBoardId))
-    // .fullJoin(
-    //   whiteBoa,
-    //   eq(whiteBoardPoint.whiteBoardId, whiteBoard.id)
-    // ),
     { params: t.Object({ whiteBoardId: t.String() }) }
   )
   .ws("/ws/:whiteBoardId", {
     params: t.Object({
       whiteBoardId: t.String(),
     }),
-    body: t.Object({
-      id: t.String(),
-      whiteBoardId: t.String(),
-      whiteBoardPointGroupId: t.String(),
-      x: t.Number(),
-      y: t.Number(),
-      color: t.String(),
-    }),
+    body: messageBodySchema,
     open: (ws) => {
       console.log(
         "joined white board",
@@ -106,36 +104,41 @@ export const whiteboardRoute = ProtectedElysia({ prefix: "/whiteboard" })
       ws.subscribe(`white-board-${ws.data.params.whiteBoardId}`);
     },
     message: async (ws, data) => {
-      // console.log("recieved", data);
+      switch (data.kind) {
+        case "point": {
+          const existingGroup = await db
+            .select()
+            .from(whiteBoardPointGroup)
+            .where(eq(whiteBoardPointGroup.id, data.whiteBoardPointGroupId));
+          if (existingGroup.length === 0) {
+            await db
+              .insert(whiteBoardPointGroup)
+              .values({
+                color: data.color as WhiteBoardColor,
+                whiteBoardId: data.whiteBoardId,
+                id: data.whiteBoardPointGroupId,
+              })
+              .onConflictDoNothing();
+          }
+          await db
+            .insert(whiteBoardPoint)
+            .values({
+              x: data.x,
+              y: data.y,
+              id: data.id,
+              whiteBoardPointGroupId: data.whiteBoardPointGroupId,
+            })
+            .onConflictDoNothing();
+          console.log("publishing", data.id);
+          ws.publish(`white-board-${ws.data.params.whiteBoardId}`, data);
 
-      const existingGroup = await db
-        .select()
-        .from(whiteBoardPointGroup)
-        .where(eq(whiteBoardPointGroup.id, data.whiteBoardPointGroupId));
-
-      if (existingGroup.length === 0) {
-        await db
-          .insert(whiteBoardPointGroup)
-          .values({
-            color: data.color as WhiteBoardColor,
-            whiteBoardId: data.whiteBoardId,
-            id: data.whiteBoardPointGroupId,
-          })
-          .onConflictDoNothing();
+          return;
+        }
+        case "mouse": {
+          await db.insert(whiteBoardMouse).values(data);
+          ws.publish(`white-board-${ws.data.params.whiteBoardId}`);
+        }
       }
-
-      await db
-        .insert(whiteBoardPoint)
-        .values({
-          x: data.x,
-          y: data.y,
-          id: data.id,
-          whiteBoardPointGroupId: data.whiteBoardPointGroupId,
-        })
-        .onConflictDoNothing();
-
-      console.log("publishing", data.id);
-      ws.publish(`white-board-${ws.data.params.whiteBoardId}`, data);
     },
     close: (ws) => {
       ws.unsubscribe(`white-board-${ws.data.params.whiteBoardId}`);
@@ -145,17 +148,3 @@ export const whiteboardRoute = ProtectedElysia({ prefix: "/whiteboard" })
 // export type PublishedPoints = {
 //   x: number
 // }
-
-const whiteBoardBodySchema = t.Object({
-  id: t.String(),
-  whiteBoardId: t.String(),
-  whiteBoardPointGroupId: t.String(),
-  x: t.Number(),
-  y: t.Number(),
-  color: t.String(),
-});
-
-export type PublishedWhiteBoardPoint = Omit<
-  Static<typeof whiteBoardBodySchema>,
-  "color"
-> & { color: WhiteBoardColor };

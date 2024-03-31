@@ -375,14 +375,14 @@ const WhiteBoard = ({
               const newPoint = {
                 ...mouseCords,
                 color: selectedTool.color,
-
                 whiteBoardId,
                 id: genWhiteBoardPointId(),
                 whiteBoardPointGroupId: newGroupIdRef.current,
+                kind: "point" as const,
               };
               setDrawingPoints((prev) => [...prev, newPoint]);
               console.log("sending", newPoint);
-              subscriptionRef.current?.send(newPoint);
+              subscriptionRef.current?.send({ ...newPoint, kind: "point" });
 
               return;
             }
