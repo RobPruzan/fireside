@@ -301,7 +301,7 @@ const WhiteBoard = ({
           variant: "ghost",
         })}
       >
-        <XIcon />
+        <XIcon className="text-black" />
       </Link>
 
       <div className="absolute bottom-2 border border-gray-200 bg-opacity-50 backdrop-blur-md right-[7px] rounded-lg p-3  flex justify-evenly items-center w-[95%]">
