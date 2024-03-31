@@ -320,18 +320,13 @@ const WhiteBoard = ({
     }
 
     whiteBoardMousePoints?.forEach((mousePoint) => {
-      // ctx.moveTo(mousePoint.x, mousePoint.y);
-      // ctx.beginPath;
-      // ctx.rect(mousePoint.x, mousePoint.y, 0.25, 0.25);
-      // // ctx.fillStyle = "black";
-      // ctx.strokeStyle = "red";
-      // ctx.fill();
-      // ctx.stroke();
-      // document.createElement("image");
       const image = new Image(15, 15);
       image.src = "/pencil-mouse.png";
       console.log({ image });
       ctx.drawImage(image, mousePoint.x, mousePoint.y, 20, 20);
+
+      ctx.font = "10px";
+      ctx.fillText(mousePoint.user.email, mousePoint.x - 15, mousePoint.y - 5);
     });
 
     ctx.stroke();
@@ -373,6 +368,7 @@ const WhiteBoard = ({
           kind: "mouse",
           whiteBoardId,
           userId: user.id,
+          user,
         });
       }
     };
@@ -457,6 +453,7 @@ const WhiteBoard = ({
             kind: "mouse",
             whiteBoardId,
             userId: user.id,
+            user,
           });
           if (!mouseCords) {
             return;

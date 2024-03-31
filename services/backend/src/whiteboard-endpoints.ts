@@ -12,11 +12,16 @@ import {
   whiteBoardMouseSelectSchema,
   and,
   not,
+  user,
+  getTableColumns,
+  type User,
+  safeUserSelectSchema,
 } from "@fireside/db";
 import { ProtectedElysia } from "./lib";
 import { db } from ".";
 import { t, type Static } from "elysia";
 import { run } from "@fireside/utils";
+import { cleanedUserCols } from "./camp-endpoints";
 export type TransformedWhiteBoardPointGroup = WhiteBoardPoint & {
   color: WhiteBoardColor;
 };
@@ -34,11 +39,22 @@ const whiteBoardBodySchema = t.Object({
 
 const messageBodySchema = t.Union([
   whiteBoardBodySchema,
-  whiteBoardMouseSelectSchema,
+  t.Intersect([
+    whiteBoardMouseSelectSchema,
+    t.Object({
+      user: t.Object({
+        id: t.String(),
+        email: t.String(),
+        displayName: t.String(),
+      }),
+    }),
+  ]),
 ]);
 
 export type WhiteBoardPublish =
-  | Static<typeof whiteBoardMouseSelectSchema>
+  | (Static<typeof whiteBoardMouseSelectSchema> & {
+      user: Omit<User, "password" | "token">;
+    })
   | (Omit<Static<typeof whiteBoardBodySchema>, "color"> & {
       color: WhiteBoardColor;
     });
@@ -103,14 +119,18 @@ export const whiteboardRoute = ProtectedElysia({ prefix: "/whiteboard" })
     "/mouse/retrieve/:whiteBoardId",
     async (ctx) => {
       const mousePoints = await db
-        .select()
+        .select({
+          ...getTableColumns(whiteBoardMouse),
+          user: cleanedUserCols,
+        })
         .from(whiteBoardMouse)
         .where(
           and(
             eq(whiteBoardMouse.whiteBoardId, ctx.params.whiteBoardId),
             not(eq(whiteBoardMouse.userId, ctx.user.id))
           )
-        );
+        )
+        .innerJoin(user, eq(user.id, whiteBoardMouse.userId));
 
       const dedupedIds = new Set<string>();
 
