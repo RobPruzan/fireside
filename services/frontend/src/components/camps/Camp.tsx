@@ -71,7 +71,7 @@ import { client } from "@/edenClient";
 import { useQueryClient } from "@tanstack/react-query";
 import { PublishedMessage } from "@fireside/backend/src/message-endpoints";
 import { threadId } from "worker_threads";
-import { WhiteBoard } from "./whiteboard/WhiteBoard";
+import { WhiteBoardLoader } from "./whiteboard/WhiteBoard";
 const subscribeFn = client.api.protected.message.ws({
   campId: "anything",
 }).subscribe;
@@ -158,7 +158,7 @@ export const Camp = () => {
                           minSize={30}
                           className={cn([" w-full"])}
                         >
-                          <WhiteBoard />
+                          <WhiteBoardLoader whiteBoardId={v} />
                         </ResizablePanel>
 
                         {index !== searchEntries.length - 1 && (

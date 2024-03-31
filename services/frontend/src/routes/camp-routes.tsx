@@ -24,7 +24,7 @@ import {
 import { Thread } from "@/components/camps/Thread";
 import { promise, z } from "zod";
 import { getThreadsOptions } from "@/components/camps/thread-state";
-import { WhiteBoard } from "@/components/camps/whiteboard/WhiteBoard";
+// import { WhiteBoard } from "@/components/camps/whiteboard/WhiteBoard";
 
 export const campLayoutRoute = createRoute({
   getParentRoute: () => authRootLayout,
@@ -98,12 +98,12 @@ export const campRoute = createRoute({
 //   pendingComponent: LoadingSection,
 // });
 
-export const whiteboardRoute = createRoute({
-  getParentRoute: () => campRoute,
-  component: WhiteBoard,
-  path: "/$whiteboardId",
+// export const whiteboardRoute = createRoute({
+//   getParentRoute: () => campRoute,
+//   component: WhiteBoard,
+//   path: "/$whiteboardId",
 
-  // loader: ({ context: { queryClient }, params: { threadId, campId } }) =>
-  //   Promise.all([queryClient.ensureQueryData(getThreadsOptions({ campId }))]),
-  pendingComponent: LoadingSection,
-});
+//   // loader: ({ context: { queryClient }, params: { threadId, campId } }) =>
+//   //   Promise.all([queryClient.ensureQueryData(getThreadsOptions({ campId }))]),
+//   pendingComponent: LoadingSection,
+// });
