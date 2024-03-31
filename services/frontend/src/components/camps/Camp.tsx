@@ -4,6 +4,7 @@ import {
   useMatch,
   useMatchRoute,
   useParams,
+  useSearch,
 } from "@tanstack/react-router";
 import { Input } from "../ui/input";
 import {
@@ -42,12 +43,13 @@ import {
   Image,
   MessageCircle,
   MessageCircleIcon,
+  Pencil,
   SmilePlus,
   Trash,
 } from "lucide-react";
 import { Button, buttonVariants } from "../ui/button";
 import { Avatar } from "../ui/avatar";
-import { run } from "@fireside/utils";
+import { hasKey, run } from "@fireside/utils";
 import { CampMessage } from "@fireside/db";
 import {
   useGetMessages,
@@ -68,6 +70,8 @@ import { Textarea } from "../ui/textarea";
 import { client } from "@/edenClient";
 import { useQueryClient } from "@tanstack/react-query";
 import { PublishedMessage } from "@fireside/backend/src/message-endpoints";
+import { threadId } from "worker_threads";
+import { WhiteBoard } from "./whiteboard/WhiteBoard";
 const subscribeFn = client.api.protected.message.ws({
   campId: "anything",
 }).subscribe;
@@ -96,7 +100,10 @@ export const Camp = () => {
   }, [messages.length]);
 
   const match = useMatchRoute();
+  const search = useSearch({ from: "/root-auth/camp-layout/camp/$campId" });
 
+  // const key
+  const searchEntries = Object.entries(search);
   return (
     <div className="flex  w-full h-full px-5 pb-5">
       <ResizablePanelGroup direction="horizontal">
@@ -105,16 +112,67 @@ export const Camp = () => {
         </ResizablePanel>
         <ResizableHandle
           className="bg-accent/50 w-[2px]"
-          withHandle={match({
-            to: "/camp/$campId/$threadId",
-          })}
+          withHandle={searchEntries.length > 0}
         />
 
-        {match({
-          to: "/camp/$campId/$threadId",
-        }) && (
-          <ResizablePanel minSize={25} className="p-1  h-full">
-            <Outlet />
+        {searchEntries.length > 0 && (
+          <ResizablePanel minSize={25} className="p-1  h-full flex flex-col">
+            <ResizablePanelGroup direction="vertical">
+              {searchEntries.map(([k, v], index) => {
+                const typedKey = k as keyof typeof search;
+
+                switch (typedKey) {
+                  case "threadId": {
+                    return v ? (
+                      <>
+                        <ResizablePanel
+                          key={k}
+                          id={k}
+                          style={{
+                            height: `${100 / searchEntries.length}%`,
+                          }}
+                          minSize={30}
+                          className={cn([" w-full"])}
+                        >
+                          <Thread threadId={v} />
+                        </ResizablePanel>
+
+                        {index !== searchEntries.length - 1 && (
+                          <ResizableHandle
+                            className="bg-accent/50"
+                            withHandle={searchEntries.length > 0}
+                          />
+                        )}
+                      </>
+                    ) : null;
+                  }
+
+                  case "whiteBoardId": {
+                    return v ? (
+                      <>
+                        <ResizablePanel
+                          key={k}
+                          style={{
+                            height: `${100 / Object.entries(search).length}%`,
+                          }}
+                          minSize={30}
+                          className={cn([" w-full"])}
+                        >
+                          <WhiteBoard />
+                        </ResizablePanel>
+
+                        {index !== searchEntries.length - 1 && (
+                          <ResizableHandle
+                            className="bg-accent/50 "
+                            withHandle={searchEntries.length > 0}
+                          />
+                        )}
+                      </>
+                    ) : null;
+                  }
+                }
+              })}
+            </ResizablePanelGroup>
           </ResizablePanel>
         )}
       </ResizablePanelGroup>
@@ -377,46 +435,64 @@ const Message = memo(
                         </span>
                       </div>
                     </span>
-                    <div className="flex gap-x-1">
-                      <div className="flex items-center justify-center p-1 h-fit">
-                        {thread?.id ? (
-                          <Link
-                            to="/camp/$campId/$threadId"
-                            params={{
-                              threadId: thread?.id,
-                              campId: campId,
-                            }}
-                            className={buttonVariants({
-                              variant: "ghost",
+                    <div className="flex gap-x-1 items-center">
+                      {thread?.id ? (
+                        <Link
+                          from="/camp/$campId"
+                          search={(prev) => ({
+                            ...prev,
+                            threadId: thread.id,
+                          })}
+                          preload={false}
+                          // params={{
+                          //   threadId: thread?.id,
+                          //   campId: campId,
+                          // }}
+                          className={buttonVariants({
+                            variant: "ghost",
 
-                              className:
-                                " text-foreground h-fit  py-0 pl-0 px-0 pb-0 pt-0 pr-0 ",
-                            })}
-                          >
-                            <MessageCircleIcon size={20} />
-                          </Link>
-                        ) : (
-                          <Button
-                            onClick={() => {
-                              toast({
-                                title: "Thread not available yet",
-                                description: "Try again in a few seconds",
-                              });
-                            }}
-                            variant={"ghost"}
-                            className=" text-foreground h-fit py-0 pl-0 px-0 pb-0 pt-0 pr-0  "
-                          >
-                            <MessageCircleIcon size={20} />
-                          </Button>
-                        )}
-                      </div>
+                            className:
+                              " text-foreground h-fit  py-1 pl-1 px-1 pb-1 pt-1 pr-1 ",
+                          })}
+                        >
+                          <MessageCircleIcon size={20} />
+                        </Link>
+                      ) : (
+                        <Button
+                          onClick={() => {
+                            toast({
+                              title: "Thread not available yet",
+                              description: "Try again in a few seconds",
+                            });
+                          }}
+                          variant={"ghost"}
+                          className=" text-foreground h-fit py-1 pl-1 px-1 pb-1 pt-1 pr-1  "
+                        >
+                          <MessageCircleIcon size={20} />
+                        </Button>
+                      )}
+                      <Link
+                        // from=""
+                        from="/camp/$campId"
+                        search={(prev) => ({
+                          ...prev,
+                          whiteBoardId: crypto.randomUUID(),
+                        })}
+                        preload={false}
+                        className={buttonVariants({
+                          variant: "ghost",
+                          className: cn([
+                            "h-full py-1 px-1",
+                            " text-foreground h-fit  py-1  px-1 pb-1 pt-1 pr-1 pl-1",
+                          ]),
+                        })}
+                      >
+                        <Pencil size={20} />
+                      </Link>
 
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <Button
-                            className="h-7 w-7 p-1 -ml-1 mr-4"
-                            variant={"ghost"}
-                          >
+                          <Button className="h-7 w-7 p-1" variant={"ghost"}>
                             <SmilePlus />
                           </Button>
                         </DropdownMenuTrigger>
@@ -448,7 +524,7 @@ const Message = memo(
             </ContextMenuItem>
 
             <ContextMenuSub>
-              <ContextMenuSubTrigger className="flex gap-x-2">
+              <ContextMenuSubTrigger className="flex gap-x-2 ">
                 <SmilePlus size={17} /> Reactions
               </ContextMenuSubTrigger>
               <ContextMenuSubContent className="w-48 flex flex-wrap gap-2 items-center">

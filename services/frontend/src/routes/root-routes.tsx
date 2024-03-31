@@ -21,7 +21,6 @@ import {
   campRoute,
   friendsRoute,
   inboxRoute,
-  threadRoute,
 } from "./camp-routes";
 import { authRootLayout } from "./layouts";
 
@@ -80,7 +79,7 @@ export const routeTree = rootRoute.addChildren([
   authRootLayout.addChildren([
     campLayoutRoute.addChildren([
       exploreRoute,
-      campRoute.addChildren([threadRoute]),
+      campRoute,
       friendsRoute,
       inboxRoute,
     ]),
