@@ -363,4 +363,4 @@ export const whiteBoardColors = [
   "white",
 ] as const;
 
-export type WhiteBoardColors = (typeof whiteBoardColors)[number];
+export type WhiteBoardColor = (typeof whiteBoardColors)[number];

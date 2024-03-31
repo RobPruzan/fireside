@@ -91,5 +91,5 @@ const app = new Elysia()
     hostname: "0.0.0.0",
   });
 
-console.log(`Running on port ${port}`);
+console.log(`hiRunning on port ${port}`);
 export type App = typeof app;

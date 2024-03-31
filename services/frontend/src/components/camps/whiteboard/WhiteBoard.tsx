@@ -3,7 +3,10 @@ import { LoadingSection } from "@/components/ui/loading";
 import { client, promiseDataOrThrow } from "@/edenClient";
 import { cn } from "@/lib/utils";
 import { queryClient } from "@/query";
-import { TransformedWhiteBoardPointGroup } from "@fireside/backend/src/whiteboard-endpoints";
+import {
+  PublishedWhiteBoardPoint,
+  TransformedWhiteBoardPointGroup,
+} from "@fireside/backend/src/whiteboard-endpoints";
 
 export const genWhiteBoardPointId = () =>
   "white_board_point_" + crypto.randomUUID();
@@ -14,12 +17,8 @@ export const whiteBoardColors = [
   "black",
   "white",
 ] as const;
-// import {
-//   WhiteBoardPoint,
-//   // genWhiteBoardPointId,
-//   whiteBoardColors,
-// } from "@fireside/db";
-import { queryOptions, useQuery } from "@tanstack/react-query";
+
+import { queryOptions, useMutation, useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { Eraser, XIcon, ZoomIn, ZoomOut } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
@@ -29,8 +28,6 @@ const subscribeFn = client.api.protected.whiteboard.ws({
   whiteBoardId: "who cares",
 }).subscribe;
 
-// const genLineId = () => "line_" + crypto.randomUUID();
-// const genDrawingPointId = () => "drawing_point_" + crypto.randomUUID();
 type Point = {
   x: number;
   y: number;
@@ -67,6 +64,21 @@ export const WhiteBoardLoader = ({
   whiteBoardId: string;
 }) => {
   const whiteBoardQuery = useQuery(getWhiteBoardQueryOptions({ whiteBoardId }));
+  const autoCreateWhiteBoardMutation = useMutation({
+    mutationFn: () =>
+      client.api.protected.whiteboard.create.post({ id: whiteBoardId }),
+  });
+
+  useEffect(() => {
+    if (autoCreateWhiteBoardMutation.data) {
+      return;
+    }
+    autoCreateWhiteBoardMutation.mutate();
+  }, [autoCreateWhiteBoardMutation.status]);
+
+  if (autoCreateWhiteBoardMutation.isPending) {
+    return <LoadingSection />;
+  }
 
   switch (whiteBoardQuery.status) {
     case "error": {
@@ -106,7 +118,12 @@ const WhiteBoard = ({
     Array<TransformedWhiteBoardPointGroup>
   >([]);
 
-  const drawnPoints = whiteBoard ?? [];
+  const newGroupIdRef = useRef<string | null>(null);
+  const whiteBoardQueryKey = getWhiteBoardQueryOptions({
+    whiteBoardId,
+  }).queryKey;
+
+  const drawnPoints = queryClient.getQueryData(whiteBoardQueryKey) ?? [];
   const [erased, setErased] = useState<Array<{ x: number; y: number }>>([]); // todo
 
   const mouseCords = currentMousePositionRef.current;
@@ -117,9 +134,6 @@ const WhiteBoard = ({
     | { kind: "marker"; color: (typeof whiteBoardColors)[number] }
     | { kind: "eraser" }
   >({ kind: "marker", color: "blue" });
-  const whiteBoardQueryKey = getWhiteBoardQueryOptions({
-    whiteBoardId,
-  }).queryKey;
 
   const subscriptionRef = useRef<null | ReturnType<typeof subscribeFn>>(null);
 
@@ -127,11 +141,41 @@ const WhiteBoard = ({
     const newSubscription = client.api.protected.whiteboard
       .ws({ whiteBoardId })
       .subscribe();
+    console.log("new sub");
 
     subscriptionRef.current = newSubscription;
     return () => {
+      console.log("killing");
       newSubscription.close();
+      subscriptionRef.current = null;
     };
+  }, []);
+
+  useEffect(() => {
+    const handleMessage = (e: { data: unknown }) => {
+      const publishedPoint = e.data as PublishedWhiteBoardPoint;
+      queryClient.setQueryData(whiteBoardQueryKey, (prev) => {
+        const someGroupExists = prev?.some(
+          (points) =>
+            points.at(0)?.whiteBoardPointGroupId ===
+            publishedPoint.whiteBoardPointGroupId
+        );
+
+        if (someGroupExists) {
+          return prev?.map((points) =>
+            points.at(0)?.whiteBoardPointGroupId ===
+            publishedPoint.whiteBoardPointGroupId
+              ? [...points, publishedPoint]
+              : points
+          );
+        }
+
+        return [...(prev ?? []), [publishedPoint]];
+      });
+    };
+
+    subscriptionRef.current?.on("message", handleMessage);
+    return () => {};
   }, []);
 
   const render = () => {
@@ -230,7 +274,7 @@ const WhiteBoard = ({
     observer.observe(parentCanvasEl);
 
     return () => observer.unobserve(parentCanvasEl);
-  }, [render]);
+  }, []);
 
   useEffect(() => {
     render();
@@ -293,7 +337,6 @@ const WhiteBoard = ({
         onMouseLeave={() => {
           setIsMouseDown(false);
           currentMousePositionRef.current = null;
-          // setDrawnPoints((prev) => [...prev, drawingPoints]);
 
           queryClient.setQueryData(whiteBoardQueryKey, (prev) => [
             ...(prev ?? []),
@@ -303,7 +346,7 @@ const WhiteBoard = ({
         }}
         onMouseUp={() => {
           setIsMouseDown(false);
-          // setDrawnPoints((prev) => [...prev, drawingPoints]);
+
           queryClient.setQueryData(whiteBoardQueryKey, (prev) => [
             ...(prev ?? []),
             drawingPoints,
@@ -323,18 +366,23 @@ const WhiteBoard = ({
           if (!isMouseDown) {
             return;
           }
+
+          if (!newGroupIdRef.current) {
+            return;
+          }
           switch (selectedTool.kind) {
             case "marker": {
-              setDrawingPoints((prev) => [
-                ...prev,
-                {
-                  ...mouseCords,
-                  color: selectedTool.color,
+              const newPoint = {
+                ...mouseCords,
+                color: selectedTool.color,
 
-                  whiteBoardId,
-                  id: genWhiteBoardPointId(),
-                },
-              ]);
+                whiteBoardId,
+                id: genWhiteBoardPointId(),
+                whiteBoardPointGroupId: newGroupIdRef.current,
+              };
+              setDrawingPoints((prev) => [...prev, newPoint]);
+              console.log("sending", newPoint);
+              subscriptionRef.current?.send(newPoint);
 
               return;
             }
@@ -357,6 +405,7 @@ const WhiteBoard = ({
           }
         }}
         onMouseDown={(e) => {
+          newGroupIdRef.current = crypto.randomUUID();
           setIsMouseDown(true);
         }}
         className="bg-white w-full h-full overflow-hidden touch-none"

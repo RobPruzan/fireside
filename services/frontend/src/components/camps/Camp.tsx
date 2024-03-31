@@ -107,7 +107,7 @@ export const Camp = () => {
   return (
     <div className="flex  w-full h-full px-5 pb-5">
       <ResizablePanelGroup direction="horizontal">
-        <ResizablePanel minSize={30} className="h-full w-full">
+        <ResizablePanel className="h-full w-full">
           <MessageSection campId={campId} />
         </ResizablePanel>
         <ResizableHandle
@@ -116,7 +116,7 @@ export const Camp = () => {
         />
 
         {searchEntries.length > 0 && (
-          <ResizablePanel minSize={25} className="p-1  h-full flex flex-col">
+          <ResizablePanel className="p-1  h-full flex flex-col">
             <ResizablePanelGroup direction="vertical">
               {searchEntries.map(([k, v], index) => {
                 const typedKey = k as keyof typeof search;
@@ -253,10 +253,6 @@ const MessageSection = memo(({ campId }: { campId: string }) => {
             ref={scrollRef}
             className="flex flex-col w-full h-full overflow-y-auto gap-y-3"
           >
-            {run(() => {
-              console.log("look at me render");
-              return "hi";
-            })}
             {messages
               .sort(
                 (a, b) =>
