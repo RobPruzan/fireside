@@ -1,6 +1,12 @@
 import { cn } from "@/lib/utils";
-import { Link, useMatchRoute } from "@tanstack/react-router";
-import { ChevronLeft, Image, MoreVertical, PlusCircle } from "lucide-react";
+import { Link, useMatchRoute, useSearch } from "@tanstack/react-router";
+import {
+  ChevronLeft,
+  Image,
+  MoreVertical,
+  Pencil,
+  PlusCircle,
+} from "lucide-react";
 import { useState } from "react";
 import { Button, buttonVariants } from "../ui/button";
 import {
@@ -31,6 +37,7 @@ export const CampDynamicSideBar = () => {
   const [newCampRoomName, setNewCampRoomName] = useState("");
   const { camps } = useUserCamps();
   const match = useMatchRoute();
+  const search = useSearch({ from: "/root-auth/camp-layout" });
   const createCampMutation = useCreateCampMutation();
 
   return (
@@ -114,6 +121,7 @@ export const CampDynamicSideBar = () => {
             .map((camp) => (
               <div className="flex w-full items-center gap-x-2" key={camp.id}>
                 <Link
+                  search={(prev) => prev}
                   to="/camp/$campId"
                   params={{
                     campId: camp.id,
@@ -121,15 +129,10 @@ export const CampDynamicSideBar = () => {
                   className={buttonVariants({
                     className: cn([
                       "py-9 w-full flex justify-between",
-                      (match({
+                      match({
                         to: "/camp/$campId",
                         params: { campId: camp.id },
-                      }) ||
-                        match({
-                          to: "/camp/$campId/$threadId",
-                          params: { campId: camp.id },
-                        })) &&
-                        "bg-accent",
+                      }) && "bg-accent",
                     ]),
                     variant: "ghost",
                   })}
@@ -146,10 +149,6 @@ export const CampDynamicSideBar = () => {
                   </div>
                   <div className="relative w-1/4 flex items-center justify-end"></div>
                 </Link>
-                {/* <Button className="h-full p-0" variant={"ghost"}>
-                  <MoreVertical />
-                </Button> */}
-                {/* comment out till we add functionality */}
               </div>
             ))}
         </div>

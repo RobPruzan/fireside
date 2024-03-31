@@ -14,15 +14,15 @@ import { useDefinedUser } from "./camps-state";
 import { flushSync } from "react-dom";
 import { cn } from "@/lib/utils";
 
-export const Thread = () => {
-  const { threadId, campId } = useParams({
-    from: "/root-auth/camp-layout/camp/$campId/$threadId",
+export const Thread = ({ threadId }: { threadId: string }) => {
+  const { campId } = useParams({
+    from: "/root-auth/camp-layout/camp/$campId",
   });
 
   const { messages } = useGetMessages({ campId });
 
   const { threads } = useGetThreads({ campId });
-
+  console.log({ threadId });
   const thread = threads.find((thread) => thread.id === threadId);
 
   const parentMessage = messages.find(
@@ -50,13 +50,12 @@ export const Thread = () => {
   }, [threadMessages.length]);
 
   return (
-    <div className="h-full  flex flex-col  px-2">
+    <div className="h-full  flex flex-col  relative px-2">
       <div className=" break-words border-b-2 p-2">{parentMessage.message}</div>
       <Link
-        to="/camp/$campId"
-        params={{
-          campId,
-        }}
+        from="/camp/$campId"
+        preload={false}
+        search={(prev) => ({ ...prev, threadId: undefined })}
         className={buttonVariants({
           className: "absolute top-1 right-1",
           variant: "ghost",
