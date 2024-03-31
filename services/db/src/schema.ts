@@ -1,4 +1,4 @@
-import { Type as t } from "@sinclair/typebox";
+import { Static, Type as t } from "@sinclair/typebox";
 import { InferSelectModel } from "drizzle-orm";
 import {
   serial,
@@ -13,7 +13,7 @@ import {
   text,
   doublePrecision,
 } from "drizzle-orm/pg-core";
-import { createInsertSchema } from "drizzle-typebox";
+import { createInsertSchema, createSelectSchema } from "drizzle-typebox";
 import { DatesToString } from "@fireside/utils";
 
 export const getOneYearAheadDate = () => {
@@ -352,7 +352,7 @@ export const whiteBoardPoint = pgTable("whiteBoardPoint", {
   x: doublePrecision("x").notNull(),
   y: doublePrecision("y").notNull(),
   kind: text("kind")
-    .$type<"point" | "mouse">()
+    .$type<"point">()
     .$defaultFn(() => "point")
     .notNull(),
 });
@@ -381,9 +381,12 @@ export const whiteBoardMouse = pgTable("whiteBoardMouseSchema", {
     onDelete: "cascade",
   }),
   kind: text("kind")
-    .$type<"point" | "mouse">()
+    .$type<"mouse">()
     .$defaultFn(() => "mouse")
     .notNull(),
+  userId: uuid("userId")
+    .notNull()
+    .references(() => user.id),
 });
 
 export const whiteBoardMouseInsertSchema = createInsertSchema(
@@ -393,6 +396,15 @@ export const whiteBoardMouseInsertSchema = createInsertSchema(
     kind: t.Literal("mouse"),
   }
 );
+export const whiteBoardMouseSelectSchema = createSelectSchema(
+  whiteBoardMouse,
+
+  {
+    kind: t.Literal("mouse"),
+  }
+);
 export const requiredWhiteBoardMouseInsertSchema = t.Required(
   whiteBoardMouseInsertSchema
 );
+
+export type WhiteBoardMouse = Static<typeof whiteBoardMouseInsertSchema>;

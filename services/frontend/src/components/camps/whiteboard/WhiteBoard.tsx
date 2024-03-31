@@ -4,9 +4,10 @@ import { client, promiseDataOrThrow } from "@/edenClient";
 import { cn } from "@/lib/utils";
 import { queryClient } from "@/query";
 import {
-  PublishedWhiteBoardPoint,
   TransformedWhiteBoardPointGroup,
+  WhiteBoardPublish,
 } from "@fireside/backend/src/whiteboard-endpoints";
+import { WhiteBoardMouse } from "@fireside/db";
 
 export const genWhiteBoardPointId = () =>
   "white_board_point_" + crypto.randomUUID();
@@ -23,6 +24,7 @@ import { Link } from "@tanstack/react-router";
 import { Eraser, XIcon, ZoomIn, ZoomOut } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { render } from "react-dom";
+import { useDefinedUser } from "../camps-state";
 
 const subscribeFn = client.api.protected.whiteboard.ws({
   whiteBoardId: "who cares",
@@ -58,12 +60,29 @@ const getWhiteBoardQueryOptions = ({
       ),
   });
 
+const getWhiteBoardMousePointsOptions = ({
+  whiteBoardId,
+}: {
+  whiteBoardId: string;
+}) =>
+  queryOptions({
+    queryKey: ["white-board-mouse-points", whiteBoardId],
+    queryFn: () =>
+      promiseDataOrThrow(
+        client.api.protected.whiteboard.mouse.retrieve({ whiteBoardId }).get()
+      ),
+  });
+
 export const WhiteBoardLoader = ({
   whiteBoardId,
 }: {
   whiteBoardId: string;
 }) => {
   const whiteBoardQuery = useQuery(getWhiteBoardQueryOptions({ whiteBoardId }));
+
+  const whiteBoardMousePointsQuery = useQuery(
+    getWhiteBoardMousePointsOptions({ whiteBoardId })
+  );
   const autoCreateWhiteBoardMutation = useMutation({
     mutationFn: () =>
       client.api.protected.whiteboard.create.post({ id: whiteBoardId }),
@@ -80,6 +99,15 @@ export const WhiteBoardLoader = ({
     return <LoadingSection />;
   }
 
+  switch (whiteBoardMousePointsQuery.status) {
+    case "error": {
+      return <div> something went wrong</div>;
+    }
+    case "pending": {
+      return <LoadingSection />;
+    }
+  }
+
   switch (whiteBoardQuery.status) {
     case "error": {
       return <div>something went wrong</div>;
@@ -90,6 +118,7 @@ export const WhiteBoardLoader = ({
     case "success": {
       return (
         <WhiteBoard
+          whiteBoardMousePoints={whiteBoardMousePointsQuery.data}
           whiteBoardId={whiteBoardId}
           whiteBoard={whiteBoardQuery.data}
         />
@@ -101,12 +130,26 @@ export const WhiteBoardLoader = ({
 const onlyForTheType = client.api.protected.whiteboard.retrieve({
   whiteBoardId: "whatever",
 }).get;
+const onlyForTheTypeAgain = client.api.protected.whiteboard.mouse.retrieve({
+  whiteBoardId: "whatever",
+}).get;
+
+// type EdenData<T> = (ReturnType<T> extends Promise<infer R>
+//   ? R
+//   : never)["data"]
 
 const WhiteBoard = ({
   whiteBoard,
   whiteBoardId,
+  whiteBoardMousePoints,
 }: {
   whiteBoard: (ReturnType<typeof onlyForTheType> extends Promise<infer R>
+    ? R
+    : never)["data"];
+
+  whiteBoardMousePoints: (ReturnType<
+    typeof onlyForTheTypeAgain
+  > extends Promise<infer R>
     ? R
     : never)["data"];
   whiteBoardId: string;
@@ -117,13 +160,17 @@ const WhiteBoard = ({
   const [drawingPoints, setDrawingPoints] = useState<
     Array<TransformedWhiteBoardPointGroup>
   >([]);
-
+  const user = useDefinedUser();
   const newGroupIdRef = useRef<string | null>(null);
   const whiteBoardQueryKey = getWhiteBoardQueryOptions({
     whiteBoardId,
   }).queryKey;
 
-  const drawnPoints = queryClient.getQueryData(whiteBoardQueryKey) ?? [];
+  const whiteBoardPointsQueryKey = getWhiteBoardMousePointsOptions({
+    whiteBoardId,
+  }).queryKey;
+
+  const drawnPoints = whiteBoard ?? [];
   const [erased, setErased] = useState<Array<{ x: number; y: number }>>([]); // todo
 
   const mouseCords = currentMousePositionRef.current;
@@ -141,11 +188,9 @@ const WhiteBoard = ({
     const newSubscription = client.api.protected.whiteboard
       .ws({ whiteBoardId })
       .subscribe();
-    console.log("new sub");
 
     subscriptionRef.current = newSubscription;
     return () => {
-      console.log("killing");
       newSubscription.close();
       subscriptionRef.current = null;
     };
@@ -153,25 +198,42 @@ const WhiteBoard = ({
 
   useEffect(() => {
     const handleMessage = (e: { data: unknown }) => {
-      const publishedPoint = e.data as PublishedWhiteBoardPoint;
-      queryClient.setQueryData(whiteBoardQueryKey, (prev) => {
-        const someGroupExists = prev?.some(
-          (points) =>
-            points.at(0)?.whiteBoardPointGroupId ===
-            publishedPoint.whiteBoardPointGroupId
-        );
+      const publishedData = e.data as WhiteBoardPublish;
 
-        if (someGroupExists) {
-          return prev?.map((points) =>
-            points.at(0)?.whiteBoardPointGroupId ===
-            publishedPoint.whiteBoardPointGroupId
-              ? [...points, publishedPoint]
-              : points
-          );
+      switch (publishedData.kind) {
+        case "point": {
+          queryClient.setQueryData(whiteBoardQueryKey, (prev) => {
+            const someGroupExists = prev?.some(
+              (points) =>
+                points.at(0)?.whiteBoardPointGroupId ===
+                publishedData.whiteBoardPointGroupId
+            );
+
+            if (someGroupExists) {
+              return prev?.map((points) =>
+                points.at(0)?.whiteBoardPointGroupId ===
+                publishedData.whiteBoardPointGroupId
+                  ? [...points, publishedData]
+                  : points
+              );
+            }
+
+            return [...(prev ?? []), [publishedData]];
+          });
+          return;
         }
 
-        return [...(prev ?? []), [publishedPoint]];
-      });
+        case "mouse": {
+          queryClient.setQueryData(whiteBoardPointsQueryKey, (prev) => {
+            const withoutCurrentMousePosition =
+              prev?.filter(({ userId }) => {
+                return userId !== publishedData.userId;
+              }) ?? [];
+
+            return [...withoutCurrentMousePosition, publishedData];
+          });
+        }
+      }
     };
 
     subscriptionRef.current?.on("message", handleMessage);
@@ -257,6 +319,21 @@ const WhiteBoard = ({
       ctx.stroke();
     }
 
+    whiteBoardMousePoints?.forEach((mousePoint) => {
+      // ctx.moveTo(mousePoint.x, mousePoint.y);
+      // ctx.beginPath;
+      // ctx.rect(mousePoint.x, mousePoint.y, 0.25, 0.25);
+      // // ctx.fillStyle = "black";
+      // ctx.strokeStyle = "red";
+      // ctx.fill();
+      // ctx.stroke();
+      // document.createElement("image");
+      const image = new Image(15, 15);
+      image.src = "/pencil-mouse.png";
+      console.log({ image });
+      ctx.drawImage(image, mousePoint.x, mousePoint.y, 20, 20);
+    });
+
     ctx.stroke();
 
     ctx.restore();
@@ -284,6 +361,20 @@ const WhiteBoard = ({
     const handleWheel = (e: WheelEvent) => {
       e.preventDefault();
       setCamera((prev) => ({ x: prev.x - e.deltaX, y: prev.y - e.deltaY }));
+      if (currentMousePositionRef.current) {
+        currentMousePositionRef.current = {
+          x: currentMousePositionRef.current.x + e.deltaX,
+          y: currentMousePositionRef.current.y + e.deltaY,
+        };
+
+        subscriptionRef.current?.send({
+          ...currentMousePositionRef.current,
+          id: crypto.randomUUID(),
+          kind: "mouse",
+          whiteBoardId,
+          userId: user.id,
+        });
+      }
     };
     canvasRef.current?.addEventListener("wheel", handleWheel);
 
@@ -359,6 +450,14 @@ const WhiteBoard = ({
             x: e.nativeEvent.offsetX,
             y: e.nativeEvent.offsetY,
           });
+
+          subscriptionRef.current?.send({
+            ...currentMousePositionRef.current,
+            id: crypto.randomUUID(),
+            kind: "mouse",
+            whiteBoardId,
+            userId: user.id,
+          });
           if (!mouseCords) {
             return;
           }
@@ -381,7 +480,7 @@ const WhiteBoard = ({
                 kind: "point" as const,
               };
               setDrawingPoints((prev) => [...prev, newPoint]);
-              console.log("sending", newPoint);
+
               subscriptionRef.current?.send({ ...newPoint, kind: "point" });
 
               return;

@@ -176,6 +176,13 @@
       "when": 1711913178966,
       "tag": "0024_good_gamora",
       "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "5",
+      "when": 1711915057442,
+      "tag": "0025_powerful_hercules",
+      "breakpoints": true
     }
   ]
 }
