@@ -37,6 +37,11 @@ export const user = pgTable("user", {
   updatedAt: timestamp("updated_at", { mode: "string" }),
 });
 
+export const safeUserSelectSchema = createSelectSchema(user, {
+  token: t.Optional(t.Never()),
+  password: t.Optional(t.Never()),
+});
+
 export type User = InferSelectModel<typeof user>;
 
 export const token = pgTable("token", {
