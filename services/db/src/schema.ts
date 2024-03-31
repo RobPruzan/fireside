@@ -95,6 +95,12 @@ export const campThreadInsertSchema = createInsertSchema(campThread, {
   createdBy: t.Optional(t.Never()),
 });
 
+// export const requiredThreadInsertSchema = t.Required(campThreadInsertSchema);
+export const requiredThreadInsertSchema = t.Intersect([
+  t.Omit(t.Required(campThreadInsertSchema), ["createdBy"]), // make this whole mess a helper tbh
+  t.Pick(campThreadInsertSchema, ["createdBy"]),
+]);
+
 export const campThreadMessage = pgTable("campThreadMessage", {
   id: uuid("id").defaultRandom().primaryKey(),
   userId: uuid("userId")
@@ -121,6 +127,11 @@ export type CampMessage = InferSelectModel<typeof campMessage>;
 export const campMessageInsertSchema = createInsertSchema(campMessage, {
   userId: t.Optional(t.Never()),
 });
+
+export const requiredCampMessageInsertSchema = t.Intersect([
+  t.Omit(t.Required(campMessageInsertSchema), ["userId"]),
+  t.Pick(campMessageInsertSchema, ["userId"]),
+]);
 
 export const campMember = pgTable("campMember", {
   id: uuid("id").defaultRandom().primaryKey(),

@@ -10,8 +10,10 @@ import {
   userMessageReactionInsertSchema,
   reactionAsset,
   campThread,
+  requiredCampMessageInsertSchema,
+  requiredThreadInsertSchema,
 } from "@fireside/db";
-import { t } from "elysia";
+import { t, type Static } from "elysia";
 import { db } from ".";
 import { cleanedUserCols } from "./camp-endpoints";
 import { ProtectedElysia } from "./lib";
@@ -36,45 +38,6 @@ export const messageRouter = ProtectedElysia({ prefix: "/message" })
     }
   )
 
-  .post(
-    "/create",
-    async (ctx) => {
-      const newMessage = (
-        await db
-          .insert(campMessage)
-          .values({ ...ctx.body, userId: ctx.user.id })
-          .returning()
-      )[0];
-
-      const newThread = (
-        await db
-          .insert(campThread)
-          .values({
-            createdBy: ctx.user.id,
-            parentMessageId: newMessage.id,
-            createdAt: new Date().toISOString(),
-          })
-          .returning()
-      )[0];
-
-      return {
-        message: (
-          await db
-            .select({
-              ...getTableColumns(campMessage),
-              user: cleanedUserCols,
-            })
-            .from(campMessage)
-            .where(eq(campMessage.id, newMessage.id))
-            .innerJoin(user, eq(campMessage.userId, user.id))
-        )[0],
-        thread: newThread,
-      };
-    },
-    {
-      body: campMessageInsertSchema,
-    }
-  )
   .post(
     "/react/:reactionAssetId/:messageId",
     async (ctx) => {
@@ -144,4 +107,43 @@ export const messageRouter = ProtectedElysia({ prefix: "/message" })
         reactionId: t.String(),
       }),
     }
-  );
+  )
+  .ws("/ws/:campId", {
+    body: t.Object({
+      message: requiredCampMessageInsertSchema,
+      thread: requiredThreadInsertSchema,
+    }),
+    params: t.Object({
+      campId: t.String(),
+    }),
+    open: (ws) => {
+      ws.subscribe(`camp-${ws.data.params.campId}`);
+    },
+    close: (ws) => {
+      ws.unsubscribe(`camp-${ws.data.params.campId}`);
+    },
+    message: async (ws, data) => {
+      // message must exist before the thread is created
+      await db
+        .insert(campMessage)
+        .values({ ...data.message, userId: ws.data.user.id });
+
+      await db
+        .insert(campThread)
+        .values({ ...data.thread, createdBy: ws.data.user.id });
+
+      ws.publish(`camp-${ws.data.params.campId}`, data);
+    },
+  });
+
+export type UserConnectedToCamp = {
+  userId: string;
+  joinedAt: string;
+};
+
+const publishMessageSchema = t.Object({
+  message: requiredCampMessageInsertSchema,
+  thread: requiredThreadInsertSchema,
+});
+
+export type PublishedMessage = Static<typeof publishMessageSchema>;
