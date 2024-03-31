@@ -3,6 +3,7 @@ import {
   Outlet,
   useMatch,
   useMatchRoute,
+  useNavigate,
   useParams,
   useSearch,
 } from "@tanstack/react-router";
@@ -384,7 +385,7 @@ const Message = memo(
     campId: string;
   }) => {
     const { threads } = useGetThreads({ campId });
-
+    const navigate = useNavigate({ from: "/camp/$campId" });
     const thread = threads.find(
       (thread) => thread.parentMessageId === messageObj.id
     );
@@ -433,26 +434,33 @@ const Message = memo(
                     </span>
                     <div className="flex gap-x-1 items-center">
                       {thread?.id ? (
-                        <Link
-                          from="/camp/$campId"
-                          search={(prev) => ({
-                            ...prev,
-                            threadId: thread.id,
-                          })}
-                          preload={false}
+                        <Button
+                          // from="/camp/$campId"
+                          // search={(prev) => ({
+                          // ...prev,
+                          // threadId: thread.id,
+                          // })}
+                          // preload={false}
+                          onClick={() => {
+                            navigate({
+                              search: (prev) => ({
+                                ...prev,
+                                threadId: thread.id,
+                              }),
+                            });
+                          }}
                           // params={{
                           //   threadId: thread?.id,
                           //   campId: campId,
                           // }}
-                          className={buttonVariants({
-                            variant: "ghost",
-
-                            className:
-                              " text-foreground h-fit  py-1 pl-1 px-1 pb-1 pt-1 pr-1 ",
-                          })}
+                          variant={"ghost"}
+                          className="  h-fit py-1 pl-1 px-1 pb-1 pt-1 pr-1  "
                         >
-                          <MessageCircleIcon size={20} />
-                        </Link>
+                          <MessageCircleIcon
+                            className="text-primary"
+                            size={20}
+                          />
+                        </Button>
                       ) : (
                         <Button
                           onClick={() => {
@@ -462,34 +470,43 @@ const Message = memo(
                             });
                           }}
                           variant={"ghost"}
-                          className=" text-foreground h-fit py-1 pl-1 px-1 pb-1 pt-1 pr-1  "
+                          className="  h-fit py-1 pl-1 px-1 pb-1 pt-1 pr-1  "
                         >
-                          <MessageCircleIcon size={20} />
+                          <MessageCircleIcon
+                            className="text-primary"
+                            size={20}
+                          />
                         </Button>
                       )}
-                      <Link
+                      <Button
                         // from=""
-                        from="/camp/$campId"
-                        search={(prev) => ({
-                          ...prev,
-                          whiteBoardId: crypto.randomUUID(),
-                        })}
-                        preload={false}
-                        className={buttonVariants({
-                          variant: "ghost",
-                          className: cn([
-                            "h-full py-1 px-1",
-                            " text-foreground h-fit  py-1  px-1 pb-1 pt-1 pr-1 pl-1",
-                          ]),
-                        })}
+                        // from="/camp/$campId"
+                        // search={(prev) => ({
+                        //   ...prev,
+                        //   whiteBoardId: crypto.randomUUID(),
+                        // })}
+                        // preload={false}
+                        variant={"ghost"}
+                        onClick={() => {
+                          navigate({
+                            search: (prev) => ({
+                              ...prev,
+                              whiteBoardId: crypto.randomUUID(),
+                            }),
+                          });
+                        }}
+                        className={cn([
+                          "h-full py-1 px-1",
+                          "  h-fit  py-1  px-1 pb-1 pt-1 pr-1 pl-1",
+                        ])}
                       >
-                        <Pencil size={20} />
-                      </Link>
+                        <Pencil className="text-primary" size={20} />
+                      </Button>
 
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <Button className="h-7 w-7 p-1" variant={"ghost"}>
-                            <SmilePlus />
+                            <SmilePlus className="text-primary" />
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent className="w-48 flex flex-wrap gap-2 items-center">
