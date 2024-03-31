@@ -351,8 +351,13 @@ export const whiteBoardPoint = pgTable("whiteBoardPoint", {
     }),
   x: doublePrecision("x").notNull(),
   y: doublePrecision("y").notNull(),
+  kind: text("kind")
+    .$type<"point" | "mouse">()
+    .$defaultFn(() => "point")
+    .notNull(),
 });
 
+export const whiteBoardPointInsertSchema = createInsertSchema(whiteBoardPoint);
 export type WhiteBoardPoint = InferSelectModel<typeof whiteBoardPoint>;
 
 export const whiteBoardColors = [
@@ -364,3 +369,30 @@ export const whiteBoardColors = [
 ] as const;
 
 export type WhiteBoardColor = (typeof whiteBoardColors)[number];
+
+export const getWhiteBoardMouseId = () =>
+  "white_board_mouse_" + crypto.randomUUID();
+
+export const whiteBoardMouse = pgTable("whiteBoardMouseSchema", {
+  id: text("id").$defaultFn(getWhiteBoardMouseId).primaryKey(),
+  x: doublePrecision("x").notNull(),
+  y: doublePrecision("y").notNull(),
+  whiteBoardId: uuid("whiteBoardId").references(() => whiteBoard.id, {
+    onDelete: "cascade",
+  }),
+  kind: text("kind")
+    .$type<"point" | "mouse">()
+    .$defaultFn(() => "mouse")
+    .notNull(),
+});
+
+export const whiteBoardMouseInsertSchema = createInsertSchema(
+  whiteBoardMouse,
+
+  {
+    kind: t.Literal("mouse"),
+  }
+);
+export const requiredWhiteBoardMouseInsertSchema = t.Required(
+  whiteBoardMouseInsertSchema
+);
