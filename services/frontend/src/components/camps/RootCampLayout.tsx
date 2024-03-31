@@ -26,7 +26,7 @@ export const RootCampLayout = () => {
 
   return (
     <div className="h-screen w-screen flex ">
-      <div className="w-[18%] border-r-2 border-r-accent/50 h-full p-2 px-4 min-w-fit">
+      <div className="w-[5%] border-r-2 border-r-accent/50 h-full p-2 px-4 min-w-fit">
         <CampStaticSideBar />
       </div>
       <div
@@ -38,7 +38,7 @@ export const RootCampLayout = () => {
         <CampDynamicSideBar />
       </div>
       <div
-        className={cn(["flex h-screen", sideBarOpen ? "w-[62%]" : "w-[82%]"])}
+        className={cn(["flex h-screen", sideBarOpen ? "w-[75%]" : "w-[95%]"])}
       >
         <Outlet />
       </div>

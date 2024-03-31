@@ -51,7 +51,7 @@ export const CampDynamicSideBar = () => {
       >
         <ChevronLeft />
       </Button>
-      <div className="flex flex-col w-full h-1/6">
+      <div className="flex flex-col w-full h-1/6 border-r-2 border-accent/50">
         <div className="h-1/2 flex items-start justify-start pt-5 pl-5 ">
           <span className="text-3xl font-semibold ">Camp Rooms</span>
         </div>
@@ -98,7 +98,7 @@ export const CampDynamicSideBar = () => {
           </Dialog>
         </div>
       </div>
-      <div className=" flex flex-col justify-start items-center h-5/6">
+      <div className=" flex flex-col justify-start items-center h-5/6 border-r-2 border-accent/50">
         <div className="w-full flex justify-star p-5">
           <Input
             value={campSearch}

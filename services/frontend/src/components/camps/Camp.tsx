@@ -106,7 +106,7 @@ export const Camp = () => {
   // const key
   const searchEntries = Object.entries(search);
   return (
-    <div className="flex  w-full h-full px-5 pb-5">
+    <div className="flex  w-full h-full  pb-5">
       <ResizablePanelGroup direction="horizontal">
         <ResizablePanel className="h-full w-full">
           <MessageSection campId={campId} />
