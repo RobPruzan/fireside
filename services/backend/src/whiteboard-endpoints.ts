@@ -5,20 +5,38 @@ import {
   whiteBoardPoint,
   whiteBoardPointGroup,
   type WhiteBoardPoint,
-  type WhiteBoardColors,
+  type WhiteBoardColor,
 } from "@fireside/db";
 import { ProtectedElysia } from "./lib";
 import { db } from ".";
-import { t } from "elysia";
+import { t, type Static } from "elysia";
 import { run } from "@fireside/utils";
-export type TransformedWhiteBoardPointGroup = Omit<
-  WhiteBoardPoint,
-  "whiteBoardPointGroupId"
-> & { color: WhiteBoardColors };
+export type TransformedWhiteBoardPointGroup = WhiteBoardPoint & {
+  color: WhiteBoardColor;
+};
 export const whiteboardRoute = ProtectedElysia({ prefix: "/whiteboard" })
   .post(
     "/create",
-    async () => (await db.insert(whiteBoard).values({}).returning())[0],
+    async ({ body }) => {
+      // if (body.id) {
+      //   const existingBoard = await db
+      //     .select()
+      //     .from(whiteBoard)
+      //     .where(eq(whiteBoard.id, body.id));
+
+      //   if (existingBoard.at(0)) {
+      //     return;
+      //   }
+      // }
+
+      return (
+        await db
+          .insert(whiteBoard)
+          .values(body)
+          .onConflictDoNothing()
+          .returning()
+      )[0];
+    },
     {
       body: whiteBoardInsertSchema,
     }
@@ -72,9 +90,72 @@ export const whiteboardRoute = ProtectedElysia({ prefix: "/whiteboard" })
     params: t.Object({
       whiteBoardId: t.String(),
     }),
-    message: (ws) => {},
+    body: t.Object({
+      id: t.String(),
+      whiteBoardId: t.String(),
+      whiteBoardPointGroupId: t.String(),
+      x: t.Number(),
+      y: t.Number(),
+      color: t.String(),
+    }),
+    open: (ws) => {
+      console.log(
+        "joined white board",
+        `white-board-${ws.data.params.whiteBoardId}`
+      );
+      ws.subscribe(`white-board-${ws.data.params.whiteBoardId}`);
+    },
+    message: async (ws, data) => {
+      // console.log("recieved", data);
+
+      const existingGroup = await db
+        .select()
+        .from(whiteBoardPointGroup)
+        .where(eq(whiteBoardPointGroup.id, data.whiteBoardPointGroupId));
+
+      if (existingGroup.length === 0) {
+        await db
+          .insert(whiteBoardPointGroup)
+          .values({
+            color: data.color as WhiteBoardColor,
+            whiteBoardId: data.whiteBoardId,
+            id: data.whiteBoardPointGroupId,
+          })
+          .onConflictDoNothing();
+      }
+
+      await db
+        .insert(whiteBoardPoint)
+        .values({
+          x: data.x,
+          y: data.y,
+          id: data.id,
+          whiteBoardPointGroupId: data.whiteBoardPointGroupId,
+        })
+        .onConflictDoNothing();
+
+      console.log("publishing", data.id);
+      ws.publish(`white-board-${ws.data.params.whiteBoardId}`, data);
+    },
+    close: (ws) => {
+      ws.unsubscribe(`white-board-${ws.data.params.whiteBoardId}`);
+    },
   });
 
 // export type PublishedPoints = {
 //   x: number
 // }
+
+const whiteBoardBodySchema = t.Object({
+  id: t.String(),
+  whiteBoardId: t.String(),
+  whiteBoardPointGroupId: t.String(),
+  x: t.Number(),
+  y: t.Number(),
+  color: t.String(),
+});
+
+export type PublishedWhiteBoardPoint = Omit<
+  Static<typeof whiteBoardBodySchema>,
+  "color"
+> & { color: WhiteBoardColor };
