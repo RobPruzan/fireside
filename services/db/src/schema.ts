@@ -11,6 +11,7 @@ import {
   AnyPgTable,
   AnyPgColumn,
   text,
+  doublePrecision,
 } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-typebox";
 import { DatesToString } from "@fireside/utils";
@@ -323,3 +324,43 @@ export const emojis = [
     alt: "Power",
   },
 ];
+
+export const genWhiteBoardPointId = () =>
+  "white_board_point_" + crypto.randomUUID();
+export const genWhiteBoardPointGroupId = () =>
+  "white_board_point_group_" + crypto.randomUUID();
+
+export const whiteBoard = pgTable("whiteBoard", {
+  id: uuid("id").defaultRandom().primaryKey(),
+});
+export const whiteBoardInsertSchema = createInsertSchema(whiteBoard);
+export const whiteBoardPointGroup = pgTable("whiteBoardPointGroup", {
+  id: text("id").$defaultFn(genWhiteBoardPointId).primaryKey(),
+  color: text("color").$type<(typeof whiteBoardColors)[number]>().notNull(),
+  whiteBoardId: uuid("whiteBoardId").references(() => whiteBoard.id, {
+    onDelete: "cascade",
+  }),
+});
+
+export const whiteBoardPoint = pgTable("whiteBoardPoint", {
+  id: text("id").$defaultFn(genWhiteBoardPointId).primaryKey(),
+  whiteBoardPointGroupId: text("whiteBoardPointGroupId")
+    // .notNull()
+    .references(() => whiteBoardPointGroup.id, {
+      onDelete: "cascade",
+    }),
+  x: doublePrecision("x").notNull(),
+  y: doublePrecision("y").notNull(),
+});
+
+export type WhiteBoardPoint = InferSelectModel<typeof whiteBoardPoint>;
+
+export const whiteBoardColors = [
+  "blue",
+  "red",
+  "green",
+  "black",
+  "white",
+] as const;
+
+export type WhiteBoardColors = (typeof whiteBoardColors)[number];

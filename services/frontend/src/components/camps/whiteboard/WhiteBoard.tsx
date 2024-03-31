@@ -1,11 +1,36 @@
 import { Button, buttonVariants } from "@/components/ui/button";
+import { LoadingSection } from "@/components/ui/loading";
+import { client, promiseDataOrThrow } from "@/edenClient";
 import { cn } from "@/lib/utils";
+import { queryClient } from "@/query";
+import { TransformedWhiteBoardPointGroup } from "@fireside/backend/src/whiteboard-endpoints";
+
+export const genWhiteBoardPointId = () =>
+  "white_board_point_" + crypto.randomUUID();
+export const whiteBoardColors = [
+  "blue",
+  "red",
+  "green",
+  "black",
+  "white",
+] as const;
+// import {
+//   WhiteBoardPoint,
+//   // genWhiteBoardPointId,
+//   whiteBoardColors,
+// } from "@fireside/db";
+import { queryOptions, useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { Eraser, XIcon, ZoomIn, ZoomOut } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { render } from "react-dom";
-const genLineId = () => "line_" + crypto.randomUUID();
-const genDrawingPointId = () => "drawing_point_" + crypto.randomUUID();
+
+const subscribeFn = client.api.protected.whiteboard.ws({
+  whiteBoardId: "who cares",
+}).subscribe;
+
+// const genLineId = () => "line_" + crypto.randomUUID();
+// const genDrawingPointId = () => "drawing_point_" + crypto.randomUUID();
 type Point = {
   x: number;
   y: number;
@@ -23,31 +48,92 @@ const cameraPOV = ({
   camera: { x: number; y: number };
 }) => ({ x: x - camera.x, y: y - camera.y });
 
-const colors = [
-  "blue",
-  "red",
-  "green",
-  // "orange",
-  "black",
-  "white",
-  // "brown",
-] as const;
+const getWhiteBoardQueryOptions = ({
+  whiteBoardId,
+}: {
+  whiteBoardId: string;
+}) =>
+  queryOptions({
+    queryKey: ["white-board", whiteBoardId],
+    queryFn: () =>
+      promiseDataOrThrow(
+        client.api.protected.whiteboard.retrieve({ whiteBoardId }).get()
+      ),
+  });
 
-export const WhiteBoard = ({}) => {
+export const WhiteBoardLoader = ({
+  whiteBoardId,
+}: {
+  whiteBoardId: string;
+}) => {
+  const whiteBoardQuery = useQuery(getWhiteBoardQueryOptions({ whiteBoardId }));
+
+  switch (whiteBoardQuery.status) {
+    case "error": {
+      return <div>something went wrong</div>;
+    }
+    case "pending": {
+      return <LoadingSection />;
+    }
+    case "success": {
+      return (
+        <WhiteBoard
+          whiteBoardId={whiteBoardId}
+          whiteBoard={whiteBoardQuery.data}
+        />
+      );
+    }
+  }
+};
+
+const onlyForTheType = client.api.protected.whiteboard.retrieve({
+  whiteBoardId: "whatever",
+}).get;
+
+const WhiteBoard = ({
+  whiteBoard,
+  whiteBoardId,
+}: {
+  whiteBoard: (ReturnType<typeof onlyForTheType> extends Promise<infer R>
+    ? R
+    : never)["data"];
+  whiteBoardId: string;
+}) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [isMouseDown, setIsMouseDown] = useState(false);
-  const [drawnPoints, setDrawnPoints] = useState<Array<Array<Point>>>([]);
   const currentMousePositionRef = useRef<{ x: number; y: number } | null>(null);
-  const [drawingPoints, setDrawingPoints] = useState<Array<Point>>([]);
-  const [erased, setErased] = useState<Array<{ x: number; y: number }>>([]);
+  const [drawingPoints, setDrawingPoints] = useState<
+    Array<TransformedWhiteBoardPointGroup>
+  >([]);
+
+  const drawnPoints = whiteBoard ?? [];
+  const [erased, setErased] = useState<Array<{ x: number; y: number }>>([]); // todo
 
   const mouseCords = currentMousePositionRef.current;
 
   const parentCanvasRef = useRef<HTMLDivElement | null>(null);
   const [camera, setCamera] = useState({ x: 0, y: 0 });
   const [selectedTool, setSelectedTool] = useState<
-    { kind: "marker"; color: (typeof colors)[number] } | { kind: "eraser" }
+    | { kind: "marker"; color: (typeof whiteBoardColors)[number] }
+    | { kind: "eraser" }
   >({ kind: "marker", color: "blue" });
+  const whiteBoardQueryKey = getWhiteBoardQueryOptions({
+    whiteBoardId,
+  }).queryKey;
+
+  const subscriptionRef = useRef<null | ReturnType<typeof subscribeFn>>(null);
+
+  useEffect(() => {
+    const newSubscription = client.api.protected.whiteboard
+      .ws({ whiteBoardId })
+      .subscribe();
+
+    subscriptionRef.current = newSubscription;
+    return () => {
+      newSubscription.close();
+    };
+  }, []);
+
   const render = () => {
     const canvasEl = canvasRef.current!;
     const parentEl = parentCanvasRef.current!;
@@ -73,8 +159,8 @@ export const WhiteBoard = ({}) => {
       points,
       initialPoint,
     }: {
-      points: Array<Point>;
-      initialPoint: Point;
+      points: Array<TransformedWhiteBoardPointGroup>;
+      initialPoint: TransformedWhiteBoardPointGroup;
     }) => {
       ctx.moveTo(initialPoint.x, initialPoint.y);
       ctx.strokeStyle = initialPoint.color;
@@ -175,7 +261,7 @@ export const WhiteBoard = ({}) => {
       </Link>
 
       <div className="absolute bottom-2 border border-gray-200 bg-opacity-50 backdrop-blur-md right-[7px] rounded-lg p-3  flex justify-evenly items-center w-[95%]">
-        {colors.map((color) => (
+        {whiteBoardColors.map((color) => (
           <Button
             key={color}
             onClick={() => setSelectedTool({ kind: "marker", color: color })}
@@ -207,12 +293,21 @@ export const WhiteBoard = ({}) => {
         onMouseLeave={() => {
           setIsMouseDown(false);
           currentMousePositionRef.current = null;
-          setDrawnPoints((prev) => [...prev, drawingPoints]);
+          // setDrawnPoints((prev) => [...prev, drawingPoints]);
+
+          queryClient.setQueryData(whiteBoardQueryKey, (prev) => [
+            ...(prev ?? []),
+            drawingPoints,
+          ]);
           setDrawingPoints([]);
         }}
         onMouseUp={() => {
           setIsMouseDown(false);
-          setDrawnPoints((prev) => [...prev, drawingPoints]);
+          // setDrawnPoints((prev) => [...prev, drawingPoints]);
+          queryClient.setQueryData(whiteBoardQueryKey, (prev) => [
+            ...(prev ?? []),
+            drawingPoints,
+          ]);
           setDrawingPoints([]);
         }}
         onMouseMove={(e) => {
@@ -235,7 +330,9 @@ export const WhiteBoard = ({}) => {
                 {
                   ...mouseCords,
                   color: selectedTool.color,
-                  pointId: genDrawingPointId(),
+
+                  whiteBoardId,
+                  id: genWhiteBoardPointId(),
                 },
               ]);
 

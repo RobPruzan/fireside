@@ -5,7 +5,7 @@ import {
   userQueryOptions,
 } from "@/lib/useUserQuery";
 import { persister } from "@/query";
-import { user } from "@fireside/db";
+
 import { QueryClient, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
