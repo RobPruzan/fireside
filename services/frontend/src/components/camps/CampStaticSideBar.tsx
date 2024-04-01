@@ -2,7 +2,16 @@
 import { ThemeToggle } from "@/hooks/useTheme";
 import { cn } from "@/lib/utils";
 import { Link, useMatchRoute } from "@tanstack/react-router";
-import { Inbox, PanelRight, Search, Settings, Tent, User } from "lucide-react";
+import {
+  ArrowRight,
+  ChevronRight,
+  Inbox,
+  PanelRight,
+  Search,
+  Settings,
+  Tent,
+  User,
+} from "lucide-react";
 import { Button, buttonVariants } from "../ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { ProfileDropdown } from "../ProfileDropdown";
@@ -18,94 +27,73 @@ export const CampStaticSideBar = () => {
   const { openFriendRequests } = useGetUserFriendRequests();
   const user = useDefinedUser();
   return (
-    <>
-      <div className="h-[10%]">
-        <div className="w-full flex justify-between">
-          <Link to="/camp">
-            <img className="h-8 w-8" src="/logo.png" />
-          </Link>
+    <div className="flex flex-col items-start justify-start h-full py-4">
+      <div className="flex flex-col items-center justify-start  w-full h-[15%] gap-y-4">
+        <Avatar className="h-10 w-10">
+          <AvatarImage src="/joey-boy.jpg" />
+          <AvatarFallback />
+        </Avatar>
 
-          {!sideBarOpen && (
-            <Button
-              onClick={() => {
-                setSideBarOpen(true);
-              }}
-              variant={"ghost"}
-            >
-              <PanelRight />
-            </Button>
-          )}
-        </div>
+        {!sideBarOpen && (
+          <Button
+            variant={"ghost"}
+            onClick={() => setSideBarOpen(true)}
+            className=" "
+          >
+            <PanelRight />
+          </Button>
+        )}
       </div>
-      <div className="h-[80%] flex flex-col items-center justify-start w-full">
-        <div className="h-1-4 flex flex-col justify-start items-center gap-y-2">
-          <Avatar className="h-14 w-14">
-            <AvatarImage src="/joey-boy.jpg" />
-            <AvatarFallback />
-          </Avatar>
-          <span className="text-lg font-semibold">{user.email}</span>
-        </div>
+      <div className="flex flex-col items-center justify-start  w-full h-[75%] relative">
+        <Link
+          to="/camp/friends"
+          className={buttonVariants({
+            className: cn([
+              "flex gap-x-4 justify-between w-full py-6 min-w-fit",
+              match({ to: "/camp/friends" }) && "bg-accent",
+            ]),
+            variant: "ghost",
+          })}
+        >
+          <div className="flex items-center gap-x-4">
+            <User />
+          </div>
+        </Link>
 
-        <div className="h-3/4 flex flex-col py-10 w-full gap-y-1">
-          <Link
-            to="/camp/friends"
-            className={buttonVariants({
-              className: cn([
-                "flex gap-x-4 justify-between w-full py-6 min-w-fit",
-                match({ to: "/camp/friends" }) && "bg-accent",
-              ]),
-              variant: "ghost",
-            })}
-          >
-            <div className="flex items-center gap-x-4">
-              <User />
-              <span className="text-lg"> Friends</span>
-            </div>
-            <div className="text-lg  items-center">{friends.length}</div>
-          </Link>
-
-          <Link
-            to="/camp/inbox"
-            className={buttonVariants({
-              className: cn([
-                "flex gap-x-4 justify-between w-full py-6 min-w-fit",
-                match({ to: "/camp/inbox" }) && "bg-accent",
-              ]),
-              variant: "ghost",
-            })}
-          >
-            <div className="flex items-center gap-x-4">
-              <Inbox />
-              <span className="text-lg"> Inbox</span>
-            </div>
-            <div className="text-lg items-center">
-              {openFriendRequests.length}
-            </div>
-          </Link>
-          <Link
-            to="/camp"
-            className={buttonVariants({
-              className: cn([
-                "flex gap-x-4 justify-between w-full py-6 min-w-fit",
-                match({ to: "/camp" }) && "bg-accent",
-              ]),
-              variant: "ghost",
-            })}
-          >
-            <div className="flex items-center gap-x-4">
-              <Tent />
-              <span className="text-lg"> Camps</span>
-            </div>
-          </Link>
-        </div>
+        <Link
+          to="/camp/inbox"
+          className={buttonVariants({
+            className: cn([
+              "flex gap-x-4 justify-between w-full py-6 min-w-fit",
+              match({ to: "/camp/inbox" }) && "bg-accent",
+            ]),
+            variant: "ghost",
+          })}
+        >
+          <div className="flex items-center gap-x-4">
+            <Inbox />
+          </div>
+        </Link>
+        <Link
+          to="/camp"
+          className={buttonVariants({
+            className: cn([
+              "flex gap-x-4 justify-between w-full py-6 min-w-fit",
+              match({ to: "/camp" }) && "bg-accent",
+            ]),
+            variant: "ghost",
+          })}
+        >
+          <div className="flex items-center gap-x-4">
+            <Tent />
+          </div>
+        </Link>
       </div>
-      <div className="h-[10%] min-h-[50px] flex items-end justify-evenly">
+
+      <div className="h-[10%] min-h-[50px] flex flex-col items-end justify-evenly">
         <ThemeToggle />
-        <Button variant={"ghost"}>
-          <Settings />
-        </Button>
         <ProfileDropdown />
       </div>
-    </>
+    </div>
   );
 };

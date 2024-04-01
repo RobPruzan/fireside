@@ -27,7 +27,7 @@ export const getMessagesOptions = ({ campId }: { campId: string }) =>
           .get()
       );
     },
-    refetchInterval: 1500,
+    // refetchInterval: 1500,
   });
 
 export const useGetMessages = ({ campId }: { campId: string }) => {
@@ -40,64 +40,64 @@ export const useGetMessages = ({ campId }: { campId: string }) => {
   };
 };
 
-export const useCreateMessageMutation = ({ campId }: { campId: string }) => {
-  const { toast } = useToast();
-  const { messagesQueryKey } = useGetMessages({ campId });
-  const user = useDefinedUser();
-  const queryClient = useQueryClient();
-  const { getThreadsQueryKey } = useGetThreads({ campId });
-  const createMessageMutation = useMutation({
-    mutationFn: (messageInfo: {
-      message: string;
-      createdAt: string;
-      id: string;
-    }) =>
-      promiseDataOrThrow(
-        client.api.protected.message.create.post({
-          campId,
-          ...messageInfo,
-        })
-      ),
-    onMutate: async (variables) => {
-      await queryClient.cancelQueries({
-        queryKey: getMessagesOptions({ campId }).queryKey,
-      });
-      const previousMessages = queryClient.getQueryData(
-        getMessagesOptions({ campId }).queryKey
-      );
-      queryClient.setQueryData(messagesQueryKey, (prev) => [
-        ...(prev ?? []),
-        {
-          campId,
-          userId: user.id,
-          user,
-          ...variables,
-        },
-      ]);
+// export const useCreateMessageMutation = ({ campId }: { campId: string }) => {
+//   const { toast } = useToast();
+//   const { messagesQueryKey } = useGetMessages({ campId });
+//   const user = useDefinedUser();
+//   const queryClient = useQueryClient();
+//   const { threadsQueryKey: getThreadsQueryKey } = useGetThreads({ campId });
+//   const createMessageMutation = useMutation({
+//     mutationFn: (messageInfo: {
+//       message: string;
+//       createdAt: string;
+//       id: string;
+//     }) =>
+//       promiseDataOrThrow(
+//         client.api.protected.message.create.post({
+//           campId,
+//           ...messageInfo,
+//         })
+//       ),
+//     onMutate: async (variables) => {
+//       await queryClient.cancelQueries({
+//         queryKey: getMessagesOptions({ campId }).queryKey,
+//       });
+//       const previousMessages = queryClient.getQueryData(
+//         getMessagesOptions({ campId }).queryKey
+//       );
+//       queryClient.setQueryData(messagesQueryKey, (prev) => [
+//         ...(prev ?? []),
+//         {
+//           campId,
+//           userId: user.id,
+//           user,
+//           ...variables,
+//         },
+//       ]);
 
-      return { previousMessages };
-    },
+//       return { previousMessages };
+//     },
 
-    onError: (e, _, ctx) => {
-      toast({
-        variant: "destructive",
-        title: "Failed to send message.",
-        description: e.message,
-      });
+//     onError: (e, _, ctx) => {
+//       toast({
+//         variant: "destructive",
+//         title: "Failed to send message.",
+//         description: e.message,
+//       });
 
-      queryClient.setQueryData(messagesQueryKey, ctx?.previousMessages ?? []);
-    },
+//       queryClient.setQueryData(messagesQueryKey, ctx?.previousMessages ?? []);
+//     },
 
-    onSuccess: (data) => {
-      queryClient.setQueryData(getThreadsQueryKey, (prev) => [
-        ...(prev ?? []),
-        { ...data.thread, campId },
-      ]);
-    },
-  });
+//     onSuccess: (data) => {
+//       queryClient.setQueryData(getThreadsQueryKey, (prev) => [
+//         ...(prev ?? []),
+//         { ...data.thread, campId },
+//       ]);
+//     },
+//   });
 
-  return createMessageMutation;
-};
+//   return createMessageMutation;
+// };
 
 export const getMessageReactionOptions = ({ campId }: { campId: string }) =>
   queryOptions({

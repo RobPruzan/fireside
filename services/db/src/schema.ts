@@ -1,4 +1,4 @@
-import { Type as t } from "@sinclair/typebox";
+import { Static, Type as t } from "@sinclair/typebox";
 import { InferSelectModel } from "drizzle-orm";
 import {
   serial,
@@ -11,8 +11,9 @@ import {
   AnyPgTable,
   AnyPgColumn,
   text,
+  doublePrecision,
 } from "drizzle-orm/pg-core";
-import { createInsertSchema } from "drizzle-typebox";
+import { createInsertSchema, createSelectSchema } from "drizzle-typebox";
 import { DatesToString } from "@fireside/utils";
 
 export const getOneYearAheadDate = () => {
@@ -34,6 +35,11 @@ export const user = pgTable("user", {
     .$defaultFn(() => new Date().toISOString())
     .notNull(),
   updatedAt: timestamp("updated_at", { mode: "string" }),
+});
+
+export const safeUserSelectSchema = createSelectSchema(user, {
+  token: t.Optional(t.Never()),
+  password: t.Optional(t.Never()),
 });
 
 export type User = InferSelectModel<typeof user>;
@@ -95,6 +101,12 @@ export const campThreadInsertSchema = createInsertSchema(campThread, {
   createdBy: t.Optional(t.Never()),
 });
 
+// export const requiredThreadInsertSchema = t.Required(campThreadInsertSchema);
+export const requiredThreadInsertSchema = t.Intersect([
+  t.Omit(t.Required(campThreadInsertSchema), ["createdBy"]), // make this whole mess a helper tbh
+  t.Pick(campThreadInsertSchema, ["createdBy"]),
+]);
+
 export const campThreadMessage = pgTable("campThreadMessage", {
   id: uuid("id").defaultRandom().primaryKey(),
   userId: uuid("userId")
@@ -121,6 +133,11 @@ export type CampMessage = InferSelectModel<typeof campMessage>;
 export const campMessageInsertSchema = createInsertSchema(campMessage, {
   userId: t.Optional(t.Never()),
 });
+
+export const requiredCampMessageInsertSchema = t.Intersect([
+  t.Omit(t.Required(campMessageInsertSchema), ["userId"]),
+  t.Pick(campMessageInsertSchema, ["userId"]),
+]);
 
 export const campMember = pgTable("campMember", {
   id: uuid("id").defaultRandom().primaryKey(),
@@ -312,3 +329,91 @@ export const emojis = [
     alt: "Power",
   },
 ];
+
+export const genWhiteBoardPointId = () =>
+  "white_board_point_" + crypto.randomUUID();
+export const genWhiteBoardPointGroupId = () =>
+  "white_board_point_group_" + crypto.randomUUID();
+
+export const whiteBoard = pgTable("whiteBoard", {
+  id: uuid("id").defaultRandom().primaryKey(),
+});
+export const whiteBoardInsertSchema = createInsertSchema(whiteBoard);
+export const whiteBoardPointGroup = pgTable("whiteBoardPointGroup", {
+  id: text("id").$defaultFn(genWhiteBoardPointId).primaryKey(),
+  color: text("color").$type<(typeof whiteBoardColors)[number]>().notNull(),
+  whiteBoardId: uuid("whiteBoardId").references(() => whiteBoard.id, {
+    onDelete: "cascade",
+  }),
+});
+
+export const whiteBoardPoint = pgTable("whiteBoardPoint", {
+  id: text("id").$defaultFn(genWhiteBoardPointId).primaryKey(),
+  whiteBoardPointGroupId: text("whiteBoardPointGroupId")
+    // .notNull()
+    .references(() => whiteBoardPointGroup.id, {
+      onDelete: "cascade",
+    }),
+  x: doublePrecision("x").notNull(),
+  y: doublePrecision("y").notNull(),
+  kind: text("kind")
+    .$type<"point">()
+    .$defaultFn(() => "point")
+    .notNull(),
+});
+
+export const whiteBoardPointInsertSchema = createInsertSchema(whiteBoardPoint);
+export type WhiteBoardPoint = InferSelectModel<typeof whiteBoardPoint>;
+
+export const whiteBoardColors = [
+  "blue",
+  "red",
+  "green",
+  "black",
+  "white",
+] as const;
+
+export type WhiteBoardColor = (typeof whiteBoardColors)[number];
+
+export const getWhiteBoardMouseId = () =>
+  "white_board_mouse_" + crypto.randomUUID();
+
+export const whiteBoardMouse = pgTable("whiteBoardMouseSchema", {
+  id: text("id").$defaultFn(getWhiteBoardMouseId).primaryKey(),
+  x: doublePrecision("x").notNull(),
+  y: doublePrecision("y").notNull(),
+  whiteBoardId: uuid("whiteBoardId").references(() => whiteBoard.id, {
+    onDelete: "cascade",
+  }),
+  kind: text("kind")
+    .$type<"mouse">()
+    .$defaultFn(() => "mouse")
+    .notNull(),
+  userId: uuid("userId")
+    .notNull()
+    .references(() => user.id),
+});
+
+export const whiteBoardMouseInsertSchema = createInsertSchema(
+  whiteBoardMouse,
+
+  {
+    kind: t.Literal("mouse"),
+  }
+);
+export const whiteBoardMouseSelectSchema = createSelectSchema(
+  whiteBoardMouse,
+
+  {
+    kind: t.Literal("mouse"),
+  }
+);
+export const requiredWhiteBoardMouseInsertSchema = t.Required(
+  whiteBoardMouseInsertSchema
+);
+
+export type WhiteBoardMouse = Static<typeof whiteBoardMouseInsertSchema>;
+
+export const connectedToCamp = pgTable("connectToCamp", {
+  id: uuid("id").defaultRandom().primaryKey(),
+});

@@ -9,6 +9,7 @@ import { friendRoute } from "./friend-endpoints";
 import staticPlugin from "@elysiajs/static";
 import { messageRouter } from "./message-endpoints";
 import { threadRouter } from "./thread-endpoints";
+import { whiteboardRoute } from "./whiteboard-endpoints";
 
 const port = 8080;
 
@@ -21,7 +22,8 @@ const authRoutes = new Elysia()
   .use(userProtectedRoute)
   .use(friendRoute)
   .use(messageRouter)
-  .use(threadRouter);
+  .use(threadRouter)
+  .use(whiteboardRoute);
 const noAuthRoutes = new Elysia().use(userRoute);
 
 const app = new Elysia()
@@ -84,7 +86,10 @@ const app = new Elysia()
     return error.toString();
   })
 
-  .listen(port);
+  .listen({
+    port,
+    hostname: "0.0.0.0",
+  });
 
-console.log(`Running on port ${port}`);
+console.log(`hiRunning on port ${port}`);
 export type App = typeof app;

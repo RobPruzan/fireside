@@ -22,11 +22,19 @@ import {
   reactionAssetsOptions,
 } from "@/components/camps/message-state";
 import { Thread } from "@/components/camps/Thread";
-import { promise } from "zod";
+import { promise, z } from "zod";
 import { getThreadsOptions } from "@/components/camps/thread-state";
+// import { WhiteBoard } from "@/components/camps/whiteboard/WhiteBoard";
 
 export const campLayoutRoute = createRoute({
   getParentRoute: () => authRootLayout,
+  validateSearch: (search) =>
+    z
+      .object({
+        threadId: z.string().optional(),
+        whiteBoardId: z.string().optional(),
+      })
+      .parse(search),
   id: "camp-layout",
   loader: async ({ context: { queryClient, user } }) =>
     Promise.all([
@@ -71,6 +79,7 @@ export const inboxRoute = createRoute({
 export const campRoute = createRoute({
   getParentRoute: () => campLayoutRoute,
   path: "/camp/$campId",
+
   loader: ({ context: { queryClient }, params: { campId } }) =>
     Promise.all([
       queryClient.ensureQueryData(getMessageReactionOptions({ campId })),
@@ -80,11 +89,21 @@ export const campRoute = createRoute({
   pendingComponent: LoadingSection,
 });
 
-export const threadRoute = createRoute({
-  getParentRoute: () => campRoute,
-  component: Thread,
-  path: "/$threadId",
-  loader: ({ context: { queryClient }, params: { threadId, campId } }) =>
-    Promise.all([queryClient.ensureQueryData(getThreadsOptions({ campId }))]),
-  pendingComponent: LoadingSection,
-});
+// export const threadRoute = createRoute({
+//   getParentRoute: () => campRoute,
+//   component: Thread,
+//   path: "/$threadId",
+//   loader: ({ context: { queryClient }, params: { threadId, campId } }) =>
+//     Promise.all([queryClient.ensureQueryData(getThreadsOptions({ campId }))]),
+//   pendingComponent: LoadingSection,
+// });
+
+// export const whiteboardRoute = createRoute({
+//   getParentRoute: () => campRoute,
+//   component: WhiteBoard,
+//   path: "/$whiteboardId",
+
+//   // loader: ({ context: { queryClient }, params: { threadId, campId } }) =>
+//   //   Promise.all([queryClient.ensureQueryData(getThreadsOptions({ campId }))]),
+//   pendingComponent: LoadingSection,
+// });

@@ -28,12 +28,12 @@ export const useGetThreads = ({ campId }: { campId: string }) => {
   return {
     threads: getThreadsQuery.data,
     getThreadsQuery,
-    getThreadsQueryKey: options.queryKey,
+    threadsQueryKey: options.queryKey,
   };
 };
 
 export const useCreateThread = ({ campId }: { campId: string }) => {
-  const { getThreadsQueryKey } = useGetThreads({ campId });
+  const { threadsQueryKey: getThreadsQueryKey } = useGetThreads({ campId });
   const queryClient = useQueryClient();
   const createThreadMutation = useMutation({
     mutationFn: ({ parentMessageId }: { parentMessageId: string }) =>
