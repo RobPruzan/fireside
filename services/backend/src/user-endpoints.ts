@@ -241,4 +241,32 @@ export const userProtectedRoute = ProtectedElysia({
       .where(eq(user.id, ctx.user.id));
     ctx.cookie.auth.set(getDeleteAuthCookie());
   })
-  .get("/get-all", () => db.select(cleanedUserCols).from(user));
+  .get("/get-all", () => db.select(cleanedUserCols).from(user))
+  .post("/update-nickname", async (ctx) => {
+    const { nickname } = ctx.body;
+    if (!nickname) {
+      ctx.set.status = 400;
+      return { error: "Nickname is required" };
+    }
+
+    const updatedUsers = await db
+    .update(user)
+    .set({ displayName: nickname })
+    .where(eq(user.id, ctx.user.id))
+    .returning();
+  
+    const updatedUser = updatedUsers[0]; 
+  
+
+    if (!updatedUser) {
+      ctx.set.status = 500;
+      return { error: "Failed to update user nickname" };
+    }
+
+    ctx.set.status = 200;
+    return { message: "Nickname updated successfully", user: cleanUser(updatedUser) };
+  }, {
+    body: t.Object({
+      nickname: t.String(),
+    }),
+  })

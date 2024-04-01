@@ -183,6 +183,13 @@
       "when": 1711915057442,
       "tag": "0025_powerful_hercules",
       "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "5",
+      "when": 1711979682660,
+      "tag": "0026_broken_thaddeus_ross",
+      "breakpoints": true
     }
   ]
 }

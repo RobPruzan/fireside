@@ -1,6 +1,6 @@
 import Landing from "@/components/landing/Landing";
 import Login from "@/components/landing/Login";
-import { Profile } from "@/components/landing/Profile";
+import { Profile } from "@/components/camps/Profile";
 import { LoadingSection } from "@/components/ui/loading";
 
 import {
@@ -21,6 +21,7 @@ import {
   campRoute,
   friendsRoute,
   inboxRoute,
+  profileRoute
 } from "./camp-routes";
 import { authRootLayout } from "./layouts";
 
@@ -55,13 +56,6 @@ export const registerPageRoute = createRoute({
   pendingComponent: LoadingSection,
 });
 
-export const profileRoute = createRoute({
-  getParentRoute: () => rootLandingLayout,
-  path: "/profile",
-  component: Profile,
-  pendingComponent: LoadingSection,
-});
-
 export const loginPageRoute = createRoute({
   getParentRoute: () => rootLandingLayout,
   path: "/login",
@@ -74,7 +68,6 @@ export const routeTree = rootRoute.addChildren([
     rootLandingRoute,
     registerPageRoute,
     loginPageRoute,
-    profileRoute,
   ]),
   authRootLayout.addChildren([
     campLayoutRoute.addChildren([
@@ -82,6 +75,7 @@ export const routeTree = rootRoute.addChildren([
       campRoute,
       friendsRoute,
       inboxRoute,
+      profileRoute,
     ]),
   ]),
 ]);

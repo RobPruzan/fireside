@@ -1,6 +1,7 @@
 import { Camp } from "@/components/camps/Camp";
 import { Explore } from "@/components/camps/Explore";
 import { Friends } from "@/components/camps/Friends";
+import { Profile } from "@/components/camps/Profile";
 import { RootCampLayout } from "@/components/camps/RootCampLayout";
 import {
   getUserCampQueryOptions,
@@ -88,6 +89,14 @@ export const campRoute = createRoute({
   component: Camp,
   pendingComponent: LoadingSection,
 });
+
+export const profileRoute = createRoute({
+  getParentRoute: () => campLayoutRoute,
+  path: "/profile",
+  component: Profile,
+  pendingComponent: LoadingSection,
+});
+
 
 // export const threadRoute = createRoute({
 //   getParentRoute: () => campRoute,

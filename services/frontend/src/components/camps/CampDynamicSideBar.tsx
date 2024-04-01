@@ -39,7 +39,7 @@ export const CampDynamicSideBar = () => {
   const match = useMatchRoute();
   const search = useSearch({ from: "/root-auth/camp-layout" });
   const createCampMutation = useCreateCampMutation();
-
+  
   return (
     <>
       <Button
@@ -56,8 +56,8 @@ export const CampDynamicSideBar = () => {
           <span className="text-3xl font-semibold ">Campsites</span>
         </div>
       </div>
-      <div className=" flex flex-col justify-start items-center h-5/6 border-r-2 border-accent/50">
-        <div className="w-full flex justify-star p-5">
+      <div className=" flex flex-col justify-start h-5/6 border-r-2 border-accent/50">
+        <div className="w-full flex justify-start p-5">
           <Input
             value={campSearch}
             onChange={(e) => setCampSearch(e.target.value)}
@@ -66,7 +66,6 @@ export const CampDynamicSideBar = () => {
           />
         </div>
       </div>
-      <div className=" flex flex-col justify-start items-center h-5/6">
 
         <div className="flex flex-col overflow-y-auto h-full w-full p-5 gap-y-1">
           {camps
@@ -79,7 +78,7 @@ export const CampDynamicSideBar = () => {
                 new Date(a.createdAt).getTime()
             )
             .map((camp) => (
-              <div className="flex w-full items-center gap-x-2" key={camp.id}>
+              <div className="flex" key={camp.id}>
                 <Link
                   search={(prev) => prev}
                   to="/camp/$campId"
@@ -148,8 +147,6 @@ export const CampDynamicSideBar = () => {
               </DialogContent>
             </Dialog>
           </div>
-
-        </div>
       </div>
     </>
   );
