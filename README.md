@@ -23,3 +23,9 @@
 1. `cd frontend`
 2. `pnpm install`
 3. `pnpm run dev`
+
+
+
+## Website Preview
+
+<img width="1491" alt="image" src="https://github.com/RobPruzan/fireside/assets/97781863/97378f22-e52c-475c-af05-7a025f447875">
