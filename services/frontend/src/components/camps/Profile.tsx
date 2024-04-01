@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useDefinedUser } from "./camps-state";
 import { Avatar, AvatarFallback } from '../ui/avatar';
 import { SquarePen } from "lucide-react";
@@ -21,6 +21,9 @@ export const Profile = () => {
   const user = useDefinedUser();
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [nickname, setNickname] = useState("");
+  const [avatar, setAvatar] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   const activities = [
     { date: "2023-09-01", activity: "Updated profile picture."},
     { date: "2023-08-24", activity: "Changed nickname to 'CoolUser'."},
@@ -34,18 +37,45 @@ export const Profile = () => {
   });
 
   const saveChanges = () => {
-  if (nickname.trim() !== "") {
-    updateNicknameMutation.mutate({ newNickname: nickname }, {
-      onSuccess: () => {
-        console.log("Nickname updated successfully");
-        setEditDialogOpen(false);
-      },
-      onError: (error: Error) => {
-        console.error("Failed to update nickname", error);
+    if (nickname.trim() !== "") {
+      updateNicknameMutation.mutate({ newNickname: nickname }, {
+        onSuccess: () => {
+          console.log("Nickname updated successfully");
+          setEditDialogOpen(false);
+        },
+        onError: (error: Error) => {
+          console.error("Failed to update nickname", error);
+        }
+      });
+    }
+  };
+
+  const uploadAvatarMutation = useMutation({
+    mutationFn: async (avatarFile: File) => {
+      const formData = new FormData();
+      formData.append('avatar', avatarFile);
+
+      const response = await client.api.protected.user["update-avatar"].post(formData);
+
+      if (!response || response.error) {
+        throw new Error('Failed to upload avatar');
       }
-    });
-  }
-};
+
+      return response.avatarUrl ? response : response.data;
+    },
+    onSuccess: (data) => {
+      console.log('Avatar updated successfully', data.avatarUrl);
+    },
+    onError: (error: Error) => {
+      console.error('Failed to upload avatar', error);
+    }
+  });
+
+  const changeAvatar = (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (event.target.files && event.target.files[0]) {
+      uploadAvatarMutation.mutate(event.target.files[0]);
+    }
+  };
 
 
   return (
@@ -55,17 +85,18 @@ export const Profile = () => {
           {/* masthead, will change this later on */}
         </div>
 
-        <div className="absolute top-[calc(25%-5rem)] ml-20">
-          <Avatar className="w-36 h-36">
-            <AvatarFallback delayMs={600}>
+        <div className="absolute top-[calc(25%-5rem)] ml-20" onClick={() => fileInputRef.current.click()}>
+          <Avatar className="w-36 h-36 cursor-pointer">
+            {avatar ? <img src={avatar} alt="Avatar" /> : <AvatarFallback delayMs={600}>
               {user.email[0].toUpperCase()}
-            </AvatarFallback>
+            </AvatarFallback>}
           </Avatar>
+          <input type="file" ref={fileInputRef} onChange={changeAvatar} style={{ display: 'none' }} />
         </div>
 
         <div className="mt-20 w-full flex items-center pl-20 pr-20 justify-between">
           <div className="text-5xl text-foreground/30 mr-4">
-          {user.displayName || "No Nickname Set"}
+            {user.displayName || "No Nickname Set"}
           </div>
           <Dialog>
             <DialogTrigger asChild>

@@ -257,7 +257,6 @@ export const userProtectedRoute = ProtectedElysia({
   
     const updatedUser = updatedUsers[0]; 
   
-
     if (!updatedUser) {
       ctx.set.status = 500;
       return { error: "Failed to update user nickname" };

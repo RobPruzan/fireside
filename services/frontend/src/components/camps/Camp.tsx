@@ -87,6 +87,7 @@ export const Camp = () => {
   const { campId } = useParams({ from: "/root-auth/camp-layout/camp/$campId" });
   const { messages } = useGetMessages({ campId });
   const scrollRef = useRef<HTMLInputElement | null>(null);
+  
 
   useEffect(() => {
     const lastChild = scrollRef.current?.lastChild!;
@@ -109,6 +110,9 @@ export const Camp = () => {
     <div className="flex  w-full h-full  pb-5">
       <ResizablePanelGroup direction="horizontal">
         <ResizablePanel className="h-full w-full">
+        {/* <div className="text-xl font-bold text-center my-4">
+            {campName || 'Loading camp...'}
+          </div> */}
           <MessageSection campId={campId} />
         </ResizablePanel>
         <ResizableHandle
@@ -248,7 +252,7 @@ const MessageSection = memo(({ campId }: { campId: string }) => {
         subscriptionRef,
       }}
     >
-      <div className="p-1  flex flex-col h-full  w-full px-2">
+      <div className="p-1 flex flex-col h-full  w-full px-2">
         <div className="flex w-full h-[calc(100%-85px)] ">
           <div
             ref={scrollRef}
@@ -280,7 +284,7 @@ const MessageSection = memo(({ campId }: { campId: string }) => {
         </div>
 
         <Textarea
-          placeholder="Send a question..."
+          placeholder="What's on your mind?"
           onKeyDown={(e) => {
             if (!userMessage && e.key === "Enter" && !e.shiftKey) {
               setUserMessage("");
@@ -320,8 +324,8 @@ const MessageSection = memo(({ campId }: { campId: string }) => {
           }}
           value={userMessage}
           onChange={(event) => setUserMessage(event.target.value)}
-          className="flex h-[50px] border-2 border-accent/50"
-        />
+          className="flex h-[6px] self-center w-3/4 mb-20 border-2 border-accent/50"
+          />
       </div>
     </SocketMessageContext.Provider>
   );
@@ -389,6 +393,7 @@ const Message = memo(
       (thread) => thread.parentMessageId === messageObj.id
     );
 
+    
     return (
       <div
         className={cn([
@@ -410,28 +415,30 @@ const Message = memo(
           <ContextMenuTrigger asChild>
             <div
               className={cn([
-                "space-y-4 border-2 border-accent/50 w-full p-3 rounded-md",
+                "group space-y-4 w-full p-3 rounded-md",
                 messageWithContextMenuId === messageObj.id && "bg-muted",
               ])}
             >
-              <div className="flex items-center space-x-4">
-                <div className="flex items-start space-x-2 w-full">
-                  <Avatar className="w-10 h-10 grid place-content-center border">
-                    <Image size={20} />
-                  </Avatar>
-                  <div className="text-sm font-medium leading-none">
-                    <h3 className="text-base">{messageObj.user.email}</h3>
-                    <span className="text-sm text-gray-500 dark:text-gray-400">
-                      <div className="flex gap-x-1">
-                        <span>
-                          {new Date(messageObj.createdAt).toLocaleDateString()}
-                        </span>
-                        <span>
-                          {new Date(messageObj.createdAt).toLocaleTimeString()}
-                        </span>
+           <div className="flex items-start space-x-4">
+              <Avatar className="w-16 h-16 grid place-content-center border">
+                <Image size={20} />
+              </Avatar>
+              <div className="flex-1">
+                <h3 className="text-base font-medium">{messageObj.user.displayName || messageObj.user.email}</h3>
+                <div className="text-sm mt-1">{messageObj.message}</div>
+                <div className="flex flex-wrap mt-4 gap-x-2">
+                        <ReactionBox
+                          campId={campId}
+                          messageId={messageObj.id}
+                        />
                       </div>
-                    </span>
-                    <div className="flex gap-x-1 items-center">
+              </div>
+              <div className="text-sm text-gray-500 dark:text-gray-400">
+              {formatDate(messageObj.createdAt)}
+            </div>
+            </div>
+
+              <div className="flex gap-x-1 items-center opacity-0 group-hover:opacity-100 transition-opacity">
                       {thread?.id ? (
                         <Button
                           // from="/camp/$campId"
@@ -515,20 +522,8 @@ const Message = memo(
                           />
                         </DropdownMenuContent>
                       </DropdownMenu>
-                      <div className="flex flex-wrap gap-x-2">
-                        <ReactionBox
-                          campId={campId}
-                          messageId={messageObj.id}
-                        />
                       </div>
-                    </div>
-                  </div>
-                </div>
               </div>
-              <div className="max-w-none break-words ">
-                {messageObj.message}
-              </div>
-            </div>
           </ContextMenuTrigger>
           <ContextMenuContent>
             <ContextMenuItem className="flex gap-x-2">
@@ -602,7 +597,7 @@ const ReactionBox = memo(
                 id: crypto.randomUUID(),
               });
             }}
-            className={cn(["h-9 w-9 p-1 ", existingReaction && "bg-muted/50"])}
+            className={cn(["h-6 w-6 p-1 ", existingReaction && "bg-muted/50"])}
             variant={"ghost"}
           >
             <img src={asset.imgSrc} alt={asset.alt} />
@@ -613,3 +608,34 @@ const ReactionBox = memo(
     });
   }
 );
+
+const formatDate = (dateString) => { 
+  const messageDate = new Date(dateString);
+  const today = new Date();
+  const yesterday = new Date(today);
+  yesterday.setDate(yesterday.getDate() - 1);
+
+  const time = messageDate.toLocaleTimeString('en-US', {
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true,
+  });
+
+  if (
+    messageDate.getDate() === today.getDate() &&
+    messageDate.getMonth() === today.getMonth() &&
+    messageDate.getFullYear() === today.getFullYear()
+  ) {
+    return `Today ${time}`;
+  }
+  
+  if (
+    messageDate.getDate() === yesterday.getDate() &&
+    messageDate.getMonth() === yesterday.getMonth() &&
+    messageDate.getFullYear() === yesterday.getFullYear()
+  ) {
+    return `Yesterday ${time}`;
+  }
+  
+  return `${messageDate.toLocaleDateString('en-US')} ${time}`;
+};
