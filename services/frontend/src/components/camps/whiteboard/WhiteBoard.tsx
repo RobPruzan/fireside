@@ -240,7 +240,7 @@ const WhiteBoard = ({
     return () => {};
   }, []);
 
-  const render = () => {
+  const render = (recursive = false) => {
     const canvasEl = canvasRef.current!;
     const parentEl = parentCanvasRef.current!;
 
@@ -274,8 +274,8 @@ const WhiteBoard = ({
       ctx.beginPath();
       points.forEach((point) => {
         ctx.lineTo(point.x, point.y);
+        ctx.stroke();
       });
-      ctx.stroke();
     };
 
     const pointsArr = [drawingPoints, ...drawnPoints];
@@ -332,6 +332,10 @@ const WhiteBoard = ({
     ctx.stroke();
 
     ctx.restore();
+
+    if (recursive) {
+      requestAnimationFrame(() => render());
+    }
   };
 
   const [_, setUpdate] = useState(false);
@@ -349,7 +353,7 @@ const WhiteBoard = ({
   }, []);
 
   useEffect(() => {
-    render();
+    render(true);
   }, [render]);
 
   useEffect(() => {
