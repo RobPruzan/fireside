@@ -413,3 +413,7 @@ export const requiredWhiteBoardMouseInsertSchema = t.Required(
 );
 
 export type WhiteBoardMouse = Static<typeof whiteBoardMouseInsertSchema>;
+
+export const connectedToCamp = pgTable("connectToCamp", {
+  id: uuid("id").defaultRandom().primaryKey(),
+});

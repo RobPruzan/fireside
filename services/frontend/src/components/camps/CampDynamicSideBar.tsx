@@ -128,7 +128,7 @@ export const CampDynamicSideBar = () => {
                   }}
                   className={buttonVariants({
                     className: cn([
-                      "py-9 w-full flex justify-between",
+                      "py-7 w-full flex justify-between",
                       match({
                         to: "/camp/$campId",
                         params: { campId: camp.id },
