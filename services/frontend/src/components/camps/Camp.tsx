@@ -67,7 +67,7 @@ import { ThreadIcon } from "../ui/icons/thread";
 import { Thread } from "./Thread";
 import { useGetThreads } from "./thread-state";
 import { toast } from "../ui/use-toast";
-import { Textarea } from "../ui/textarea";
+import { CampTextArea } from "../ui/camp-textarea";
 import { client } from "@/edenClient";
 import { useQueryClient } from "@tanstack/react-query";
 import { PublishedMessage } from "@fireside/backend/src/message-endpoints";
@@ -107,7 +107,7 @@ export const Camp = () => {
   // const key
   const searchEntries = Object.entries(search);
   return (
-    <div className="flex  w-full h-full  pb-5">
+    <div className="flex  w-full h-full p-20 pb-5">
       <ResizablePanelGroup direction="horizontal">
         <ResizablePanel className="h-full w-full">
         {/* <div className="text-xl font-bold text-center my-4">
@@ -242,49 +242,41 @@ const MessageSection = memo(({ campId }: { campId: string }) => {
     };
   }, []);
 
-  const [messageWithContextMenuId, setMessageWithContextMenuId] = useState<
-    null | string
-  >(null);
+  const sortedMessages = messages.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+
+  const enhancedMessages = sortedMessages.map((message, index, array) => {
+    const prevMessage = array[index - 1];
+    const isDifferentUser = !prevMessage || message.userId !== prevMessage.userId;
+    const isTimeGapLarge = !prevMessage || Math.abs(new Date(message.createdAt).getTime() - new Date(prevMessage.createdAt).getTime()) >= 1 * 60 * 1000;
+    const showMessageDetails = isDifferentUser || isTimeGapLarge;
+    
+    let order: "first" | "last" | "middle";
+    if (index === 0) order = "first";
+    else if (index === array.length - 1) order = "last";
+    else order = "middle";
+
+    return { ...message, showMessageDetails, order };
+  });
+
 
   return (
-    <SocketMessageContext.Provider
-      value={{
-        subscriptionRef,
-      }}
-    >
-      <div className="p-1 flex flex-col h-full  w-full px-2">
-        <div className="flex w-full h-[calc(100%-85px)] ">
-          <div
-            ref={scrollRef}
-            className="flex flex-col w-full h-full overflow-y-auto gap-y-3"
-          >
-            {messages
-              .sort(
-                (a, b) =>
-                  new Date(a.createdAt).getTime() -
-                  new Date(b.createdAt).getTime()
-              )
-              .map((messageObj, index) => (
-                <Message
-                  campId={campId}
-                  key={messageObj.id}
-                  messageObj={messageObj}
-                  messageWithContextMenuId={messageWithContextMenuId}
-                  setMessageWithContextMenuId={setMessageWithContextMenuId}
-                  order={
-                    index === 0
-                      ? "first"
-                      : index === messages.length - 1
-                      ? "last"
-                      : "middle"
-                  }
-                />
-              ))}
-          </div>
+    <SocketMessageContext.Provider value={{ subscriptionRef }}>
+      <div className="p-1 flex flex-col h-full w-full px-2">
+        <div className="flex w-full h-[calc(100%-85px)]">
+        <div ref={scrollRef} className="flex flex-col w-full h-full overflow-y-auto gap-y-3">
+         {enhancedMessages.map(messageObj => (
+            <Message
+              key={messageObj.id}
+              messageObj={messageObj}
+              showMessageDetails={messageObj.showMessageDetails}
+              order={messageObj.order}
+              campId={campId}
+            />
+          ))}
         </div>
-
-        <Textarea
-          placeholder="What's on your mind?"
+      </div>
+        <CampTextArea
+          placeholder="Send a message..."
           onKeyDown={(e) => {
             if (!userMessage && e.key === "Enter" && !e.shiftKey) {
               setUserMessage("");
@@ -324,7 +316,7 @@ const MessageSection = memo(({ campId }: { campId: string }) => {
           }}
           value={userMessage}
           onChange={(event) => setUserMessage(event.target.value)}
-          className="flex h-[6px] self-center w-3/4 mb-20 border-2 border-accent/50"
+          className="flex self-center mt-8 border-accent/50"
           />
       </div>
     </SocketMessageContext.Provider>
@@ -379,6 +371,7 @@ const Message = memo(
     order = "middle",
     setMessageWithContextMenuId,
     messageWithContextMenuId,
+    showMessageDetails,
     campId,
   }: {
     messageObj: CampMessage & { user: NonNullable<FiresideUser> };
@@ -420,25 +413,29 @@ const Message = memo(
               ])}
             >
            <div className="flex items-start space-x-4">
-              <Avatar className="w-16 h-16 grid place-content-center border">
+            {showMessageDetails && (
+              <Avatar className="w-12 h-12 grid place-content-center border">
                 <Image size={20} />
               </Avatar>
+              )}
               <div className="flex-1">
+              {showMessageDetails && (
+
                 <h3 className="text-base font-medium">{messageObj.user.displayName || messageObj.user.email}</h3>
-                <div className="text-sm mt-1">{messageObj.message}</div>
-                <div className="flex flex-wrap mt-4 gap-x-2">
+              )}
+            <div className={cn([
+              "text-sm mt-1",
+              showMessageDetails ? "" : "ml-16 -mt-12", 
+            ])}>
+              {messageObj.message}
+            </div>
+                <div className="flex flex-row mt-4 gap-x-2">
                         <ReactionBox
                           campId={campId}
                           messageId={messageObj.id}
+                          showMessageDetails={showMessageDetails}
                         />
-                      </div>
-              </div>
-              <div className="text-sm text-gray-500 dark:text-gray-400">
-              {formatDate(messageObj.createdAt)}
-            </div>
-            </div>
-
-              <div className="flex gap-x-1 items-center opacity-0 group-hover:opacity-100 transition-opacity">
+                      <div className="flex mb-6 gap-x-1 items-center opacity-0 group-hover:opacity-100 transition-opacity">
                       {thread?.id ? (
                         <Button
                           // from="/camp/$campId"
@@ -523,6 +520,18 @@ const Message = memo(
                         </DropdownMenuContent>
                       </DropdownMenu>
                       </div>
+                      </div>
+
+              </div>              
+              {showMessageDetails && (
+
+              <div className="text-sm text-gray-500 dark:text-gray-400">
+              {formatDate(messageObj.createdAt)}
+            </div>
+              )}
+            </div>
+
+
               </div>
           </ContextMenuTrigger>
           <ContextMenuContent>
@@ -552,7 +561,7 @@ const Message = memo(
 );
 
 const ReactionBox = memo(
-  ({ campId, messageId }: { messageId: string; campId: string }) => {
+  ({ campId, messageId, showMessageDetails }: { messageId: string; campId: string, showMessageDetails}) => {
     const reactMutation = useReactToMessageMutation({ campId });
     const { messageReactions } = useGetMessageReactions({ campId });
     const { reactionAssets } = useGetReactionAssets();
@@ -561,7 +570,7 @@ const ReactionBox = memo(
     const reactions = messageReactions.filter(
       (reaction) => reaction.messageId === messageId
     );
-
+    
     const count: Record<string, number> = {};
 
     reactions.forEach((reaction) =>
@@ -581,8 +590,11 @@ const ReactionBox = memo(
         )
         .find(({ userId }) => userId === user.id);
       return (
-        <div key={asset.id} className="flex items-center">
-          <Button
+      <div key={asset.id} className={cn([
+        "mb-6 flex items-center",
+        showMessageDetails ? "" : "ml-16",
+      ])}>
+            <Button
             onClick={() => {
               if (existingReaction) {
                 removeReactionMutation.mutate({
