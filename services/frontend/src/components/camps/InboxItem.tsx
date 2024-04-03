@@ -17,7 +17,7 @@ export const InboxItem = ({
 
   return (
     <div
-      className="w-full border-2 border-accent/50 rounded"
+      className="w-full border-accent/50 rounded"
       key={friendRequest.id}
     >
       From: {from}

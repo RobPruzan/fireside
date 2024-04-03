@@ -7,7 +7,7 @@ export const CurrentFriendItem = ({
 }) => {
   return (
     <div
-      className="w-full border-2 border-accent/50 rounded-md"
+      className="w-full border-accent/50 rounded-md"
       key={friend.id}
     >
       Email:{friend.email}

@@ -15,7 +15,7 @@ export const ExploreCard = ({
   return (
     <div
       key={camp.id}
-      className="h-52 w-52 rounded-sm border-2 border-accent/50 p-3"
+      className="h-52 w-52 rounded-sm border-accent/50 p-3"
     >
       <div className="h-1/2 grid place-items-center">
         <Image size={50} />

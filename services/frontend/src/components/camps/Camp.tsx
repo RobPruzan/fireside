@@ -141,7 +141,7 @@ export const Camp = () => {
                         >
                           <Thread threadId={v} />
                         </ResizablePanel>
-
+zz
                         {index !== searchEntries.length - 1 && (
                           <ResizableHandle
                             className="bg-accent/50"
@@ -425,7 +425,7 @@ const Message = memo(
               )}
             <div className={cn([
               "text-sm mt-1",
-              showMessageDetails ? "" : "ml-16 -mt-12", 
+              showMessageDetails ? "" : "ml-16 -mt-16", 
             ])}>
               {messageObj.message}
             </div>
