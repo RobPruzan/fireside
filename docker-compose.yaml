@@ -25,4 +25,4 @@ services:
       dockerfile: fireside.Dockerfile
     container_name: fireside_workspace_prod
     ports:
-      - 8080:8080
+      - 443:443

@@ -11,7 +11,7 @@ import { messageRouter } from "./message-endpoints";
 import { threadRouter } from "./thread-endpoints";
 import { whiteboardRoute } from "./whiteboard-endpoints";
 
-const port = 8080;
+const port = 443;
 
 export const { db } = createDB({
   connString: process.env.CONNECTION_STRING!,
@@ -85,7 +85,6 @@ const app = new Elysia()
   .onError(({ error }) => {
     return error.toString();
   })
-
   .listen({
     port,
     hostname: "0.0.0.0",
