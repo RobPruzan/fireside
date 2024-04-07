@@ -16,6 +16,7 @@
     "typescript": "^5.0.0"
   },
   "dependencies": {
+    "@bogeychan/elysia-logger": "^0.0.20",
     "@elysiajs/cors": "^1.0.0",
     "@elysiajs/server-timing": "^1.0.0",
     "@elysiajs/static": "^1.0.0",

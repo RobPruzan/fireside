@@ -10,6 +10,7 @@ import staticPlugin from "@elysiajs/static";
 import { messageRouter } from "./message-endpoints";
 import { threadRouter } from "./thread-endpoints";
 import { whiteboardRoute } from "./whiteboard-endpoints";
+import { logger } from "@bogeychan/elysia-logger";
 
 const port = 8080;
 
@@ -30,6 +31,11 @@ const app = new Elysia()
   .onBeforeHandle(({ set }) => {
     set.headers["X-Content-Type-Options"] = "nosniff";
   })
+  .use(
+    logger({
+      level: "trace",
+    })
+  )
   .use(
     cors({
       credentials: true,
