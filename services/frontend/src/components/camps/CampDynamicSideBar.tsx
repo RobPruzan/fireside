@@ -44,13 +44,13 @@ export const CampDynamicSideBar = () => {
   useScreenSize({
     width: {
       onMedium: () => {
-        console.log("on medium");
+        // console.log("on medium");
         setSideBarOpen(false);
       },
 
       onLarge: () => {
         if (!sideBarOpen) {
-          console.log("on large");
+          // console.log("on large");
           setSideBarOpen(true);
         }
       },

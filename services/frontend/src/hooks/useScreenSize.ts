@@ -19,49 +19,43 @@ export const useScreenSize = ({
   height?: OptionalSizeHandlers;
 }) => {
   useEffect(() => {
-    const body = document.getElementById("body");
-    if (!body) {
-      return;
-    }
-    const observer = new ResizeObserver(() => {
-      const w = body.clientWidth;
-
+    const handleResize = () => {
+      if (!visualViewport) {
+        return;
+      }
       if (width) {
-        // run(())
-        if (w < 300) {
-          width?.onExtraSmall?.(w);
-        } else if (w < 600) {
-          width?.onSmall?.(w);
-        } else if (w < 1000) {
-          width?.onMedium?.(w);
-        } else if (w < 1400) {
-          width?.onLarge?.(w);
-        } else if (w < 1800) {
-          width?.onExtraLarge?.(w);
+        if (visualViewport.width < 300) {
+          width?.onExtraSmall?.(visualViewport.width);
+        } else if (visualViewport.width < 600) {
+          width?.onSmall?.(visualViewport.width);
+        } else if (visualViewport.width < 1000) {
+          width?.onMedium?.(visualViewport.width);
+        } else if (visualViewport.width < 1400) {
+          width?.onLarge?.(visualViewport.width);
+        } else if (visualViewport.width < 1800) {
+          width?.onExtraLarge?.(visualViewport.width);
         }
       }
 
       if (height) {
-        const h = body.clientHeight;
-
-        if (h < 300) {
-          height?.onExtraSmall?.(h);
-        } else if (h < 600) {
-          height?.onSmall?.(h);
-        } else if (h < 1000) {
-          height?.onMedium?.(h);
-        } else if (h < 1400) {
-          height?.onLarge?.(h);
-        } else if (h < 1800) {
-          height?.onExtraLarge?.(h);
+        if (visualViewport.height < 300) {
+          height?.onExtraSmall?.(visualViewport.height);
+        } else if (visualViewport.height < 600) {
+          height?.onSmall?.(visualViewport.height);
+        } else if (visualViewport.height < 1000) {
+          height?.onMedium?.(visualViewport.height);
+        } else if (visualViewport.height < 1400) {
+          height?.onLarge?.(visualViewport.height);
+        } else if (visualViewport.height < 1800) {
+          height?.onExtraLarge?.(visualViewport.height);
         }
       }
-    });
+    };
 
-    observer.observe(body);
+    visualViewport?.addEventListener("resize", handleResize);
 
     return () => {
-      observer.disconnect();
+      visualViewport?.removeEventListener("resize", handleResize);
     };
   }, [
     width?.onExtraSmall,
