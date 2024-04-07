@@ -31,14 +31,14 @@ export const RootCampLayout = () => {
       </div>
       <div
         className={cn([
-          "min-w-[20%] h-screen overflow-y-auto flex flex-col relative",
+          "min-w-[25%] h-screen overflow-y-auto flex flex-col relative",
           !sideBarOpen && "hidden",
         ])}
       >
         <CampDynamicSideBar />
       </div>
       <div
-        className={cn(["flex h-screen", sideBarOpen ? "w-[75%]" : "w-[95%]"])}
+        className={cn(["flex h-screen", sideBarOpen ? "w-[70%]" : "w-[90%]"])}
       >
         <Outlet />
       </div>

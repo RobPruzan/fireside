@@ -241,10 +241,20 @@ const WhiteBoard = ({
   }, []);
 
   const render = (recursive = false) => {
-    const canvasEl = canvasRef.current!;
-    const parentEl = parentCanvasRef.current!;
+    const canvasEl = canvasRef.current;
+    const parentEl = parentCanvasRef.current;
 
-    const ctx = canvasEl.getContext("2d")!;
+    if (!canvasEl) {
+      return;
+    }
+    if (!parentEl) {
+      return;
+    }
+
+    const ctx = canvasEl.getContext("2d");
+    if (!ctx) {
+      return;
+    }
 
     const dpr = window.devicePixelRatio;
     const rect = parentEl.getBoundingClientRect();

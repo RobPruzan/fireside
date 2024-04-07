@@ -29,9 +29,10 @@ import {
   useUserCamps,
   useCreateCampMutation,
 } from "./camps-state";
+import { useScreenSize } from "@/hooks/useScreenSize";
 
 export const CampDynamicSideBar = () => {
-  const setSideBarOpen = useSetAtom(dynamicSideBarOpen);
+  const [sideBarOpen, setSideBarOpen] = useAtom(dynamicSideBarOpen);
   const [modalOpen, setModalOpen] = useAtom(createCampModalOpen);
   const [campSearch, setCampSearch] = useState("");
   const [newCampRoomName, setNewCampRoomName] = useState("");
@@ -39,6 +40,22 @@ export const CampDynamicSideBar = () => {
   const match = useMatchRoute();
   const search = useSearch({ from: "/root-auth/camp-layout" });
   const createCampMutation = useCreateCampMutation();
+
+  useScreenSize({
+    width: {
+      onMedium: () => {
+        console.log("on medium");
+        setSideBarOpen(false);
+      },
+
+      onLarge: () => {
+        if (!sideBarOpen) {
+          console.log("on large");
+          setSideBarOpen(true);
+        }
+      },
+    },
+  });
 
   return (
     <>
