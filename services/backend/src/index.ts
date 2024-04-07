@@ -33,7 +33,7 @@ const app = new Elysia()
   .use(
     cors({
       credentials: true,
-      origin: /^http:\/\/localhost:5173$/,
+      origin: /(^http:\/\/localhost:5173$)|(https:\/\/fireside\.ninja)|(https:\/\/www\.fireside\.ninja)/,
       allowedHeaders: ["Origin, X-Requested-With, Content-Type, Accept"],
     })
   )
