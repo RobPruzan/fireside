@@ -27,7 +27,7 @@ const getAuthCookie = ({ token }: { token: string }) =>
     httpOnly: true,
     expires: getOneYearAheadDate(),
     secure: true,
-    domain: "localhost",
+    domain: process.env.NODE_ENV === 'production' ? "fireside.ninja" : "localhost",
     path: "/",
     sameSite: "none",
   } satisfies CookieOptions & { value: unknown });

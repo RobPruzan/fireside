@@ -18,7 +18,7 @@ COPY --from=build /code /code
 
 
 WORKDIR /code/services/backend
-
+ENV NODE_ENV=production
 RUN bun run build
 RUN chmod +x /code/entrypoint.sh
 ENTRYPOINT [ "/code/entrypoint.sh" ]
