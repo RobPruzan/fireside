@@ -6,7 +6,7 @@ export const LoadingSpinner = () => {
 
 export const LoadingScreen = () => {
   return (
-    <div className="h-screen w-screen flex items-center justify-center">
+    <div className="h-[100dvh] w-screen flex items-center justify-center">
       <Loader2 className="animate-spin" />
     </div>
   );

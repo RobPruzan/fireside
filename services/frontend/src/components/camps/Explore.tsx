@@ -26,7 +26,7 @@ export const Explore = () => {
   }, []);
 
   return (
-    <div className="w-full flex flex-col justify-center items-center p-5 gap-4 h-screen overflow-y-auto">
+    <div className="w-full flex flex-col justify-center items-center p-5 gap-4 h-[100dvh] overflow-y-auto">
       {showWelcomeDialog && (
         <Dialog open={showWelcomeDialog} onOpenChange={setShowWelcomeDialog}>
           <DialogContent className="fixed left-[50%] top-[50%] z-50 grid max-w-xl translate-x-[-50%] translate-y-[-50%] gap-4 border bg-background p-8 shadow-lg duration-200 ...">

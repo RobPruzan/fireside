@@ -25,13 +25,13 @@ export const RootCampLayout = () => {
   }, []);
 
   return (
-    <div className="h-screen w-screen flex ">
+    <div className="h-[100dvh] w-screen flex ">
       <div className="w-[5%] border-r-2 border-r-accent/50 h-full p-2 px-4 min-w-fit">
         <CampStaticSideBar />
       </div>
       <div
         className={cn([
-          "min-w-[25%] h-screen overflow-y-auto flex flex-col relative",
+          "min-w-[25%] h-[100dvh] overflow-y-auto flex flex-col relative",
           !sideBarOpen && "hidden",
           "hidden lg:flex",
         ])}
@@ -39,7 +39,9 @@ export const RootCampLayout = () => {
         {/* {visualViewport} */}
         <CampDynamicSideBar />
       </div>
-      <div className={cn(["flex h-screen w-[70%]", sideBarOpen && "w-[95%]"])}>
+      <div
+        className={cn(["flex h-[100dvh] w-[70%]", sideBarOpen && "w-[95%]"])}
+      >
         <Outlet />
       </div>
     </div>
