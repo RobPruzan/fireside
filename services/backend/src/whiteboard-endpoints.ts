@@ -248,48 +248,23 @@ export const whiteboardRoute = ProtectedElysia({ prefix: "/whiteboard" })
   .post(
     "/whiteboard-image/upload/:whiteBoardId",
     async (ctx) => {
-      // console.log("incoming");
-
-      // const formData = await ctx.request.formData();
-      // console.log("after reading first time");
-      // const formValue = formData.get("whiteBoardImg");
-      // if (typeof formValue === "string") {
-      //   console.log("not bytes");
-      //   throw new Error("White board image must be bytes");
-      // }
-
-      // if (!formValue) {
-      //   console.log("no image");
-      //   throw new Error("Must upload white board image");
-      // }
       const imageId = crypto.randomUUID();
       const extension = extensionMapping[ctx.body.whiteBoardImg.type];
-      console.log("extension", extension);
-      // const file = Bun.file(`${import.meta.dir}/${imageId}${extension}`);
-
-      try {
-        console.log("first");
-        const file = Bun.file(`./uploads/${imageId}${extension}`);
-        // console.log({ file });
-        // if (formValue instanceof Blob) {
-        await Bun.write(file, ctx.body.whiteBoardImg);
-        // }
-      } catch (e) {
-        console.log(e);
-      }
-
+      const file = Bun.file(`./upload/${imageId}${extension}`);
+      await Bun.write(file, ctx.body.whiteBoardImg);
       const newImg = await db
         .insert(whiteBoardImg)
         .values({
           imgUrl: process.env.API_URL + `/upload/${imageId}${extension}`,
           id: imageId,
           whiteBoardId: ctx.params.whiteBoardId,
+          x: Number(ctx.body.x),
+          y: Number(ctx.body.y),
         })
         .returning();
       return newImg[0];
     },
-    //
-    //
+
     {
       type: "multipart/form-data",
       params: t.Object({
@@ -297,13 +272,18 @@ export const whiteboardRoute = ProtectedElysia({ prefix: "/whiteboard" })
       }),
       body: t.Object({
         whiteBoardImg: t.File(),
+        x: t.String(),
+        y: t.String(),
       }),
     }
   )
   .get(
     "/whiteboard-image/retrieve/:whiteBoardId",
-    ({ params }) => db.select().from(whiteBoardImg),
-    // .where(eq(whiteBoardImg.whiteBoardId, params.whiteBoardId)),
+    ({ params }) =>
+      db
+        .select()
+        .from(whiteBoardImg)
+        .where(eq(whiteBoardImg.whiteBoardId, params.whiteBoardId)),
     {
       params: t.Object({
         whiteBoardId: t.String(),

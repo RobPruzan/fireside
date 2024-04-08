@@ -67,9 +67,9 @@ const app = new Elysia()
       "./node_modules/@fireside/frontend/dist/index.html"
     );
 
-    const uploadFIle = Bun.file(
-      `./uploads/${path.replaceAll("/", "").replaceAll("..", "")}`
-    );
+    const uploadFIle = Bun.file(`.${path}`);
+
+    console.log("attempting to read", `.${path}`, await uploadFIle.exists());
 
     if (await uploadFIle.exists()) {
       set.headers["Content-Type"] = uploadFIle.type;
@@ -77,6 +77,7 @@ const app = new Elysia()
     }
 
     if (await assetFile.exists()) {
+      // console.log('at')
       set.headers["Content-Type"] = assetFile.type;
 
       return assetFile;
