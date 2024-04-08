@@ -12,7 +12,6 @@ import {
   campThread,
   requiredCampMessageInsertSchema,
   requiredThreadInsertSchema,
-  getISOFormatDateQuery,
 } from "@fireside/db";
 import { t, type Static } from "elysia";
 import { db } from ".";
