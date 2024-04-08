@@ -417,3 +417,19 @@ export type WhiteBoardMouse = Static<typeof whiteBoardMouseInsertSchema>;
 export const connectedToCamp = pgTable("connectToCamp", {
   id: uuid("id").defaultRandom().primaryKey(),
 });
+
+export const messageWhiteBoard = pgTable("messageWhiteBoard", {
+  id: text("id").$defaultFn(genWhiteBoardPointId).primaryKey(),
+  messageId: uuid("messageId")
+    .references(() => campMessage.id)
+    .notNull(),
+  whiteBoardId: uuid("whiteBoardId")
+    .references(() => whiteBoard.id)
+    .notNull(),
+});
+
+export const messageWhiteBoardSchema = createInsertSchema(messageWhiteBoard);
+
+export type MessageWhiteBoardInsertSchema = Static<
+  typeof messageWhiteBoardSchema
+>;

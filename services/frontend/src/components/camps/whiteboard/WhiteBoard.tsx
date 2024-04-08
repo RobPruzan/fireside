@@ -20,7 +20,7 @@ export const whiteBoardColors = [
 ] as const;
 
 import { queryOptions, useMutation, useQuery } from "@tanstack/react-query";
-import { Link } from "@tanstack/react-router";
+import { Link, useMatchRoute } from "@tanstack/react-router";
 import { Eraser, XIcon, ZoomIn, ZoomOut } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { render } from "react-dom";
@@ -37,6 +37,12 @@ type Point = {
   color: string;
 };
 
+type Options = Partial<{
+  slot: React.ReactNode;
+  readOnly: boolean;
+  scale: number;
+  canPan: boolean;
+}>;
 const cameraPOV = ({
   x,
   y,
@@ -75,29 +81,16 @@ const getWhiteBoardMousePointsOptions = ({
 
 export const WhiteBoardLoader = ({
   whiteBoardId,
+  options,
 }: {
   whiteBoardId: string;
+  options?: Options;
 }) => {
   const whiteBoardQuery = useQuery(getWhiteBoardQueryOptions({ whiteBoardId }));
 
   const whiteBoardMousePointsQuery = useQuery(
     getWhiteBoardMousePointsOptions({ whiteBoardId })
   );
-  const autoCreateWhiteBoardMutation = useMutation({
-    mutationFn: () =>
-      client.api.protected.whiteboard.create.post({ id: whiteBoardId }),
-  });
-
-  useEffect(() => {
-    if (autoCreateWhiteBoardMutation.data) {
-      return;
-    }
-    autoCreateWhiteBoardMutation.mutate();
-  }, [autoCreateWhiteBoardMutation.status]);
-
-  if (autoCreateWhiteBoardMutation.isPending) {
-    return <LoadingSection />;
-  }
 
   switch (whiteBoardMousePointsQuery.status) {
     case "error": {
@@ -121,6 +114,7 @@ export const WhiteBoardLoader = ({
           whiteBoardMousePoints={whiteBoardMousePointsQuery.data}
           whiteBoardId={whiteBoardId}
           whiteBoard={whiteBoardQuery.data}
+          options={options}
         />
       );
     }
@@ -142,6 +136,7 @@ const WhiteBoard = ({
   whiteBoard,
   whiteBoardId,
   whiteBoardMousePoints,
+  options,
 }: {
   whiteBoard: (ReturnType<typeof onlyForTheType> extends Promise<infer R>
     ? R
@@ -153,7 +148,9 @@ const WhiteBoard = ({
     ? R
     : never)["data"];
   whiteBoardId: string;
+  options?: Options;
 }) => {
+  const match = useMatchRoute();
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [isMouseDown, setIsMouseDown] = useState(false);
   const currentMousePositionRef = useRef<{ x: number; y: number } | null>(null);
@@ -267,6 +264,10 @@ const WhiteBoard = ({
 
     ctx.scale(dpr, dpr);
 
+    if (options?.scale) {
+      ctx.scale(options.scale, options.scale);
+    }
+
     ctx.save();
 
     ctx.translate(camera.x, camera.y);
@@ -367,6 +368,9 @@ const WhiteBoard = ({
   }, [render]);
 
   useEffect(() => {
+    if (options?.canPan === false) {
+      return;
+    }
     const handleWheel = (e: WheelEvent) => {
       e.preventDefault();
       setCamera((prev) => ({ x: prev.x - e.deltaX, y: prev.y - e.deltaY }));
@@ -389,51 +393,43 @@ const WhiteBoard = ({
     canvasRef.current?.addEventListener("wheel", handleWheel);
 
     return () => canvasRef.current?.removeEventListener("wheel", handleWheel);
-  }, []);
+  }, [options?.canPan]);
 
   return (
     <div ref={parentCanvasRef} className="w-full h-full relative">
-      <Link
-        from="/camp/$campId"
-        preload={false}
-        search={(prev) => ({ ...prev, whiteBoardId: undefined })}
-        className={buttonVariants({
-          className: "absolute top-1 right-1 ",
-          variant: "ghost",
-        })}
-      >
-        <XIcon className="text-black" />
-      </Link>
-
-      <div className="absolute bottom-2 border border-gray-200 bg-opacity-50 backdrop-blur-md right-[7px] rounded-lg p-3  flex justify-evenly items-center w-[95%]">
-        {whiteBoardColors.map((color) => (
+      {options?.slot}
+      {!options?.readOnly && (
+        <div className="absolute bottom-2 border border-gray-200 bg-opacity-50 backdrop-blur-md right-[7px] rounded-lg p-3  flex justify-evenly items-center w-[95%]">
+          {whiteBoardColors.map((color) => (
+            <Button
+              key={color}
+              onClick={() => setSelectedTool({ kind: "marker", color: color })}
+              style={{
+                backgroundColor: color,
+                // borderColor:
+              }}
+              className={cn([
+                "rounded-full w-10 h-10 hover:bg-inherit transition",
+                color === "white" && "border",
+                selectedTool.kind === "marker" &&
+                  color === selectedTool.color &&
+                  "border-2 border-inherit/50  scale-110",
+              ])}
+            />
+          ))}
           <Button
-            key={color}
-            onClick={() => setSelectedTool({ kind: "marker", color: color })}
-            style={{
-              backgroundColor: color,
-              // borderColor:
-            }}
+            onClick={() => setSelectedTool({ kind: "eraser" })}
+            variant={"ghost"}
             className={cn([
-              "rounded-full w-10 h-10 hover:bg-inherit transition",
-              color === "white" && "border",
-              selectedTool.kind === "marker" &&
-                color === selectedTool.color &&
-                "border-2 border-inherit/50  scale-110",
+              "rounded-full w-10 h-10 p-0 bg-white hover:bg-inherit transition",
+              selectedTool.kind === "eraser" && "scale-110 border-2 ",
             ])}
-          />
-        ))}
-        <Button
-          onClick={() => setSelectedTool({ kind: "eraser" })}
-          variant={"ghost"}
-          className={cn([
-            "rounded-full w-10 h-10 p-0 bg-white hover:bg-inherit transition",
-            selectedTool.kind === "eraser" && "scale-110 border-2 ",
-          ])}
-        >
-          <Eraser className="text-black" />
-        </Button>
-      </div>
+          >
+            <Eraser className="text-black" />
+          </Button>
+        </div>
+      )}
+
       <canvas
         onMouseLeave={() => {
           setIsMouseDown(false);
@@ -482,6 +478,9 @@ const WhiteBoard = ({
           }
           switch (selectedTool.kind) {
             case "marker": {
+              if (options?.readOnly) {
+                return;
+              }
               const newPoint = {
                 ...mouseCords,
                 color: selectedTool.color,

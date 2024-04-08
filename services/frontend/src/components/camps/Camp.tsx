@@ -7,6 +7,15 @@ import {
   useParams,
   useSearch,
 } from "@tanstack/react-router";
+import {
+  Dialog,
+  DialogTrigger,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "../ui/dialog";
 import { Input } from "../ui/input";
 import {
   DropdownMenu,
@@ -42,15 +51,20 @@ import { cn } from "@/lib/utils";
 import {
   Edit,
   Image,
+  Lock,
   MessageCircle,
   MessageCircleIcon,
+  Move,
   Pencil,
+  Presentation,
   SmilePlus,
   Trash,
+  Unlock,
+  XIcon,
 } from "lucide-react";
 import { Button, buttonVariants } from "../ui/button";
 import { Avatar } from "../ui/avatar";
-import { hasKey, run } from "@fireside/utils";
+import { Nullish, hasKey, run } from "@fireside/utils";
 import { CampMessage } from "@fireside/db";
 import {
   useGetMessages,
@@ -69,10 +83,16 @@ import { useGetThreads } from "./thread-state";
 import { toast } from "../ui/use-toast";
 import { Textarea } from "../ui/textarea";
 import { client } from "@/edenClient";
-import { useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { PublishedMessage } from "@fireside/backend/src/message-endpoints";
 import { threadId } from "worker_threads";
 import { WhiteBoardLoader } from "./whiteboard/WhiteBoard";
+import {
+  useCreateWhiteBoardMessageMutation,
+  useCreateWhiteBoardMutation,
+  useGetWhiteBoardMessages,
+} from "./whiteboard/white-board-state";
+import { LoadingSection } from "../ui/loading";
 const subscribeFn = client.api.protected.message.ws({
   campId: "anything",
 }).subscribe;
@@ -159,7 +179,27 @@ export const Camp = () => {
                           minSize={30}
                           className={cn([" w-full"])}
                         >
-                          <WhiteBoardLoader whiteBoardId={v} />
+                          <WhiteBoardLoader
+                            whiteBoardId={v}
+                            options={{
+                              slot: (
+                                <Link
+                                  from="/camp/$campId"
+                                  preload={false}
+                                  search={(prev) => ({
+                                    ...prev,
+                                    whiteBoardId: undefined,
+                                  })}
+                                  className={buttonVariants({
+                                    className: "absolute top-1 right-1 ",
+                                    variant: "ghost",
+                                  })}
+                                >
+                                  <XIcon className="text-black" />
+                                </Link>
+                              ),
+                            }}
+                          />
                         </ResizablePanel>
 
                         {index !== searchEntries.length - 1 && (
@@ -189,7 +229,16 @@ const MessageSection = memo(({ campId }: { campId: string }) => {
   const queryClient = useQueryClient();
   const { messagesQueryKey } = useGetMessages({ campId });
   const { threadsQueryKey } = useGetThreads({ campId });
+  const { whiteBoardMessages } = useGetWhiteBoardMessages({ campId });
+  const createWhiteBoardMessageMutation = useCreateWhiteBoardMessageMutation({
+    campId,
+  });
+  const createWhiteBoardMutation = useCreateWhiteBoardMutation();
+  const [whiteBoardDialogOpen, setWhiteBoardDialogOpen] = useState(false);
   const user = useDefinedUser();
+  const [nonCreatedMessageWhiteBoardInfo, setNonCreatedMessageWhiteBoardInfo] =
+    useState<null | { whiteBoardId: string; attach: boolean }>(null);
+
   useEffect(() => {
     const lastChild = scrollRef.current?.lastChild!;
     if (lastChild instanceof HTMLElement) {
@@ -241,7 +290,7 @@ const MessageSection = memo(({ campId }: { campId: string }) => {
   const [messageWithContextMenuId, setMessageWithContextMenuId] = useState<
     null | string
   >(null);
-
+  console.log("wtf", createWhiteBoardMutation.variables?.whiteBoardId);
   return (
     <SocketMessageContext.Provider
       value={{
@@ -262,6 +311,11 @@ const MessageSection = memo(({ campId }: { campId: string }) => {
               )
               .map((messageObj, index) => (
                 <Message
+                  messageWhiteBoardId={
+                    whiteBoardMessages.find(
+                      ({ messageId }) => messageObj.id === messageId
+                    )?.whiteBoardId
+                  }
                   campId={campId}
                   key={messageObj.id}
                   messageObj={messageObj}
@@ -278,50 +332,162 @@ const MessageSection = memo(({ campId }: { campId: string }) => {
               ))}
           </div>
         </div>
+        <div className="relative">
+          <Textarea
+            placeholder="Send a question..."
+            onKeyDown={(e) => {
+              if (!userMessage && e.key === "Enter" && !e.shiftKey) {
+                setUserMessage("");
+                e.preventDefault();
+                return;
+              }
 
-        <Textarea
-          placeholder="Send a question..."
-          onKeyDown={(e) => {
-            if (!userMessage && e.key === "Enter" && !e.shiftKey) {
-              setUserMessage("");
-              e.preventDefault();
-              return;
-            }
+              if (e.key === "Enter" && !e.shiftKey) {
+                const parentMessageId = crypto.randomUUID();
 
-            if (e.key === "Enter" && !e.shiftKey) {
-              const parentMessageId = crypto.randomUUID();
+                const newMessage = {
+                  campId,
+                  createdAt: new Date().toISOString(),
+                  id: parentMessageId,
+                  message: userMessage,
+                  // userId: user.id
+                };
+                const newThread = {
+                  createdAt: new Date().toISOString(),
+                  id: crypto.randomUUID(),
+                  parentMessageId: parentMessageId,
+                };
 
-              const newMessage = {
-                campId,
-                createdAt: new Date().toISOString(),
-                id: parentMessageId,
-                message: userMessage,
-                // userId: user.id
-              };
-              const newThread = {
-                createdAt: new Date().toISOString(),
-                id: crypto.randomUUID(),
-                parentMessageId: parentMessageId,
-              };
+                subscriptionRef.current?.send({
+                  message: newMessage,
+                  thread: newThread,
+                });
 
-              subscriptionRef.current?.send({
-                message: newMessage,
-                thread: newThread,
-              });
+                updateMessageCache({
+                  message: newMessage,
+                  thread: newThread,
+                });
 
-              updateMessageCache({
-                message: newMessage,
-                thread: newThread,
-              });
+                if (nonCreatedMessageWhiteBoardInfo) {
+                  createWhiteBoardMessageMutation.mutate({
+                    messageId: parentMessageId,
+                    whiteBoardId: nonCreatedMessageWhiteBoardInfo.whiteBoardId,
+                    id: crypto.randomUUID(),
+                  });
+                }
 
-              setUserMessage("");
-              e.preventDefault();
-            }
-          }}
-          value={userMessage}
-          onChange={(event) => setUserMessage(event.target.value)}
-          className="flex h-[50px] border-2 border-accent/50"
-        />
+                // await createWhiteBoardMutation.mutateAsync({
+                //   whiteBoardId: messageObj.id,
+                // });
+
+                // createMessageWhiteBoard.mutate({
+                //   messageId: parentMessageId,
+                //   whiteBoardId:
+                // })
+                setNonCreatedMessageWhiteBoardInfo(null);
+                setUserMessage("");
+                e.preventDefault();
+              }
+            }}
+            value={userMessage}
+            onChange={(event) => setUserMessage(event.target.value)}
+            className="flex h-[50px] border-2 border-accent/50 relative"
+          />
+
+          <Dialog
+            open={whiteBoardDialogOpen}
+            onOpenChange={setWhiteBoardDialogOpen}
+          >
+            <DialogTrigger asChild>
+              <Button
+                onClick={() => {
+                  if (nonCreatedMessageWhiteBoardInfo) {
+                    return;
+                  }
+                  const whiteBoardId = crypto.randomUUID();
+                  createWhiteBoardMutation.mutate({
+                    whiteBoardId,
+                  });
+                  setNonCreatedMessageWhiteBoardInfo({
+                    whiteBoardId,
+                    attach: false,
+                  });
+                }}
+                variant={"ghost"}
+                className={cn([
+                  "absolute top-4 right-3 text-white ",
+                  nonCreatedMessageWhiteBoardInfo?.attach &&
+                    nonCreatedMessageWhiteBoardInfo.attach &&
+                    "h-[50px] px-0 w-[100px]",
+                ])}
+              >
+                {nonCreatedMessageWhiteBoardInfo?.whiteBoardId &&
+                nonCreatedMessageWhiteBoardInfo.attach ? (
+                  <div className="h-[50px] w-[100px]">
+                    <WhiteBoardLoader
+                      whiteBoardId={
+                        nonCreatedMessageWhiteBoardInfo.whiteBoardId
+                      }
+                      options={{
+                        readOnly: true,
+                        scale: 0.08,
+                      }}
+                    />
+                  </div>
+                ) : (
+                  <Presentation size={20} />
+                )}
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="min-h-[90vh] min-w-[90vw]">
+              <DialogHeader>
+                <DialogTitle>Create Whiteboard</DialogTitle>
+                <DialogDescription></DialogDescription>
+              </DialogHeader>
+
+              {createWhiteBoardMutation.isPending ||
+              !createWhiteBoardMutation.variables?.whiteBoardId ? (
+                <>
+                  <LoadingSection />
+                </>
+              ) : (
+                <WhiteBoardLoader
+                  whiteBoardId={createWhiteBoardMutation.variables.whiteBoardId}
+                />
+              )}
+
+              <DialogFooter>
+                <Button
+                  onClick={() => {
+                    setNonCreatedMessageWhiteBoardInfo((prev) =>
+                      prev ? { ...prev, attach: false } : null
+                    );
+                    setWhiteBoardDialogOpen(false);
+                  }}
+                  variant={"destructive"}
+                >
+                  Remove
+                </Button>
+                <Button
+                  variant={"outline"}
+                  className="min-w-[78px]"
+                  onClick={() => {
+                    setNonCreatedMessageWhiteBoardInfo((prev) =>
+                      prev ? { ...prev, attach: true } : null
+                    );
+
+                    setWhiteBoardDialogOpen(false);
+                    // createCampMutation.mutate({
+                    //   name: newCampRoomName,
+                    // });
+                  }}
+                >
+                  Attach
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
     </SocketMessageContext.Provider>
   );
@@ -376,19 +542,28 @@ const Message = memo(
     setMessageWithContextMenuId,
     messageWithContextMenuId,
     campId,
+    messageWhiteBoardId,
   }: {
     messageObj: CampMessage & { user: NonNullable<FiresideUser> };
     order?: "first" | "last" | "middle";
     setMessageWithContextMenuId: Setter<string | null>;
     messageWithContextMenuId: string | null;
     campId: string;
+    messageWhiteBoardId: Nullish<string>;
   }) => {
     const { threads } = useGetThreads({ campId });
     const navigate = useNavigate({ from: "/camp/$campId" });
     const thread = threads.find(
       (thread) => thread.parentMessageId === messageObj.id
     );
+    // const [ca]
+    const createWhiteBoardMutation = useCreateWhiteBoardMutation();
+    // const createWhiteBoardMutation = useMutation({
+    //   mutationFn: ({ whiteBoardId }: { whiteBoardId: string }) =>
+    //     client.api.protected.whiteboard.create.post({ id: whiteBoardId }),
+    // });
 
+    const [whiteBoardLocked, setWhiteBoardLocked] = useState(false);
     return (
       <div
         className={cn([
@@ -434,12 +609,6 @@ const Message = memo(
                     <div className="flex gap-x-1 items-center">
                       {thread?.id ? (
                         <Button
-                          // from="/camp/$campId"
-                          // search={(prev) => ({
-                          // ...prev,
-                          // threadId: thread.id,
-                          // })}
-                          // preload={false}
                           onClick={() => {
                             navigate({
                               search: (prev) => ({
@@ -448,10 +617,6 @@ const Message = memo(
                               }),
                             });
                           }}
-                          // params={{
-                          //   threadId: thread?.id,
-                          //   campId: campId,
-                          // }}
                           variant={"ghost"}
                           className="  h-fit py-1 pl-1 px-1 pb-1 pt-1 pr-1  "
                         >
@@ -477,30 +642,26 @@ const Message = memo(
                           />
                         </Button>
                       )}
-                      <Button
-                        // from=""
-                        // from="/camp/$campId"
-                        // search={(prev) => ({
-                        //   ...prev,
-                        //   whiteBoardId: crypto.randomUUID(),
-                        // })}
-                        // preload={false}
+                      {/* <Button
                         variant={"ghost"}
-                        onClick={() => {
+                        onClick={async () => {
+                          await createWhiteBoardMutation.mutateAsync({
+                            whiteBoardId: messageObj.id,
+                          });
                           navigate({
                             search: (prev) => ({
                               ...prev,
-                              whiteBoardId: crypto.randomUUID(),
+                              whiteBoardId: messageObj.id,
                             }),
                           });
                         }}
                         className={cn([
                           "h-full py-1 px-1",
-                          "  h-fit  py-1  px-1 pb-1 pt-1 pr-1 pl-1",
+                          "h-fit  py-1  px-1 pb-1 pt-1 pr-1 pl-1",
                         ])}
                       >
                         <Pencil className="text-primary" size={20} />
-                      </Button>
+                      </Button> */}
 
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
@@ -525,8 +686,29 @@ const Message = memo(
                   </div>
                 </div>
               </div>
-              <div className="max-w-none break-words ">
+              <div className="max-w-none break-words max-h-[700px]">
                 {messageObj.message}
+
+                {messageWhiteBoardId && (
+                  <WhiteBoardLoader
+                    options={{
+                      canPan: whiteBoardLocked,
+                      readOnly: !whiteBoardLocked,
+                      slot: (
+                        <Button
+                          onClick={() => {
+                            setWhiteBoardLocked((prev) => !prev);
+                          }}
+                          className="absolute top-5 right-5"
+                        >
+                          {/* <Lock /> */}
+                          {whiteBoardLocked ? <Unlock /> : <Lock />}
+                        </Button>
+                      ),
+                    }}
+                    whiteBoardId={messageWhiteBoardId}
+                  />
+                )}
               </div>
             </div>
           </ContextMenuTrigger>

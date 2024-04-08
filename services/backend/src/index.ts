@@ -39,7 +39,8 @@ const app = new Elysia()
   .use(
     cors({
       credentials: true,
-      origin: /(^http:\/\/localhost:5173$)|(https:\/\/fireside\.ninja)|(https:\/\/www\.fireside\.ninja)/,
+      origin:
+        /(^http:\/\/localhost:5173$)|(https:\/\/fireside\.ninja)|(https:\/\/www\.fireside\.ninja)/,
       allowedHeaders: ["Origin, X-Requested-With, Content-Type, Accept"],
     })
   )
@@ -97,5 +98,6 @@ const app = new Elysia()
     hostname: "0.0.0.0",
   });
 
-console.log(`hiRunning on port ${port}`);
+console.log(`Running on port ${port}`);
 export type App = typeof app;
+//

@@ -16,6 +16,8 @@ import {
   getTableColumns,
   type User,
   safeUserSelectSchema,
+  messageWhiteBoardSchema,
+  messageWhiteBoard,
 } from "@fireside/db";
 import { ProtectedElysia } from "./lib";
 import { db } from ".";
@@ -149,6 +151,18 @@ export const whiteboardRoute = ProtectedElysia({ prefix: "/whiteboard" })
 
     { params: t.Object({ whiteBoardId: t.String() }) }
   )
+  .post(
+    "/message/create",
+    ({ body }) => db.insert(messageWhiteBoard).values(body),
+    {
+      body: messageWhiteBoardSchema,
+    }
+  )
+  .get("/message/retrieve/:campId", () => db.select().from(messageWhiteBoard), {
+    params: t.Object({
+      campId: t.String(),
+    }),
+  })
   .ws("/ws/:whiteBoardId", {
     params: t.Object({
       whiteBoardId: t.String(),
@@ -189,8 +203,6 @@ export const whiteboardRoute = ProtectedElysia({ prefix: "/whiteboard" })
           return;
         }
         case "mouse": {
-          // await db.insert(whiteBoardMouse).values(data);
-
           const existingMousePoint = (
             await db
               .select()

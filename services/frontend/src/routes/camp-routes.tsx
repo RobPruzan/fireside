@@ -24,6 +24,7 @@ import {
 import { Thread } from "@/components/camps/Thread";
 import { promise, z } from "zod";
 import { getThreadsOptions } from "@/components/camps/thread-state";
+import { getMessageWhiteBoardsOptions } from "@/components/camps/whiteboard/white-board-state";
 // import { WhiteBoard } from "@/components/camps/whiteboard/WhiteBoard";
 
 export const campLayoutRoute = createRoute({
@@ -84,6 +85,7 @@ export const campRoute = createRoute({
     Promise.all([
       queryClient.ensureQueryData(getMessageReactionOptions({ campId })),
       queryClient.ensureQueryData(getMessagesOptions({ campId })),
+      queryClient.ensureQueryData(getMessageWhiteBoardsOptions({ campId })),
     ]),
   component: Camp,
   pendingComponent: LoadingSection,
