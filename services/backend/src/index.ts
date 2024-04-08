@@ -31,11 +31,11 @@ const app = new Elysia()
   .onBeforeHandle(({ set }) => {
     set.headers["X-Content-Type-Options"] = "nosniff";
   })
-  .use(
-    logger({
-      level: "trace",
-    })
-  )
+  // .use(
+  //   logger({
+  //     level: "trace",
+  //   })
+  // )
   .use(
     cors({
       credentials: true,
@@ -67,17 +67,19 @@ const app = new Elysia()
       "./node_modules/@fireside/frontend/dist/index.html"
     );
 
-    if (await assetFile.exists()) {
-      set.headers["Content-Type"] = assetFile.type;
-      // if (assetFile.name?.includes(".css" ||  publicFile.type === "javascript")) {
+    const uploadFIle = Bun.file(`.${path}`);
 
-      // }
-      // if (assetFile.name?.includes(".js")) {
-      //   set.headers["Content-Type"] = publicFile.type
-      // }
-      // if (assetFile.name?.includes(".html")) {
-      //   set.headers["Content-Type"] = publicFile.type
-      // }
+    console.log("attempting to read", `.${path}`, await uploadFIle.exists());
+
+    if (await uploadFIle.exists()) {
+      set.headers["Content-Type"] = uploadFIle.type;
+      return uploadFIle;
+    }
+
+    if (await assetFile.exists()) {
+      // console.log('at')
+      set.headers["Content-Type"] = assetFile.type;
+
       return assetFile;
     }
 

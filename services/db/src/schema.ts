@@ -1,5 +1,5 @@
 import { Static, Type as t } from "@sinclair/typebox";
-import { InferSelectModel } from "drizzle-orm";
+import { InferSelectModel, SQL, sql } from "drizzle-orm";
 import {
   serial,
   timestamp,
@@ -12,6 +12,7 @@ import {
   AnyPgColumn,
   text,
   doublePrecision,
+  PgColumn,
 } from "drizzle-orm/pg-core";
 import { createInsertSchema, createSelectSchema } from "drizzle-typebox";
 import { DatesToString } from "@fireside/utils";
@@ -31,7 +32,7 @@ export const user = pgTable("user", {
   email: text("email").notNull(),
   password: text("password").notNull(),
   role: text("role").$type<"instructor" | "student">().notNull(),
-  createdAt: timestamp("createdAt", { mode: "string" })
+  createdAt: timestamp("createdAt", { mode: "string", withTimezone: true })
     .$defaultFn(() => new Date().toISOString())
     .notNull(),
   updatedAt: timestamp("updated_at", { mode: "string" }),
@@ -60,7 +61,7 @@ export const user_to_user = pgTable("friend", {
 export const camp = pgTable("camp", {
   id: uuid("id").defaultRandom().primaryKey(),
   name: text("name").notNull(),
-  createdAt: timestamp("createdAt", { mode: "string" })
+  createdAt: timestamp("createdAt", { mode: "string", withTimezone: true })
     .$defaultFn(() => new Date().toISOString())
     .notNull(),
   updatedAt: timestamp("updated_at", { mode: "string" }),
@@ -70,6 +71,10 @@ export type FiresideCamp = InferSelectModel<typeof camp>;
 
 export const campSchema = createInsertSchema(camp);
 
+// export function getISOFormatDateQuery(dateTimeColumn: PgColumn): SQL<string> {
+//   // Using TO_CHAR in PostgreSQL to format the date in ISO 8601 format
+//   return sql<string>`TO_CHAR(${dateTimeColumn}, 'YYYY-MM-DD"T"HH24:MI:SSTZ')`;
+// }
 export const campMessage = pgTable("campMessage", {
   id: uuid("id").defaultRandom().primaryKey(),
   userId: uuid("userId")
@@ -79,7 +84,7 @@ export const campMessage = pgTable("campMessage", {
     .notNull()
     .references(() => camp.id),
   message: text("message").notNull(),
-  createdAt: timestamp("createdAt", { mode: "string" })
+  createdAt: timestamp("createdAt", { mode: "string", withTimezone: true })
     .$defaultFn(() => new Date().toISOString())
     .notNull(),
 });
@@ -92,7 +97,7 @@ export const campThread = pgTable("campThread", {
   parentMessageId: uuid("campMessage")
     .notNull()
     .references(() => campMessage.id),
-  createdAt: timestamp("createdAt", { mode: "string" })
+  createdAt: timestamp("createdAt", { mode: "string", withTimezone: true })
     .$defaultFn(() => new Date().toISOString())
     .notNull(),
 });
@@ -116,7 +121,7 @@ export const campThreadMessage = pgTable("campThreadMessage", {
     .notNull()
     .references(() => campThread.id),
   message: text("message").notNull(),
-  createdAt: timestamp("createdAt", { mode: "string" })
+  createdAt: timestamp("createdAt", { mode: "string", withTimezone: true })
     .$defaultFn(() => new Date().toISOString())
     .notNull(),
 });
@@ -166,7 +171,7 @@ export const bonfire = pgTable("bonfire", {
     .references(() => camp.id)
     .notNull(),
   name: text("name").notNull(),
-  createdAt: timestamp("createdAt", { mode: "string" })
+  createdAt: timestamp("createdAt", { mode: "string", withTimezone: true })
     .$defaultFn(() => new Date().toISOString())
     .notNull(),
   updatedAt: timestamp("updated_at", { mode: "string" }),
@@ -182,7 +187,7 @@ export const userToBonfire = pgTable("userToBonfire", {
   bonfireId: uuid("bonfireId")
     .references(() => bonfire.id)
     .notNull(),
-  joinedAt: timestamp("createdAt", { mode: "string" })
+  joinedAt: timestamp("createdAt", { mode: "string", withTimezone: true })
     .$defaultFn(() => new Date().toISOString())
     .notNull(),
 });
@@ -196,7 +201,7 @@ export const friendRequest = pgTable("friendRequest", {
     .references(() => user.id)
     .notNull(),
   deleted: boolean("deleted").default(false),
-  createdAt: timestamp("createdAt", { mode: "string" })
+  createdAt: timestamp("createdAt", { mode: "string", withTimezone: true })
     .$defaultFn(() => new Date().toISOString())
     .notNull(),
 });
@@ -211,7 +216,7 @@ export const friend = pgTable("friend", {
     .references(() => user.id)
     .notNull(),
   // problem for later
-  // createdAt: timestamp("createdAt", { mode: "string" })
+  // createdAt: timestamp("createdAt", { mode: "string",withTimezone: true })
   //   .$defaultFn(() => new Date().toISOString())
   //   .notNull(),
 });
@@ -226,7 +231,7 @@ export const userMessageReaction = pgTable("userMessageReaction", {
   messageId: uuid("messageId")
     .references(() => campMessage.id)
     .notNull(),
-  createdAt: timestamp("createdAt", { mode: "string" })
+  createdAt: timestamp("createdAt", { mode: "string", withTimezone: true })
     .$defaultFn(() => new Date().toISOString())
     .notNull(),
   reactionAssetId: uuid("reactionAssetId")
@@ -433,3 +438,15 @@ export const messageWhiteBoardSchema = createInsertSchema(messageWhiteBoard);
 export type MessageWhiteBoardInsertSchema = Static<
   typeof messageWhiteBoardSchema
 >;
+
+export const whiteBoardImg = pgTable("whiteBoardImg", {
+  id: text("id").$defaultFn(genWhiteBoardPointId).primaryKey(),
+  whiteBoardId: uuid("whiteBoardId").references(() => whiteBoard.id, {
+    onDelete: "cascade",
+  }),
+  imgUrl: text("imgUrl").notNull(),
+  x: doublePrecision("x").notNull(),
+  y: doublePrecision("y").notNull(),
+});
+
+export type WhiteBoardImgSelect = InferSelectModel<typeof whiteBoardImg>;

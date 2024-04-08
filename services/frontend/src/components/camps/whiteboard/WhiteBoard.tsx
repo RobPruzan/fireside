@@ -1,5 +1,5 @@
 import { Button, buttonVariants } from "@/components/ui/button";
-import { LoadingSection } from "@/components/ui/loading";
+import { LoadingSection, LoadingSpinner } from "@/components/ui/loading";
 import { client, promiseDataOrThrow } from "@/edenClient";
 import { cn } from "@/lib/utils";
 import { queryClient } from "@/query";
@@ -7,7 +7,7 @@ import {
   TransformedWhiteBoardPointGroup,
   WhiteBoardPublish,
 } from "@fireside/backend/src/whiteboard-endpoints";
-import { WhiteBoardMouse } from "@fireside/db";
+import { WhiteBoardImgSelect, WhiteBoardMouse } from "@fireside/db";
 
 export const genWhiteBoardPointId = () =>
   "white_board_point_" + crypto.randomUUID();
@@ -25,6 +25,7 @@ import { Eraser, XIcon, ZoomIn, ZoomOut } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { render } from "react-dom";
 import { useDefinedUser } from "../camps-state";
+import { Input } from "@/components/ui/input";
 
 const subscribeFn = client.api.protected.whiteboard.ws({
   whiteBoardId: "who cares",
@@ -79,6 +80,20 @@ const getWhiteBoardMousePointsOptions = ({
       ),
   });
 
+const getWhiteBoardImagesOptions = ({
+  whiteBoardId,
+}: {
+  whiteBoardId: string;
+}) =>
+  queryOptions({
+    queryKey: ["white-board-images", whiteBoardId],
+    queryFn: () =>
+      promiseDataOrThrow(
+        client.api.protected.whiteboard["whiteboard-image"]
+          .retrieve({ whiteBoardId })
+          .get()
+      ),
+  });
 export const WhiteBoardLoader = ({
   whiteBoardId,
   options,
@@ -91,6 +106,21 @@ export const WhiteBoardLoader = ({
   const whiteBoardMousePointsQuery = useQuery(
     getWhiteBoardMousePointsOptions({ whiteBoardId })
   );
+
+  const whiteBoardImagesQuery = useQuery(
+    getWhiteBoardImagesOptions({ whiteBoardId })
+  );
+
+  console.log({ whiteBoardImagesQuery });
+
+  switch (whiteBoardImagesQuery.status) {
+    case "error": {
+      return <div> something went wrong</div>;
+    }
+    case "pending": {
+      return <LoadingSection />;
+    }
+  }
 
   switch (whiteBoardMousePointsQuery.status) {
     case "error": {
@@ -111,6 +141,7 @@ export const WhiteBoardLoader = ({
     case "success": {
       return (
         <WhiteBoard
+          whiteBoardImages={whiteBoardImagesQuery.data}
           whiteBoardMousePoints={whiteBoardMousePointsQuery.data}
           whiteBoardId={whiteBoardId}
           whiteBoard={whiteBoardQuery.data}
@@ -128,15 +159,12 @@ const onlyForTheTypeAgain = client.api.protected.whiteboard.mouse.retrieve({
   whiteBoardId: "whatever",
 }).get;
 
-// type EdenData<T> = (ReturnType<T> extends Promise<infer R>
-//   ? R
-//   : never)["data"]
-
 const WhiteBoard = ({
   whiteBoard,
   whiteBoardId,
   whiteBoardMousePoints,
   options,
+  whiteBoardImages,
 }: {
   whiteBoard: (ReturnType<typeof onlyForTheType> extends Promise<infer R>
     ? R
@@ -149,8 +177,10 @@ const WhiteBoard = ({
     : never)["data"];
   whiteBoardId: string;
   options?: Options;
+  whiteBoardImages: Array<WhiteBoardImgSelect>;
 }) => {
   const match = useMatchRoute();
+  const whiteBoardImagesOptions = getWhiteBoardImagesOptions({ whiteBoardId });
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [isMouseDown, setIsMouseDown] = useState(false);
   const currentMousePositionRef = useRef<{ x: number; y: number } | null>(null);
@@ -171,6 +201,42 @@ const WhiteBoard = ({
   const [erased, setErased] = useState<Array<{ x: number; y: number }>>([]); // todo
 
   const mouseCords = currentMousePositionRef.current;
+
+  const uploadImgMutation = useMutation({
+    mutationFn: async ({
+      file,
+      x,
+      y,
+    }: {
+      file: FileList;
+      x: number;
+      y: number;
+    }) => {
+      const formData = new FormData();
+
+      formData.append("whiteBoardImg", file[0]);
+      formData.append("x", x.toString());
+      formData.append("y", y.toString());
+      const res = await fetch(
+        import.meta.env.VITE_API_URL +
+          `/api/protected/whiteboard/whiteboard-image/upload/${whiteBoardId}`,
+        {
+          method: "POST",
+          body: formData,
+          credentials: "include",
+        }
+      );
+
+      return res.json() as Promise<WhiteBoardImgSelect>;
+    },
+
+    onSuccess: (data) => {
+      queryClient.setQueryData(whiteBoardImagesOptions.queryKey, (prev) => [
+        ...(prev ?? []),
+        data,
+      ]);
+    },
+  });
 
   const parentCanvasRef = useRef<HTMLDivElement | null>(null);
   const [camera, setCamera] = useState({ x: 0, y: 0 });
@@ -272,6 +338,16 @@ const WhiteBoard = ({
 
     ctx.translate(camera.x, camera.y);
 
+    whiteBoardImages.forEach((whiteBoardImg) => {
+      const image = new Image(200, 200);
+      image.src = whiteBoardImg.imgUrl;
+      console.log({ wbImage: image, whiteBoardImg });
+      ctx.drawImage(image, whiteBoardImg.x, whiteBoardImg.y, 200, 200);
+
+      // ctx.font = "10px";
+      // ctx.fillText(mousePoint.user.email, mousePoint.x - 15, mousePoint.y - 5);
+    });
+
     const drawLine = ({
       points,
       initialPoint,
@@ -333,7 +409,7 @@ const WhiteBoard = ({
     whiteBoardMousePoints?.forEach((mousePoint) => {
       const image = new Image(15, 15);
       image.src = "/pencil-mouse.png";
-      console.log({ image });
+      // console.log({ image });
       ctx.drawImage(image, mousePoint.x, mousePoint.y, 20, 20);
 
       ctx.font = "10px";
@@ -365,6 +441,14 @@ const WhiteBoard = ({
 
   useEffect(() => {
     render(true);
+
+    const intervalId = setInterval(() => {
+      render(false);
+    }, 250); // run every 250ms to catch any stale changes not being reacted to
+
+    return () => {
+      clearInterval(intervalId);
+    };
   }, [render]);
 
   useEffect(() => {
@@ -399,6 +483,29 @@ const WhiteBoard = ({
     <div ref={parentCanvasRef} className="w-full h-full relative">
       {options?.slot}
       {!options?.readOnly && (
+        <Input
+          id="img-upload"
+          onChange={() => {
+            const files = (
+              document.getElementById("img-upload") as HTMLInputElement
+            ).files!;
+            uploadImgMutation.mutate({
+              file: files,
+              x: -camera.x + parentCanvasRef.current!.clientWidth / 2,
+              y: -camera.y + parentCanvasRef.current!.clientHeight / 2,
+            });
+          }}
+          className="absolute top-3 left-3 bg-white border-muted w-[100px] p-1 h-fit text-xs transition hover:bg-gray-100  hover:text-white"
+          type="file"
+        />
+      )}
+      {uploadImgMutation.isPending && (
+        <span className="absolute top-3 left-28 text-black">
+          <LoadingSpinner />
+        </span>
+      )}
+
+      {!options?.readOnly && (
         <div className="absolute bottom-2 border border-gray-200 bg-opacity-50 backdrop-blur-md right-[7px] rounded-lg p-3  flex justify-evenly items-center w-[95%]">
           {whiteBoardColors.map((color) => (
             <Button
@@ -427,6 +534,9 @@ const WhiteBoard = ({
           >
             <Eraser className="text-black" />
           </Button>
+          <div className="text-black w-[50px]">
+            ({camera.x},{camera.y})
+          </div>
         </div>
       )}
 
