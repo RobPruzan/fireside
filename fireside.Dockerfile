@@ -12,7 +12,7 @@ WORKDIR /code/services/db
 
 RUN pnpm run migrate:generate
 
-FROM oven/bun:1.0.0 AS bun-runtime
+FROM oven/bun:1.1.3 AS bun-runtime
 
 COPY --from=build /code /code
 
