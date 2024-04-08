@@ -1,15 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { Input } from "../ui/input";
-import { useAllCamps, useCreateCampMutation } from "./camps-state";
+import { useAllCamps } from "./camps-state";
 import { ExploreCard } from "./ExploreCard";
-import {
-  Dialog,
-  DialogContent,
-  DialogTitle,
-  DialogDescription,
-  DialogClose,
-} from "../ui/dialog";
-
+import { Dialog, DialogContent, DialogTitle, DialogClose } from "../ui/dialog";
 import { PlusCircle, Image, DoorOpen } from "lucide-react";
 import { CreateCampDialog } from "./CreateCampDialog";
 
@@ -67,16 +60,16 @@ export const Explore = () => {
           </DialogContent>
         </Dialog>
       )}
-      <div className="flex justify-start w-full ">
+      <div className="flex justify-start w-full gap-x-2">
         <Input
           placeholder="Search camps"
           className="w-1/2"
           value={searchFilter}
           onChange={(e) => setSearchFilter(e.target.value)}
         />
+        <CreateCampDialog className="w-1/4" />
       </div>
-      <div className="h-full flex flex-wrap items-start gap-4 overflow-y-auto">
-        <CreateCampDialog />
+      <div className="h-full flex flex-wrap gap-4 overflow-y-auto justify-start items-start w-full">
         {camps
           .filter((camp) =>
             camp.name.toLowerCase().includes(searchFilter.toLowerCase())

@@ -30,6 +30,7 @@ import {
   useCreateCampMutation,
 } from "./camps-state";
 import { useScreenSize } from "@/hooks/useScreenSize";
+import { CreateCampDialog } from "./CreateCampDialog";
 
 export const CampDynamicSideBar = () => {
   const [sideBarOpen, setSideBarOpen] = useAtom(dynamicSideBarOpen);
@@ -41,21 +42,25 @@ export const CampDynamicSideBar = () => {
   const search = useSearch({ from: "/root-auth/camp-layout" });
   const createCampMutation = useCreateCampMutation();
 
-  useScreenSize({
-    width: {
-      onMedium: () => {
-        // console.log("on medium");
-        setSideBarOpen(false);
-      },
+  // useScreenSize({ // need to think of a better api, when should it fire
+  //   width: {
+  //     onMedium: () => {
+  //       // console.log("on medium");
+  //       setSideBarOpen(false);
+  //     },
 
-      onLarge: () => {
-        if (!sideBarOpen) {
-          // console.log("on large");
-          setSideBarOpen(true);
-        }
-      },
-    },
-  });
+  //     onLarge: () => {
+  //       if (!sideBarOpen) {
+  //         // console.log("on large");
+  //         setSideBarOpen(true);
+  //       }
+  //     },
+  //   },
+  // });
+
+  // if (visualViewport?.width < 500) {
+  //   return null
+  // }
 
   return (
     <>
@@ -73,46 +78,7 @@ export const CampDynamicSideBar = () => {
           <span className="text-3xl font-semibold ">Camp Rooms</span>
         </div>
         <div className="flex h-1/2 border-b-2 gap-x-2 border-accent/50 px-5 py-2 justify-start w-full">
-          <Dialog open={modalOpen} onOpenChange={(open) => setModalOpen(open)}>
-            <DialogTrigger asChild>
-              <Button
-                className="w-full text-lg flex gap-x-3 justify-center items-center"
-                variant={"ghost"}
-              >
-                <PlusCircle />
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Create camp room</DialogTitle>
-                <DialogDescription></DialogDescription>
-              </DialogHeader>
-              <Label htmlFor="camp-room-name">Name</Label>
-              <Input
-                value={newCampRoomName}
-                onChange={(e) => setNewCampRoomName(e.target.value)}
-                className="camp-room-name"
-              />
-              <DialogFooter>
-                <Button
-                  onClick={() => setSideBarOpen(false)}
-                  variant={"outline"}
-                >
-                  Cancel
-                </Button>
-                <Button
-                  className="min-w-[78px]"
-                  onClick={() => {
-                    createCampMutation.mutate({
-                      name: newCampRoomName,
-                    });
-                  }}
-                >
-                  {createCampMutation.isPending ? <LoadingSpinner /> : "Create"}
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
+          <CreateCampDialog />
         </div>
       </div>
       <div className=" flex flex-col justify-start items-center h-5/6 border-r-2 border-accent/50">

@@ -33,13 +33,13 @@ export const RootCampLayout = () => {
         className={cn([
           "min-w-[25%] h-screen overflow-y-auto flex flex-col relative",
           !sideBarOpen && "hidden",
+          "hidden lg:flex",
         ])}
       >
+        {/* {visualViewport} */}
         <CampDynamicSideBar />
       </div>
-      <div
-        className={cn(["flex h-screen", sideBarOpen ? "w-[70%]" : "w-[95%]"])}
-      >
+      <div className={cn(["flex h-screen w-[70%]", sideBarOpen && "w-[95%]"])}>
         <Outlet />
       </div>
     </div>
