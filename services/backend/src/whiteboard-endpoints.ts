@@ -18,16 +18,26 @@ import {
   safeUserSelectSchema,
   messageWhiteBoardSchema,
   messageWhiteBoard,
+  whiteBoardImg,
 } from "@fireside/db";
 import { ProtectedElysia } from "./lib";
 import { db } from ".";
 import { t, type Static } from "elysia";
 import { run } from "@fireside/utils";
 import { cleanedUserCols } from "./camp-endpoints";
+import { writeFile } from "fs";
+import type { BunFile } from "bun";
 export type TransformedWhiteBoardPointGroup = WhiteBoardPoint & {
   color: WhiteBoardColor;
 };
-
+const extensionMapping: Record<string, string> = {
+  "image/jpeg": ".jpg",
+  "image/png": ".png",
+  "image/gif": ".gif",
+  "image/bmp": ".bmp",
+  "image/svg+xml": ".svg",
+  "image/webp": ".webp",
+};
 // export const
 const whiteBoardBodySchema = t.Object({
   id: t.String(),
@@ -233,7 +243,73 @@ export const whiteboardRoute = ProtectedElysia({ prefix: "/whiteboard" })
     close: (ws) => {
       ws.unsubscribe(`white-board-${ws.data.params.whiteBoardId}`);
     },
-  });
+  })
+  //
+  .post(
+    "/whiteboard-image/upload/:whiteBoardId",
+    async (ctx) => {
+      // console.log("incoming");
+
+      // const formData = await ctx.request.formData();
+      // console.log("after reading first time");
+      // const formValue = formData.get("whiteBoardImg");
+      // if (typeof formValue === "string") {
+      //   console.log("not bytes");
+      //   throw new Error("White board image must be bytes");
+      // }
+
+      // if (!formValue) {
+      //   console.log("no image");
+      //   throw new Error("Must upload white board image");
+      // }
+      const imageId = crypto.randomUUID();
+      const extension = extensionMapping[ctx.body.whiteBoardImg.type];
+      console.log("extension", extension);
+      // const file = Bun.file(`${import.meta.dir}/${imageId}${extension}`);
+
+      try {
+        console.log("first");
+        const file = Bun.file(`./uploads/${imageId}${extension}`);
+        // console.log({ file });
+        // if (formValue instanceof Blob) {
+        await Bun.write(file, ctx.body.whiteBoardImg);
+        // }
+      } catch (e) {
+        console.log(e);
+      }
+
+      const newImg = await db
+        .insert(whiteBoardImg)
+        .values({
+          imgUrl: process.env.API_URL + `/upload/${imageId}${extension}`,
+          id: imageId,
+          whiteBoardId: ctx.params.whiteBoardId,
+        })
+        .returning();
+      return newImg[0];
+    },
+    //
+    //
+    {
+      type: "multipart/form-data",
+      params: t.Object({
+        whiteBoardId: t.String(),
+      }),
+      body: t.Object({
+        whiteBoardImg: t.File(),
+      }),
+    }
+  )
+  .get(
+    "/whiteboard-image/retrieve/:whiteBoardId",
+    ({ params }) => db.select().from(whiteBoardImg),
+    // .where(eq(whiteBoardImg.whiteBoardId, params.whiteBoardId)),
+    {
+      params: t.Object({
+        whiteBoardId: t.String(),
+      }),
+    }
+  );
 
 // export type PublishedPoints = {
 //   x: number

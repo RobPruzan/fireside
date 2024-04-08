@@ -433,3 +433,13 @@ export const messageWhiteBoardSchema = createInsertSchema(messageWhiteBoard);
 export type MessageWhiteBoardInsertSchema = Static<
   typeof messageWhiteBoardSchema
 >;
+
+export const whiteBoardImg = pgTable("whiteBoardImg", {
+  id: text("id").$defaultFn(genWhiteBoardPointId).primaryKey(),
+  whiteBoardId: uuid("whiteBoardId").references(() => whiteBoard.id, {
+    onDelete: "cascade",
+  }),
+  imgUrl: text("imgUrl").notNull(),
+});
+
+export type WhiteBoardImgSelect = InferSelectModel<typeof whiteBoardImg>;

@@ -7,7 +7,7 @@ import {
   TransformedWhiteBoardPointGroup,
   WhiteBoardPublish,
 } from "@fireside/backend/src/whiteboard-endpoints";
-import { WhiteBoardMouse } from "@fireside/db";
+import { WhiteBoardImgSelect, WhiteBoardMouse } from "@fireside/db";
 
 export const genWhiteBoardPointId = () =>
   "white_board_point_" + crypto.randomUUID();
@@ -80,6 +80,20 @@ const getWhiteBoardMousePointsOptions = ({
       ),
   });
 
+const getWhiteBoardImagesOptions = ({
+  whiteBoardId,
+}: {
+  whiteBoardId: string;
+}) =>
+  queryOptions({
+    queryKey: ["white-board-images", whiteBoardId],
+    queryFn: () =>
+      promiseDataOrThrow(
+        client.api.protected.whiteboard["whiteboard-image"]
+          .retrieve({ whiteBoardId })
+          .get()
+      ),
+  });
 export const WhiteBoardLoader = ({
   whiteBoardId,
   options,
@@ -92,6 +106,21 @@ export const WhiteBoardLoader = ({
   const whiteBoardMousePointsQuery = useQuery(
     getWhiteBoardMousePointsOptions({ whiteBoardId })
   );
+
+  const whiteBoardImagesQuery = useQuery(
+    getWhiteBoardImagesOptions({ whiteBoardId })
+  );
+
+  console.log({ whiteBoardImagesQuery });
+
+  switch (whiteBoardImagesQuery.status) {
+    case "error": {
+      return <div> something went wrong</div>;
+    }
+    case "pending": {
+      return <LoadingSection />;
+    }
+  }
 
   switch (whiteBoardMousePointsQuery.status) {
     case "error": {
@@ -112,6 +141,7 @@ export const WhiteBoardLoader = ({
     case "success": {
       return (
         <WhiteBoard
+          whiteBoardImages={whiteBoardImagesQuery.data}
           whiteBoardMousePoints={whiteBoardMousePointsQuery.data}
           whiteBoardId={whiteBoardId}
           whiteBoard={whiteBoardQuery.data}
@@ -138,6 +168,7 @@ const WhiteBoard = ({
   whiteBoardId,
   whiteBoardMousePoints,
   options,
+  whiteBoardImages,
 }: {
   whiteBoard: (ReturnType<typeof onlyForTheType> extends Promise<infer R>
     ? R
@@ -150,8 +181,10 @@ const WhiteBoard = ({
     : never)["data"];
   whiteBoardId: string;
   options?: Options;
+  whiteBoardImages: Array<WhiteBoardImgSelect>;
 }) => {
   const match = useMatchRoute();
+  const whiteBoardImagesOptions = getWhiteBoardImagesOptions({ whiteBoardId });
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [isMouseDown, setIsMouseDown] = useState(false);
   const currentMousePositionRef = useRef<{ x: number; y: number } | null>(null);
@@ -172,6 +205,63 @@ const WhiteBoard = ({
   const [erased, setErased] = useState<Array<{ x: number; y: number }>>([]); // todo
 
   const mouseCords = currentMousePositionRef.current;
+
+  const uploadImgMutation = useMutation({
+    mutationFn: async ({ file }: { file: FileList }) => {
+      const formData = new FormData();
+
+      formData.append("whiteBoardImg", file[0]);
+
+      //   formData.append('whiteboardImg', file[0])
+      //   const res = fetch(import.meta.env.VITE_API_URL + '/')
+      // },
+      // return promiseDataOrThrow(
+      //   client.api.protected.whiteboard["whiteboard-image"]
+      //     .upload({
+      //       whiteBoardId,
+      //     })
+      //     .post(
+      //       {
+      //         whiteboardImg: file,
+      //       },
+      //       // {
+      //       //   fetch: {
+      //       //     headers: {
+      //       //       ["Content-Type"]: "multipart/form-data",
+      //       //     },
+      //       //   },
+      //       // }
+      //     )
+      // );
+
+      const res = await fetch(
+        import.meta.env.VITE_API_URL +
+          `/api/protected/whiteboard/whiteboard-image/upload/${whiteBoardId}`,
+        {
+          // headers: {
+          //   ["Content-Type"]: "multipart/form-data",
+          // },
+          method: "POST",
+          body: formData,
+          credentials: "include",
+          // body:
+        }
+      );
+
+      return res.json() as Promise<{
+        id: string;
+        whiteBoardId: string | null;
+        imgUrl: string;
+      }>;
+    },
+
+    onSuccess: (data) => {
+      queryClient.setQueryData(whiteBoardImagesOptions.queryKey, (prev) => [
+        ...(prev ?? []),
+        data,
+      ]);
+    },
+  });
 
   const parentCanvasRef = useRef<HTMLDivElement | null>(null);
   const [camera, setCamera] = useState({ x: 0, y: 0 });
@@ -341,6 +431,16 @@ const WhiteBoard = ({
       ctx.fillText(mousePoint.user.email, mousePoint.x - 15, mousePoint.y - 5);
     });
 
+    whiteBoardImages.forEach((whiteBoardImg) => {
+      const image = new Image(50, 50);
+      image.src = whiteBoardImg.imgUrl;
+      // console.log({ image });
+      ctx.drawImage(image, camera.x, camera.y, 50, 50);
+
+      // ctx.font = "10px";
+      // ctx.fillText(mousePoint.user.email, mousePoint.x - 15, mousePoint.y - 5);
+    });
+
     ctx.stroke();
 
     ctx.restore();
@@ -401,6 +501,26 @@ const WhiteBoard = ({
       {options?.slot}
       {!options?.readOnly && (
         <Input
+          id="img-upload"
+          onChange={(e) => {
+            // const addedFile = e.target.files?.[0];
+            const files = (
+              document.getElementById("img-upload") as HTMLInputElement
+            ).files!;
+
+            console.log("anything?", files[0]);
+
+            uploadImgMutation.mutate({
+              file: files,
+            });
+            // const res =  client.api.protected.whiteboard["whiteboard-image"]
+            //   .upload({
+            //     whiteBoardId,
+            //   })
+            //   .post({
+            //     whiteboardImg: addedFile,
+            //   });
+          }}
           className="absolute top-3 left-3 bg-white border-muted w-[100px] p-1 h-fit text-xs transition hover:bg-gray-100  hover:text-white"
           type="file"
         />

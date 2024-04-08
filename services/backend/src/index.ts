@@ -13,7 +13,7 @@ import { whiteboardRoute } from "./whiteboard-endpoints";
 import { logger } from "@bogeychan/elysia-logger";
 
 const port = 8080;
-//
+
 export const { db } = createDB({
   connString: process.env.CONNECTION_STRING!,
 });
@@ -31,11 +31,11 @@ const app = new Elysia()
   .onBeforeHandle(({ set }) => {
     set.headers["X-Content-Type-Options"] = "nosniff";
   })
-  .use(
-    logger({
-      level: "trace",
-    })
-  )
+  // .use(
+  //   logger({
+  //     level: "trace",
+  //   })
+  // )
   .use(
     cors({
       credentials: true,
@@ -67,17 +67,18 @@ const app = new Elysia()
       "./node_modules/@fireside/frontend/dist/index.html"
     );
 
+    const uploadFIle = Bun.file(
+      `./uploads/${path.replaceAll("/", "").replaceAll("..", "")}`
+    );
+
+    if (await uploadFIle.exists()) {
+      set.headers["Content-Type"] = uploadFIle.type;
+      return uploadFIle;
+    }
+
     if (await assetFile.exists()) {
       set.headers["Content-Type"] = assetFile.type;
-      // if (assetFile.name?.includes(".css" ||  publicFile.type === "javascript")) {
 
-      // }
-      // if (assetFile.name?.includes(".js")) {
-      //   set.headers["Content-Type"] = publicFile.type
-      // }
-      // if (assetFile.name?.includes(".html")) {
-      //   set.headers["Content-Type"] = publicFile.type
-      // }
       return assetFile;
     }
 
