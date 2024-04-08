@@ -204,6 +204,20 @@
       "when": 1712566066115,
       "tag": "0028_goofy_black_knight",
       "breakpoints": true
+    },
+    {
+      "idx": 29,
+      "version": "5",
+      "when": 1712570176595,
+      "tag": "0029_wealthy_warpath",
+      "breakpoints": true
+    },
+    {
+      "idx": 30,
+      "version": "5",
+      "when": 1712570281466,
+      "tag": "0030_absent_cerise",
+      "breakpoints": true
     }
   ]
 }
