@@ -1,5 +1,5 @@
 import { Button, buttonVariants } from "@/components/ui/button";
-import { LoadingSection } from "@/components/ui/loading";
+import { LoadingSection, LoadingSpinner } from "@/components/ui/loading";
 import { client, promiseDataOrThrow } from "@/edenClient";
 import { cn } from "@/lib/utils";
 import { queryClient } from "@/query";
@@ -159,10 +159,6 @@ const onlyForTheTypeAgain = client.api.protected.whiteboard.mouse.retrieve({
   whiteBoardId: "whatever",
 }).get;
 
-// type EdenData<T> = (ReturnType<T> extends Promise<infer R>
-//   ? R
-//   : never)["data"]
-
 const WhiteBoard = ({
   whiteBoard,
   whiteBoardId,
@@ -207,52 +203,31 @@ const WhiteBoard = ({
   const mouseCords = currentMousePositionRef.current;
 
   const uploadImgMutation = useMutation({
-    mutationFn: async ({ file }: { file: FileList }) => {
+    mutationFn: async ({
+      file,
+      x,
+      y,
+    }: {
+      file: FileList;
+      x: number;
+      y: number;
+    }) => {
       const formData = new FormData();
 
       formData.append("whiteBoardImg", file[0]);
-
-      //   formData.append('whiteboardImg', file[0])
-      //   const res = fetch(import.meta.env.VITE_API_URL + '/')
-      // },
-      // return promiseDataOrThrow(
-      //   client.api.protected.whiteboard["whiteboard-image"]
-      //     .upload({
-      //       whiteBoardId,
-      //     })
-      //     .post(
-      //       {
-      //         whiteboardImg: file,
-      //       },
-      //       // {
-      //       //   fetch: {
-      //       //     headers: {
-      //       //       ["Content-Type"]: "multipart/form-data",
-      //       //     },
-      //       //   },
-      //       // }
-      //     )
-      // );
-
+      formData.append("x", x.toString());
+      formData.append("y", y.toString());
       const res = await fetch(
         import.meta.env.VITE_API_URL +
           `/api/protected/whiteboard/whiteboard-image/upload/${whiteBoardId}`,
         {
-          // headers: {
-          //   ["Content-Type"]: "multipart/form-data",
-          // },
           method: "POST",
           body: formData,
           credentials: "include",
-          // body:
         }
       );
 
-      return res.json() as Promise<{
-        id: string;
-        whiteBoardId: string | null;
-        imgUrl: string;
-      }>;
+      return res.json() as Promise<WhiteBoardImgSelect>;
     },
 
     onSuccess: (data) => {
@@ -363,6 +338,16 @@ const WhiteBoard = ({
 
     ctx.translate(camera.x, camera.y);
 
+    whiteBoardImages.forEach((whiteBoardImg) => {
+      const image = new Image(200, 200);
+      image.src = whiteBoardImg.imgUrl;
+      console.log({ wbImage: image, whiteBoardImg });
+      ctx.drawImage(image, whiteBoardImg.x, whiteBoardImg.y, 200, 200);
+
+      // ctx.font = "10px";
+      // ctx.fillText(mousePoint.user.email, mousePoint.x - 15, mousePoint.y - 5);
+    });
+
     const drawLine = ({
       points,
       initialPoint,
@@ -424,21 +409,11 @@ const WhiteBoard = ({
     whiteBoardMousePoints?.forEach((mousePoint) => {
       const image = new Image(15, 15);
       image.src = "/pencil-mouse.png";
-      console.log({ image });
+      // console.log({ image });
       ctx.drawImage(image, mousePoint.x, mousePoint.y, 20, 20);
 
       ctx.font = "10px";
       ctx.fillText(mousePoint.user.email, mousePoint.x - 15, mousePoint.y - 5);
-    });
-
-    whiteBoardImages.forEach((whiteBoardImg) => {
-      const image = new Image(50, 50);
-      image.src = whiteBoardImg.imgUrl;
-      // console.log({ image });
-      ctx.drawImage(image, camera.x, camera.y, 50, 50);
-
-      // ctx.font = "10px";
-      // ctx.fillText(mousePoint.user.email, mousePoint.x - 15, mousePoint.y - 5);
     });
 
     ctx.stroke();
@@ -466,6 +441,14 @@ const WhiteBoard = ({
 
   useEffect(() => {
     render(true);
+
+    const intervalId = setInterval(() => {
+      render(false);
+    }, 250); // run every 250ms to catch any stale changes not being reacted to
+
+    return () => {
+      clearInterval(intervalId);
+    };
   }, [render]);
 
   useEffect(() => {
@@ -502,28 +485,24 @@ const WhiteBoard = ({
       {!options?.readOnly && (
         <Input
           id="img-upload"
-          onChange={(e) => {
-            // const addedFile = e.target.files?.[0];
+          onChange={() => {
             const files = (
               document.getElementById("img-upload") as HTMLInputElement
             ).files!;
-
-            console.log("anything?", files[0]);
-
             uploadImgMutation.mutate({
               file: files,
+              x: -camera.x + parentCanvasRef.current!.clientWidth / 2,
+              y: -camera.y + parentCanvasRef.current!.clientHeight / 2,
             });
-            // const res =  client.api.protected.whiteboard["whiteboard-image"]
-            //   .upload({
-            //     whiteBoardId,
-            //   })
-            //   .post({
-            //     whiteboardImg: addedFile,
-            //   });
           }}
           className="absolute top-3 left-3 bg-white border-muted w-[100px] p-1 h-fit text-xs transition hover:bg-gray-100  hover:text-white"
           type="file"
         />
+      )}
+      {uploadImgMutation.isPending && (
+        <span className="absolute top-3 left-28 text-black">
+          <LoadingSpinner />
+        </span>
       )}
 
       {!options?.readOnly && (
@@ -555,6 +534,9 @@ const WhiteBoard = ({
           >
             <Eraser className="text-black" />
           </Button>
+          <div className="text-black w-[50px]">
+            ({camera.x},{camera.y})
+          </div>
         </div>
       )}
 

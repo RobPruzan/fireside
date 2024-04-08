@@ -440,6 +440,8 @@ export const whiteBoardImg = pgTable("whiteBoardImg", {
     onDelete: "cascade",
   }),
   imgUrl: text("imgUrl").notNull(),
+  x: doublePrecision("x").notNull(),
+  y: doublePrecision("y").notNull(),
 });
 
 export type WhiteBoardImgSelect = InferSelectModel<typeof whiteBoardImg>;
