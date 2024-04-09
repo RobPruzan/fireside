@@ -26,6 +26,10 @@ import { useEffect, useRef, useState } from "react";
 import { render } from "react-dom";
 import { useDefinedUser } from "../camps-state";
 import { Input } from "@/components/ui/input";
+import { run } from "@fireside/utils";
+
+const pencilImage = new Image(15, 15);
+pencilImage.src = "/pencil-mouse.png";
 
 const subscribeFn = client.api.protected.whiteboard.ws({
   whiteBoardId: "who cares",
@@ -111,8 +115,6 @@ export const WhiteBoardLoader = ({
     getWhiteBoardImagesOptions({ whiteBoardId })
   );
 
-  console.log({ whiteBoardImagesQuery });
-
   switch (whiteBoardImagesQuery.status) {
     case "error": {
       return <div> something went wrong</div>;
@@ -141,7 +143,14 @@ export const WhiteBoardLoader = ({
     case "success": {
       return (
         <WhiteBoard
-          whiteBoardImages={whiteBoardImagesQuery.data}
+          whiteBoardImages={whiteBoardImagesQuery.data.map((data) => ({
+            ...data,
+            image: run(() => {
+              const image = new Image(200, 200);
+              image.src = data.imgUrl;
+              return image;
+            }),
+          }))}
           whiteBoardMousePoints={whiteBoardMousePointsQuery.data}
           whiteBoardId={whiteBoardId}
           whiteBoard={whiteBoardQuery.data}
@@ -177,7 +186,7 @@ const WhiteBoard = ({
     : never)["data"];
   whiteBoardId: string;
   options?: Options;
-  whiteBoardImages: Array<WhiteBoardImgSelect>;
+  whiteBoardImages: Array<WhiteBoardImgSelect & { image: HTMLImageElement }>;
 }) => {
   const match = useMatchRoute();
   const whiteBoardImagesOptions = getWhiteBoardImagesOptions({ whiteBoardId });
@@ -339,10 +348,13 @@ const WhiteBoard = ({
     ctx.translate(camera.x, camera.y);
 
     whiteBoardImages.forEach((whiteBoardImg) => {
-      const image = new Image(200, 200);
-      image.src = whiteBoardImg.imgUrl;
-      console.log({ wbImage: image, whiteBoardImg });
-      ctx.drawImage(image, whiteBoardImg.x, whiteBoardImg.y, 200, 200);
+      ctx.drawImage(
+        whiteBoardImg.image,
+        whiteBoardImg.x,
+        whiteBoardImg.y,
+        200,
+        200
+      );
 
       // ctx.font = "10px";
       // ctx.fillText(mousePoint.user.email, mousePoint.x - 15, mousePoint.y - 5);
@@ -407,10 +419,7 @@ const WhiteBoard = ({
     }
 
     whiteBoardMousePoints?.forEach((mousePoint) => {
-      const image = new Image(15, 15);
-      image.src = "/pencil-mouse.png";
-      // console.log({ image });
-      ctx.drawImage(image, mousePoint.x, mousePoint.y, 20, 20);
+      ctx.drawImage(pencilImage, mousePoint.x, mousePoint.y, 20, 20);
 
       ctx.font = "10px";
       ctx.fillText(mousePoint.user.email, mousePoint.x - 15, mousePoint.y - 5);

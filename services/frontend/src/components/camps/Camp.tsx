@@ -290,8 +290,7 @@ const MessageSection = memo(({ campId }: { campId: string }) => {
   const [messageWithContextMenuId, setMessageWithContextMenuId] = useState<
     null | string
   >(null);
-  // console.log("wtf", createWhiteBoardMutation.variables?.whiteBoardId);
-  console.log(messages);
+
   return (
     <SocketMessageContext.Provider
       value={{
