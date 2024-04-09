@@ -20,6 +20,11 @@ services:
         condition: service_healthy
     links:
       - db
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 512M
     build:
       context: .
       dockerfile: fireside.Dockerfile
