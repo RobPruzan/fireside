@@ -350,13 +350,15 @@ const WhiteBoard = ({
     ctx.translate(camera.x, camera.y);
 
     whiteBoardImages.forEach((whiteBoardImg) => {
-      ctx.drawImage(
-        whiteBoardImg.image,
-        whiteBoardImg.x,
-        whiteBoardImg.y,
-        200,
-        200
-      );
+      if (whiteBoardImg.image.complete) {
+        ctx.drawImage(
+          whiteBoardImg.image,
+          whiteBoardImg.x,
+          whiteBoardImg.y,
+          200,
+          200
+        );
+      }
 
       // ctx.font = "10px";
       // ctx.fillText(mousePoint.user.email, mousePoint.x - 15, mousePoint.y - 5);
@@ -421,7 +423,9 @@ const WhiteBoard = ({
     }
 
     whiteBoardMousePoints?.forEach((mousePoint) => {
-      ctx.drawImage(pencilImage, mousePoint.x, mousePoint.y, 20, 20);
+      if (pencilImage.complete) {
+        ctx.drawImage(pencilImage, mousePoint.x, mousePoint.y, 20, 20);
+      }
 
       ctx.font = "10px";
       ctx.fillText(mousePoint.user.email, mousePoint.x - 15, mousePoint.y - 5);
