@@ -97,6 +97,15 @@ const getWhiteBoardImagesOptions = ({
           .retrieve({ whiteBoardId })
           .get()
       ),
+    select: (data) =>
+      data.map((data) => ({
+        ...data,
+        image: run(() => {
+          const image = new Image(200, 200);
+          image.src = data.imgUrl;
+          return image;
+        }),
+      })),
   });
 export const WhiteBoardLoader = ({
   whiteBoardId,
@@ -143,14 +152,7 @@ export const WhiteBoardLoader = ({
     case "success": {
       return (
         <WhiteBoard
-          whiteBoardImages={whiteBoardImagesQuery.data.map((data) => ({
-            ...data,
-            image: run(() => {
-              const image = new Image(200, 200);
-              image.src = data.imgUrl;
-              return image;
-            }),
-          }))}
+          whiteBoardImages={whiteBoardImagesQuery.data}
           whiteBoardMousePoints={whiteBoardMousePointsQuery.data}
           whiteBoardId={whiteBoardId}
           whiteBoard={whiteBoardQuery.data}
