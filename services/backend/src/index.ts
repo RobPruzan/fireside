@@ -69,10 +69,14 @@ const app = new Elysia()
 
     const uploadFIle = Bun.file(`.${path}`);
 
+    set.headers["Cache-Control"] =
+      "public, max-age=31536000, s-maxage=31536000, immutable";
+
     console.log("attempting to read", `.${path}`, await uploadFIle.exists());
 
     if (await uploadFIle.exists()) {
       set.headers["Content-Type"] = uploadFIle.type;
+
       return uploadFIle;
     }
 
