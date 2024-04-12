@@ -12,7 +12,7 @@ import { Button } from "../ui/button";
 import { PlusCircle } from "lucide-react";
 import { Label } from "../ui/label";
 import { Input } from "../ui/input";
-import { useCreateCampMutation } from "./camps-state";
+import { useCreateCampMutation, useDefinedUser } from "./camps-state";
 import { LoadingSpinner } from "../ui/loading";
 import { cn } from "@/lib/utils";
 
@@ -20,6 +20,7 @@ export const CreateCampDialog = ({ className }: { className?: string }) => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const createCampMutation = useCreateCampMutation();
   const [newCampRoomName, setNewCampRoomName] = useState("");
+  const user = useDefinedUser();
 
   return (
     <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
@@ -59,6 +60,7 @@ export const CreateCampDialog = ({ className }: { className?: string }) => {
             onClick={() => {
               createCampMutation.mutate({
                 name: newCampRoomName,
+                createdBy: user.id,
               });
               setDialogOpen(false);
             }}

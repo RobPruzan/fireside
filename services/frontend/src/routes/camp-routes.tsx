@@ -17,6 +17,7 @@ import { createRoute } from "@tanstack/react-router";
 import { authRootLayout } from "./layouts";
 import { Inbox } from "@/components/camps/Inbox";
 import {
+  getCampOptions,
   getMessageReactionOptions,
   getMessagesOptions,
   reactionAssetsOptions,
@@ -86,6 +87,7 @@ export const campRoute = createRoute({
       queryClient.ensureQueryData(getMessageReactionOptions({ campId })),
       queryClient.ensureQueryData(getMessagesOptions({ campId })),
       queryClient.ensureQueryData(getMessageWhiteBoardsOptions({ campId })),
+      queryClient.ensureQueryData(getCampOptions({ campId })),
     ]),
   component: Camp,
   pendingComponent: LoadingSection,

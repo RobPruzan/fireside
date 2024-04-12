@@ -17,6 +17,16 @@ import { db } from ".";
 import { t } from "elysia";
 
 export const campRouter = ProtectedElysia({ prefix: "/camp" })
+  .get(
+    "/retrieve/:campId",
+    async ({ params }) =>
+      (await db.select().from(camp).where(eq(camp.id, params.campId)))[0],
+    {
+      params: t.Object({
+        campId: t.String(),
+      }),
+    }
+  )
   .post(
     "/create",
     async ({ body, user }) => {

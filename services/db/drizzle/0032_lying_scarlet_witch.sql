@@ -1,0 +1,1 @@
+ALTER TABLE "camp" ALTER COLUMN "createdBy" SET NOT NULL;

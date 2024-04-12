@@ -250,8 +250,16 @@ export const whiteboardRoute = ProtectedElysia({ prefix: "/whiteboard" })
     async (ctx) => {
       const imageId = crypto.randomUUID();
       const extension = extensionMapping[ctx.body.whiteBoardImg.type];
+      console.log("create file object");
       const file = Bun.file(`./upload/${imageId}${extension}`);
+
+      if (!file.type.includes("image")) {
+        ctx.error("Bad Request");
+        return;
+      }
+      console.log("writing file object");
       await Bun.write(file, ctx.body.whiteBoardImg);
+      console.log("finished writing");
       const newImg = await db
         .insert(whiteBoardImg)
         .values({

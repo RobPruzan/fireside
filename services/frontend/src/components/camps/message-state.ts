@@ -40,6 +40,22 @@ export const useGetMessages = ({ campId }: { campId: string }) => {
   };
 };
 
+export const getCampOptions = ({ campId }: { campId: string }) =>
+  queryOptions({
+    queryKey: ["camp", campId],
+    queryFn: () =>
+      promiseDataOrThrow(client.api.protected.camp.retrieve({ campId }).get()),
+  });
+export const useGetCamp = ({ campId }: { campId: string }) => {
+  const options = getCampOptions({ campId });
+  const campQuery = useSuspenseQuery(options);
+  return {
+    campQuery,
+    camp: campQuery.data,
+    campQueryKey: options.queryKey,
+  };
+};
+
 // export const useCreateMessageMutation = ({ campId }: { campId: string }) => {
 //   const { toast } = useToast();
 //   const { messagesQueryKey } = useGetMessages({ campId });

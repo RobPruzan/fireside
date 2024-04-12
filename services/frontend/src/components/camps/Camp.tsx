@@ -49,9 +49,12 @@ import {
 } from "@/components/ui/context-menu";
 import { cn } from "@/lib/utils";
 import {
+  AudioLines,
+  BookCheck,
   Edit,
   Image,
   Lock,
+  Megaphone,
   MessageCircle,
   MessageCircleIcon,
   Move,
@@ -73,6 +76,7 @@ import {
   useGetReactionAssets,
   useReactToMessageMutation,
   useRemoveReactionMutation,
+  useGetCamp,
 } from "./message-state";
 import { useDefinedUser } from "./camps-state";
 import { Setter } from "@/types/utils";
@@ -106,7 +110,11 @@ const SocketMessageContext = createContext<{
 export const Camp = () => {
   const { campId } = useParams({ from: "/root-auth/camp-layout/camp/$campId" });
   const { messages } = useGetMessages({ campId });
+  const { camp } = useGetCamp({ campId });
   const scrollRef = useRef<HTMLInputElement | null>(null);
+  const user = useDefinedUser();
+  const [listeningToAudio, setListeningToAudio] = useState(false);
+  const [broadcastingAudio, setBroadcastingAudio] = useState(false);
 
   useEffect(() => {
     const lastChild = scrollRef.current?.lastChild!;
@@ -120,13 +128,44 @@ export const Camp = () => {
     }
   }, [messages.length]);
 
-  const match = useMatchRoute();
   const search = useSearch({ from: "/root-auth/camp-layout/camp/$campId" });
-
-  // const key
   const searchEntries = Object.entries(search);
   return (
-    <div className="flex  w-full h-full  pb-5">
+    <div className="flex  w-full h-full  pb-5 relative">
+      <div className="w-full flex  justify-center  absolute top-0">
+        <div className="flex  border border-t-0 rounded-b-md justify-center gap-x-4 items-center w-2/5 h-20 backdrop-blur z-10 text-muted-foreground bg-opacity-90">
+          {camp.createdBy === user.id ? (
+            <>
+              <Button variant={"ghost"}>
+                <Presentation />
+              </Button>
+              <Button
+                onClick={() => setBroadcastingAudio((prev) => !prev)}
+                variant={"ghost"}
+              >
+                <Megaphone
+                  className={cn([broadcastingAudio && "text-green-500"])}
+                />
+              </Button>
+              <Button variant={"ghost"}>
+                <BookCheck />
+              </Button>
+            </>
+          ) : (
+            <Button
+              onClick={() => {
+                setListeningToAudio((prev) => !prev);
+              }}
+              variant={"ghost"}
+            >
+              <AudioLines
+                className={cn([listeningToAudio && "text-green-500"])}
+              />
+            </Button>
+          )}
+        </div>
+      </div>
+
       <ResizablePanelGroup direction="horizontal">
         <ResizablePanel className="h-full w-full">
           <MessageSection campId={campId} />

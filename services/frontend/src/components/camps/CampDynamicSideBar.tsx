@@ -1,6 +1,7 @@
 import { cn } from "@/lib/utils";
 import { Link, useMatchRoute, useSearch } from "@tanstack/react-router";
 import {
+  AudioLines,
   ChevronLeft,
   Image,
   MoreVertical,
@@ -132,6 +133,9 @@ export const CampDynamicSideBar = () => {
                   </div>
                   <div className="relative w-1/4 flex items-center justify-end"></div>
                 </Link>
+                {/* <Button className="h-full p-0" variant={"ghost"}>
+                  <AudioLines />
+                </Button> */}
               </div>
             ))}
         </div>

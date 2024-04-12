@@ -65,6 +65,9 @@ export const camp = pgTable("camp", {
     .$defaultFn(() => new Date().toISOString())
     .notNull(),
   updatedAt: timestamp("updated_at", { mode: "string" }),
+  createdBy: uuid("createdBy")
+    .references(() => user.id)
+    .notNull(),
 });
 
 export type FiresideCamp = InferSelectModel<typeof camp>;

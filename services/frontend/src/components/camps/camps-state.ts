@@ -46,7 +46,7 @@ export const useCreateCampMutation = () => {
 
   const createCampMutation = useMutation({
     mutationKey: ["create-camp"],
-    mutationFn: async (createOps: { name: string }) => {
+    mutationFn: async (createOps: { name: string; createdBy: string }) => {
       const res = await client.api.protected.camp.create.post(createOps);
 
       if (res.error) {
