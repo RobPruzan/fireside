@@ -183,7 +183,7 @@ export const campRouter = ProtectedElysia({ prefix: "/camp" })
             receiverId: (data as { receiverId: string }).receiverId,
           })
         );
-        return;
+        // return;
       }
 
       if ((data as { kind: string }).kind === "leave-channel-request") {
