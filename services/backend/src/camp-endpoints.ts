@@ -134,48 +134,7 @@ export const campRouter = ProtectedElysia({ prefix: "/camp" })
   })
   .ws("/audio/:campId", {
     message: async (ws, data) => {
-      // if ((data as { kind: string }).kind === "join-channel") {
-      //   ws.subscribe(
-      //     getAudioRoom({
-      //       broadcasterId: (data as { broadcasterId: string }).broadcasterId,
-      //       campId: ws.data.params.campId,
-      //       receiverId: ws.data.user.id,
-      //     })
-      //   );
-      //   return;
-      // }
-
-      const targetCamp = (
-        await db.select().from(camp).where(eq(camp.id, ws.data.params.campId))
-      )[0];
-      const broadcaster = (
-        await db
-          .select()
-          .from(user)
-          .where(eq(user.id, (data as { broadcasterId: string }).broadcasterId))
-      )[0];
-      const receiver = (
-        await db
-          .select()
-          .from(user)
-          .where(eq(user.id, (data as { receiverId: string }).receiverId))
-      )[0];
-
       if ((data as { kind: string }).kind === "join-channel-request") {
-        console.log(
-          // ws.data.user.email,
-          "joined:",
-          `${targetCamp.name}/${broadcaster.email}/${receiver.email}`,
-          `is broadcaster? ${broadcaster.id === ws.data.user.id}`
-          // "joined channel",
-
-          // getAudioRoom({
-          //   broadcasterId: (data as { broadcasterId: string }).broadcasterId,
-          //   campId: ws.data.params.campId,
-          //   receiverId: (data as { receiverId: string }).receiverId,
-          // })
-        );
-        // ws.publish(`audio-${ws.data.params.campId}`);
         ws.subscribe(
           getAudioRoom({
             broadcasterId: (data as { broadcasterId: string }).broadcasterId,
@@ -183,7 +142,6 @@ export const campRouter = ProtectedElysia({ prefix: "/camp" })
             receiverId: (data as { receiverId: string }).receiverId,
           })
         );
-        // return;
       }
 
       if ((data as { kind: string }).kind === "leave-channel-request") {
@@ -195,32 +153,6 @@ export const campRouter = ProtectedElysia({ prefix: "/camp" })
           })
         );
       }
-
-      // ws.send
-      // console.log(data);
-      // if (data.kind ===)
-      // console.log(
-      //   "sending to",
-      //   getAudioRoom({
-      //     broadcasterId: (data as { broadcasterId: string }).broadcasterId,
-      //     campId: ws.data.params.campId,
-      //     receiverId: ws.data.user.id,
-      //   })
-      //   // {
-      //   //   ...(data as any),
-      //   //   userId: ws.data.user.id,
-      //   // }
-      // );
-
-      // if (data.kind === "webRTC-answer") {
-      //   console.log('ans location',
-      //     getAudioRoom({
-      //       broadcasterId: (data as { broadcasterId: string }).broadcasterId,
-      //       campId: ws.data.params.campId,
-      //       receiverId: (data as { receiverId: string }).receiverId,
-      //     })
-      //   );
-      // }
 
       ws.publish(
         getAudioRoom({
@@ -248,18 +180,11 @@ export const campRouter = ProtectedElysia({ prefix: "/camp" })
         kind: "user-left",
         userId: ws.data.user.id,
       });
-
-      // ws.unsubscribe(getAudioRoom({broadcasterId}))
     },
     params: t.Object({
       campId: t.String(),
     }),
     body: t.Unknown(),
-    // body: t.Union([
-    //   t.Object({ kind: t.Literal("webRTC-offer"), offer: t.Unknown() }),
-    //   t.Object({ kind: t.Literal("webRTC-candidate"), candidate: t.Unknown() }),
-    //   t.Object({ kind: t.Literal("webRTC-answer"), answer: t.Unknown() }),
-    // ]),
   });
 
 export const {
