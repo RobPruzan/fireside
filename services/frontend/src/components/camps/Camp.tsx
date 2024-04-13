@@ -97,6 +97,7 @@ import {
   useGetWhiteBoardMessages,
 } from "./whiteboard/white-board-state";
 import { LoadingSection } from "../ui/loading";
+import { useAudioStream } from "@/hooks/useAudioStream";
 const subscribeFn = client.api.protected.message.ws({
   campId: "anything",
 }).subscribe;
@@ -115,6 +116,13 @@ export const Camp = () => {
   const user = useDefinedUser();
   const [listeningToAudio, setListeningToAudio] = useState(false);
   const [broadcastingAudio, setBroadcastingAudio] = useState(false);
+
+  const { createWebRTCOffer, listenForAudio } = useAudioStream({
+    campId,
+    // options: {
+    //   playAudioStream: broadcastingAudio,
+    // },
+  });
 
   useEffect(() => {
     const lastChild = scrollRef.current?.lastChild!;
@@ -140,7 +148,18 @@ export const Camp = () => {
                 <Presentation />
               </Button>
               <Button
-                onClick={() => setBroadcastingAudio((prev) => !prev)}
+                onClick={() => {
+                  setBroadcastingAudio((prev) => {
+                    if (!prev) {
+                      run(async () => {
+                        await listenForAudio();
+                        createWebRTCOffer();
+                      });
+                    }
+
+                    return !prev;
+                  });
+                }}
                 variant={"ghost"}
               >
                 <Megaphone

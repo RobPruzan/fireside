@@ -298,7 +298,3 @@ export const whiteboardRoute = ProtectedElysia({ prefix: "/whiteboard" })
       }),
     }
   );
-
-// export type PublishedPoints = {
-//   x: number
-// }

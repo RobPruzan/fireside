@@ -121,6 +121,29 @@ export const campRouter = ProtectedElysia({ prefix: "/camp" })
       .groupBy(camp.id);
 
     return res;
+  })
+  .ws("/audio/:campId", {
+    message: (ws, data) => {
+      // console.log(data);
+      // if (data.kind ===)
+      ws.publish(`audio-${ws.data.params.campId}`, {
+        ...(data as any),
+        from_id: ws.data.user.id,
+      });
+    },
+    open: (ws) => {
+      ws.subscribe(`audio-${ws.data.params.campId}`);
+    },
+
+    params: t.Object({
+      campId: t.String(),
+    }),
+    body: t.Unknown(),
+    // body: t.Union([
+    //   t.Object({ kind: t.Literal("webRTC-offer"), offer: t.Unknown() }),
+    //   t.Object({ kind: t.Literal("webRTC-candidate"), candidate: t.Unknown() }),
+    //   t.Object({ kind: t.Literal("webRTC-answer"), answer: t.Unknown() }),
+    // ]),
   });
 
 export const {
