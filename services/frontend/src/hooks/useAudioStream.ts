@@ -159,7 +159,9 @@ export const useWebRTCConnection = ({ campId }: { campId: string }) => {
             }
 
             // if (userConn.conn.signalingState !== "stable") {
-            userConn.conn.setRemoteDescription(typedData.answer);
+            userConn.conn.setRemoteDescription(
+              new RTCSessionDescription(typedData.answer)
+            );
             // }
 
             // webRTCConnections.setRemoteDescription(typedData.answer);
@@ -167,7 +169,9 @@ export const useWebRTCConnection = ({ campId }: { campId: string }) => {
             return;
           }
           // if (receiverWebRTCConnection?.signalingState !== "stable") {
-          receiverWebRTCConnection?.setRemoteDescription(typedData.answer);
+          receiverWebRTCConnection?.setRemoteDescription(
+            new RTCSessionDescription(typedData.answer)
+          );
           // }
 
           return;
@@ -183,11 +187,15 @@ export const useWebRTCConnection = ({ campId }: { campId: string }) => {
             if (!userConn) {
               return;
             }
-            userConn.conn.addIceCandidate(typedData.candidate);
+            userConn.conn.addIceCandidate(
+              new RTCIceCandidate(typedData.candidate)
+            );
             return;
           }
 
-          receiverWebRTCConnection?.addIceCandidate(typedData.candidate);
+          receiverWebRTCConnection?.addIceCandidate(
+            new RTCIceCandidate(typedData.candidate)
+          );
 
           return;
         }
@@ -206,7 +214,9 @@ export const useWebRTCConnection = ({ campId }: { campId: string }) => {
               return;
             }
 
-            userConn.conn.setRemoteDescription(typedData.offer);
+            userConn.conn.setRemoteDescription(
+              new RTCSessionDescription(typedData.offer)
+            );
 
             const answer = await userConn.conn.createAnswer();
 
@@ -232,7 +242,9 @@ export const useWebRTCConnection = ({ campId }: { campId: string }) => {
             return;
           }
 
-          receiverWebRTCConnection.setRemoteDescription(typedData.offer);
+          receiverWebRTCConnection.setRemoteDescription(
+            new RTCSessionDescription(typedData.offer)
+          );
 
           const answer = await receiverWebRTCConnection?.createAnswer();
 
@@ -250,7 +262,7 @@ export const useWebRTCConnection = ({ campId }: { campId: string }) => {
         }
 
         case "user-joined": {
-          console.log("joined", typedData.userId);
+          // console.log("joined", typedData.userId);
           if (isBroadcaster) {
             const conn = new RTCPeerConnection({
               iceServers: [{ urls: ["stun:stun2.1.google.com:19302"] }],
@@ -260,7 +272,7 @@ export const useWebRTCConnection = ({ campId }: { campId: string }) => {
               ...(prev ?? []),
               { conn, userId: typedData.userId },
             ]);
-            console.log("sending join channel request for", typedData.userId);
+            // console.log("sending join channel request for", typedData.userId);
             signalingServerSubscription?.send(
               JSON.stringify({
                 kind: "join-channel-request",
@@ -280,7 +292,7 @@ export const useWebRTCConnection = ({ campId }: { campId: string }) => {
         }
 
         case "user-left": {
-          console.log("left", typedData.userId);
+          // console.log("left", typedData.userId);
           if (isBroadcaster) {
             setWebRTCConnections((prev) =>
               prev.filter((existingConn) => {
@@ -322,7 +334,7 @@ export const useWebRTCConnection = ({ campId }: { campId: string }) => {
         // }
       }
     };
-    console.log("event listener");
+    // console.log("event listener");
     // signalingServerSubscription.addEventListener("message", handleMessage);
     // signalingServerSubscription.ws.addEventListener("message", handleMessage);
     // console.log(signalingServerSubscription.ws);
@@ -331,6 +343,7 @@ export const useWebRTCConnection = ({ campId }: { campId: string }) => {
       handleMessage,
       true
     );
+    // console.log("listenres", signalingServerSubscription);
     return () => {
       // ();
       // signalingServerSubscription.removeEventListener("message", handleMessage);
@@ -403,6 +416,7 @@ export const useAudioStream = ({
   };
 
   const createWebRTCOffer = async () => {
+    console.log("CALLING CREATE OFFER");
     if (!signalingServerSubscription) {
       console.warn("No signaling server subscription");
       return;
@@ -411,6 +425,8 @@ export const useAudioStream = ({
     // if (!receiverWebRTCConnection) {
     //   return;
     // }
+
+    console.log({ webRTCConnections });
 
     webRTCConnections.forEach(async ({ conn, userId }) => {
       const offer = await conn.createOffer();

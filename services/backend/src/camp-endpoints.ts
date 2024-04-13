@@ -186,7 +186,7 @@ export const campRouter = ProtectedElysia({ prefix: "/camp" })
         return;
       }
 
-      if ((data as { kind: string }).kind === "join-channel-request") {
+      if ((data as { kind: string }).kind === "leave-channel-request") {
         ws.unsubscribe(
           getAudioRoom({
             broadcasterId: (data as { broadcasterId: string }).broadcasterId,

@@ -150,14 +150,13 @@ export const Camp = () => {
               </Button>
               <Button
                 onClick={() => {
+                  if (!broadcastingAudio) {
+                    run(async () => {
+                      await listenForAudio();
+                      createWebRTCOffer();
+                    });
+                  }
                   setBroadcastingAudio((prev) => {
-                    if (!prev) {
-                      run(async () => {
-                        await listenForAudio();
-                        createWebRTCOffer();
-                      });
-                    }
-
                     return !prev;
                   });
                 }}
