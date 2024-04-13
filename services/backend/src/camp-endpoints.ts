@@ -16,6 +16,16 @@ import { ProtectedElysia } from "./lib";
 import { db } from ".";
 import { t } from "elysia";
 
+export const getAudioRoom = ({
+  broadcasterId,
+  campId,
+  receiverId,
+}: {
+  campId: string;
+  broadcasterId: string;
+  receiverId: string;
+}) => `audio/${campId}/${broadcasterId}/${receiverId}`;
+
 export const campRouter = ProtectedElysia({ prefix: "/camp" })
   .get(
     "/retrieve/:campId",
@@ -123,15 +133,109 @@ export const campRouter = ProtectedElysia({ prefix: "/camp" })
     return res;
   })
   .ws("/audio/:campId", {
-    message: (ws, data) => {
+    message: async (ws, data) => {
+      // if ((data as { kind: string }).kind === "join-channel") {
+      //   ws.subscribe(
+      //     getAudioRoom({
+      //       broadcasterId: (data as { broadcasterId: string }).broadcasterId,
+      //       campId: ws.data.params.campId,
+      //       receiverId: ws.data.user.id,
+      //     })
+      //   );
+      //   return;
+      // }
+
+      const targetCamp = (
+        await db.select().from(camp).where(eq(camp.id, ws.data.params.campId))
+      )[0];
+      const broadcaster = (
+        await db
+          .select()
+          .from(user)
+          .where(eq(user.id, (data as { broadcasterId: string }).broadcasterId))
+      )[0];
+      const receiver = (
+        await db
+          .select()
+          .from(user)
+          .where(eq(user.id, (data as { receiverId: string }).receiverId))
+      )[0];
+
+      if ((data as { kind: string }).kind === "join-channel-request") {
+        console.log(
+          // ws.data.user.email,
+          "joined:",
+          `${targetCamp.name}/${broadcaster.email}/${receiver.email}`,
+          `is broadcaster? ${broadcaster.id === ws.data.user.id}`
+          // "joined channel",
+
+          // getAudioRoom({
+          //   broadcasterId: (data as { broadcasterId: string }).broadcasterId,
+          //   campId: ws.data.params.campId,
+          //   receiverId: (data as { receiverId: string }).receiverId,
+          // })
+        );
+        // ws.publish(`audio-${ws.data.params.campId}`);
+        ws.subscribe(
+          getAudioRoom({
+            broadcasterId: (data as { broadcasterId: string }).broadcasterId,
+            campId: ws.data.params.campId,
+            receiverId: (data as { receiverId: string }).receiverId,
+          })
+        );
+        return;
+      }
+
+      if ((data as { kind: string }).kind === "join-channel-request") {
+        ws.unsubscribe(
+          getAudioRoom({
+            broadcasterId: (data as { broadcasterId: string }).broadcasterId,
+            campId: ws.data.params.campId,
+            receiverId: (data as { receiverId: string }).receiverId,
+          })
+        );
+      }
+
+      // ws.send
       // console.log(data);
       // if (data.kind ===)
-      ws.publish(`audio-${ws.data.params.campId}`, {
-        ...(data as any),
-        userId: ws.data.user.id,
-      });
+      // console.log(
+      //   "sending to",
+      //   getAudioRoom({
+      //     broadcasterId: (data as { broadcasterId: string }).broadcasterId,
+      //     campId: ws.data.params.campId,
+      //     receiverId: ws.data.user.id,
+      //   })
+      //   // {
+      //   //   ...(data as any),
+      //   //   userId: ws.data.user.id,
+      //   // }
+      // );
+
+      // if (data.kind === "webRTC-answer") {
+      //   console.log('ans location',
+      //     getAudioRoom({
+      //       broadcasterId: (data as { broadcasterId: string }).broadcasterId,
+      //       campId: ws.data.params.campId,
+      //       receiverId: (data as { receiverId: string }).receiverId,
+      //     })
+      //   );
+      // }
+
+      ws.publish(
+        getAudioRoom({
+          broadcasterId: (data as { broadcasterId: string }).broadcasterId,
+          campId: ws.data.params.campId,
+          receiverId: (data as { receiverId: string }).receiverId,
+        }),
+        {
+          ...(data as any),
+          userId: ws.data.user.id,
+        }
+      );
     },
     open: (ws) => {
+      console.log("joined", ws.data.user.email);
       ws.subscribe(`audio-${ws.data.params.campId}`);
 
       ws.publish(`audio-${ws.data.params.campId}`, {
@@ -144,6 +248,8 @@ export const campRouter = ProtectedElysia({ prefix: "/camp" })
         kind: "user-left",
         userId: ws.data.user.id,
       });
+
+      // ws.unsubscribe(getAudioRoom({broadcasterId}))
     },
     params: t.Object({
       campId: t.String(),
@@ -162,3 +268,4 @@ export const {
   ...cleanedUserCols
 } = getTableColumns(user);
 // const getCampsWithCount = ({}:{campId:string,camMember}) => {}
+//

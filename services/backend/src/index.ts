@@ -96,6 +96,7 @@ const app = new Elysia()
   })
 
   .onError(({ error }) => {
+    // console.log(error);
     return error.toString();
   })
 
