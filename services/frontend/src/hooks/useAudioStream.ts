@@ -15,7 +15,7 @@ type WebRTCSignal =
   | { kind: "webRTC-answer"; answer: RTCSessionDescriptionInit; userId: string }
   | { kind: "user-joined"; userId: string }
   | { kind: "user-left"; userId: string }
-  | { kind: "join-channel-request"; broadcasterId: string };
+  | { kind: "join-channel-request"; broadcasterId: string; userId: string };
 type AudioSubscribeType = ReturnType<typeof throwAwaySubscribeFn>;
 export const useWebRTCConnection = ({ campId }: { campId: string }) => {
   const [webRTCConnections, setWebRTCConnections] = useState<
@@ -278,6 +278,37 @@ export const useWebRTCConnection = ({ campId }: { campId: string }) => {
           );
           return;
         }
+
+        case "join-channel-request": {
+          console.log("got join channel request");
+          const userConn = webRTCConnections.find(
+            (existingConn) => existingConn.userId === typedData.userId
+          );
+          if (!userConn) {
+            return;
+          }
+
+          // webRTCConnections.forEach(async ({ conn, userId }) => {
+          //   console.log({ conn });
+          // if (conn.state) {
+          //   return;
+          // }
+          const offer = await userConn.conn.createOffer();
+
+          userConn.conn.setLocalDescription(offer);
+
+          signalingServerSubscription.send(
+            JSON.stringify({
+              kind: "webRTC-offer",
+              offer,
+              broadcasterId: camp.createdBy,
+              receiverId: typedData.userId,
+            })
+          );
+          // });
+
+          return;
+        }
       }
     };
 
@@ -362,20 +393,20 @@ export const useAudioStream = ({
       return;
     }
 
-    webRTCConnections.forEach(async ({ conn, userId }) => {
-      const offer = await conn.createOffer();
+    // webRTCConnections.forEach(async ({ conn, userId }) => {
+    //   const offer = await conn.createOffer();
 
-      conn.setLocalDescription(offer);
+    //   conn.setLocalDescription(offer);
 
-      signalingServerSubscription.send(
-        JSON.stringify({
-          kind: "webRTC-offer",
-          offer,
-          broadcasterId: camp.createdBy,
-          receiverId: userId,
-        })
-      );
-    });
+    //   signalingServerSubscription.send(
+    //     JSON.stringify({
+    //       kind: "webRTC-offer",
+    //       offer,
+    //       broadcasterId: camp.createdBy,
+    //       receiverId: userId,
+    //     })
+    //   );
+    // });
   };
 
   return {

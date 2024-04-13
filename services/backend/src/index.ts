@@ -31,11 +31,11 @@ const app = new Elysia()
   .onBeforeHandle(({ set }) => {
     set.headers["X-Content-Type-Options"] = "nosniff";
   })
-  .use(
-    logger({
-      level: "trace",
-    })
-  )
+  // .use(
+  //   logger({
+  //     level: "trace",
+  //   })
+  // )
   .use(
     cors({
       credentials: true,
