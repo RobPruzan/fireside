@@ -121,10 +121,6 @@ export const useWebRTCConnection = ({ campId }: { campId: string }) => {
         `/api/protected/camp/audio/${campId}`
     );
 
-    // const subscription = client.api.protected.camp
-    //   .audio({ campId })
-    //   .subscribe();
-
     setSignalingServerSubscription(subscription);
 
     return () => {
@@ -141,17 +137,10 @@ export const useWebRTCConnection = ({ campId }: { campId: string }) => {
     const handleMessage = async (ws: any) => {
       const typedData: WebRTCSignal = JSON.parse(ws.data);
 
-      // console.log(ws.data);
-
       const isBroadcaster = camp.createdBy === user.id;
-
-      // if (isB)
 
       switch (typedData.kind) {
         case "webRTC-answer": {
-          // if (receiverWebRTCConnection?.signalingState === "stable") {
-          //   return;
-          // }
           if (isBroadcaster) {
             const userConn = webRTCConnections.find(
               (existingConn) => existingConn.userId === typedData.userId
@@ -160,28 +149,20 @@ export const useWebRTCConnection = ({ campId }: { campId: string }) => {
               return;
             }
 
-            // if (userConn.conn.signalingState !== "stable") {
             userConn.conn.setRemoteDescription(
               new RTCSessionDescription(typedData.answer)
             );
-            // }
-
-            // webRTCConnections.setRemoteDescription(typedData.answer);
 
             return;
           }
-          // if (receiverWebRTCConnection?.signalingState !== "stable") {
+
           receiverWebRTCConnection?.setRemoteDescription(
             new RTCSessionDescription(typedData.answer)
           );
-          // }
 
           return;
         }
         case "webRTC-candidate": {
-          // if (receiverWebRTCConnection?.signalingState === "stable") {
-          //   return;
-          // }
           if (isBroadcaster) {
             const userConn = webRTCConnections.find(
               (existingConn) => existingConn.userId === typedData.userId
@@ -202,17 +183,11 @@ export const useWebRTCConnection = ({ campId }: { campId: string }) => {
           return;
         }
         case "webRTC-offer": {
-          // if (receiverWebRTCConnection?.signalingState === "stable") {
-          //   return;
-          // }
           if (isBroadcaster) {
             const userConn = webRTCConnections.find(
               (existingConn) => existingConn.userId === typedData.userId
             );
-            if (
-              !userConn
-              // || userConn.conn.signalingState === "stable"
-            ) {
+            if (!userConn) {
               return;
             }
 
@@ -236,11 +211,7 @@ export const useWebRTCConnection = ({ campId }: { campId: string }) => {
             return;
           }
 
-          if (
-            !receiverWebRTCConnection
-            // ||
-            // receiverWebRTCConnection.signalingState === "stable"
-          ) {
+          if (!receiverWebRTCConnection) {
             return;
           }
 
@@ -264,7 +235,6 @@ export const useWebRTCConnection = ({ campId }: { campId: string }) => {
         }
 
         case "user-joined": {
-          // console.log("joined", typedData.userId);
           if (isBroadcaster) {
             const conn = new RTCPeerConnection({
               iceServers: [{ urls: ["stun:stun2.1.google.com:19302"] }],
@@ -274,7 +244,7 @@ export const useWebRTCConnection = ({ campId }: { campId: string }) => {
               ...(prev ?? []),
               { conn, userId: typedData.userId },
             ]);
-            // console.log("sending join channel request for", typedData.userId);
+
             signalingServerSubscription?.send(
               JSON.stringify({
                 kind: "join-channel-request",
@@ -294,7 +264,6 @@ export const useWebRTCConnection = ({ campId }: { campId: string }) => {
         }
 
         case "user-left": {
-          // console.log("left", typedData.userId);
           if (isBroadcaster) {
             setWebRTCConnections((prev) =>
               prev.filter((existingConn) => {
@@ -326,29 +295,16 @@ export const useWebRTCConnection = ({ campId }: { campId: string }) => {
           );
           return;
         }
-
-        // case "join-channel-request": {
-        //   signalingServerSubscription.send(JSON.stringify({
-        //     kind: "join-channel",
-        //   }));
-
-        //   return;
-        // }
       }
     };
-    // console.log("event listener");
-    // signalingServerSubscription.addEventListener("message", handleMessage);
-    // signalingServerSubscription.ws.addEventListener("message", handleMessage);
-    // console.log(signalingServerSubscription.ws);
+
     signalingServerSubscription.addEventListener(
       "message",
       handleMessage,
       true
     );
-    // console.log("listenres", signalingServerSubscription);
+
     return () => {
-      // ();
-      // signalingServerSubscription.removeEventListener("message", handleMessage);
       signalingServerSubscription.removeEventListener(
         "message",
         handleMessage,
@@ -418,17 +374,10 @@ export const useAudioStream = ({
   };
 
   const createWebRTCOffer = async () => {
-    console.log("CALLING CREATE OFFER");
     if (!signalingServerSubscription) {
       console.warn("No signaling server subscription");
       return;
     }
-
-    // if (!receiverWebRTCConnection) {
-    //   return;
-    // }
-
-    console.log({ webRTCConnections });
 
     webRTCConnections.forEach(async ({ conn, userId }) => {
       const offer = await conn.createOffer();
