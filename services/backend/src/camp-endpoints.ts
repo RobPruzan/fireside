@@ -128,13 +128,23 @@ export const campRouter = ProtectedElysia({ prefix: "/camp" })
       // if (data.kind ===)
       ws.publish(`audio-${ws.data.params.campId}`, {
         ...(data as any),
-        from_id: ws.data.user.id,
+        userId: ws.data.user.id,
       });
     },
     open: (ws) => {
       ws.subscribe(`audio-${ws.data.params.campId}`);
-    },
 
+      ws.publish(`audio-${ws.data.params.campId}`, {
+        kind: "user-joined",
+        userId: ws.data.user.id,
+      });
+    },
+    close: (ws) => {
+      ws.publish(`audio-${ws.data.params.campId}`, {
+        kind: "user-left",
+        userId: ws.data.user.id,
+      });
+    },
     params: t.Object({
       campId: t.String(),
     }),
