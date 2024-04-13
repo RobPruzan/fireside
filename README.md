@@ -1,3 +1,11 @@
+# Features
+- Live audio streaming to an arbitrary number of users through WebRTC
+- Collaborative canvas with media upload ability
+- Live messaging and reactions
+- General social media features (friends/friend requests, DMs, threads)
+
+ 
+
 ### Dependencies
 
 - npm (to install pnpm) https://docs.npmjs.com/downloading-and-installing-node-js-and-npm
