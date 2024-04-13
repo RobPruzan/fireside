@@ -248,8 +248,9 @@ export const useWebRTCConnection = ({ campId }: { campId: string }) => {
     };
     signalingServerSubscription.on("message", handleMessage);
 
-    return () =>
+    return () => {
       signalingServerSubscription.removeEventListener("message", handleMessage);
+    };
   }, [signalingServerSubscription, webRTCConnections]);
 
   const listenForAudio = async () => {
