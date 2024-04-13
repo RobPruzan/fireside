@@ -39,28 +39,11 @@ export const useWebRTCConnection = ({ campId }: { campId: string }) => {
     }
 
     if (camp.createdBy === user.id) {
-      // const handleOnIceCandidate = ({
-      //   candidate,
-      // }: RTCPeerConnectionIceEvent) => {
-      //   if (!candidate) {
-      //     return;
-      //   }
-      //   // broadcasterId: user.id,
-      //   // receiverId: userConn.userId
-
-      //   signalingServerSubscription.send(JSON.stringify({
-      //     kind: "webRTC-candidate",
-      //     candidate,
-      //   }));
-      // };
-
       webRTCConnections.forEach(({ conn, userId }) => {
         conn.onicecandidate = ({ candidate }: RTCPeerConnectionIceEvent) => {
           if (!candidate) {
             return;
           }
-          // broadcasterId: user.id,
-          // receiverId: userConn.userId
 
           signalingServerSubscription.send(
             JSON.stringify({
