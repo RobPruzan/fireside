@@ -116,7 +116,9 @@ export const useWebRTCConnection = ({ campId }: { campId: string }) => {
     }
 
     const subscription = new WebSocket(
-      "ws://" + "localhost:8080" + `/api/protected/camp/audio/${campId}`
+      "ws://" + import.meta.env.PROD
+        ? "fireside.ninja"
+        : "localhost:8080" + `/api/protected/camp/audio/${campId}`
     );
 
     // const subscription = client.api.protected.camp
