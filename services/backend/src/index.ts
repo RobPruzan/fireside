@@ -66,15 +66,26 @@ const app = new Elysia()
     const fallBackFile = Bun.file(
       "./node_modules/@fireside/frontend/dist/index.html"
     );
+    const uploadPath = path
+      .split("/")
+      .at(-1)
+      ?.replaceAll("/", "")
+      .replaceAll("..", "");
+    const uploadFIle = uploadPath ? Bun.file(`./upload/${uploadPath}`) : null;
 
-    const uploadFIle = Bun.file(`.${path}`);
+    // const splitPath =  path.split("/")
 
     set.headers["Cache-Control"] =
       "public, max-age=31536000, s-maxage=31536000, immutable";
 
-    console.log("attempting to read", `.${path}`, await uploadFIle.exists());
+    console.log(
+      "attempting to read",
+      path,
+      "vs real read path",
+      `./upload/${uploadPath}`
+    );
 
-    if (await uploadFIle.exists()) {
+    if (uploadFIle && (await uploadFIle.exists())) {
       set.headers["Content-Type"] = uploadFIle.type;
 
       return uploadFIle;
@@ -84,14 +95,18 @@ const app = new Elysia()
       // console.log('at')
       set.headers["Content-Type"] = assetFile.type;
 
+      console.log("served", path);
+
       return assetFile;
     }
 
     if (await publicFile.exists()) {
       set.headers["Content-Type"] = publicFile.type;
+      console.log("served", path);
       return publicFile;
     }
     set.headers["Content-Type"] = fallBackFile.type;
+    console.log("served", path);
     return fallBackFile;
   })
 
