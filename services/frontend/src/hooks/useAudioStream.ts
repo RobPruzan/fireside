@@ -103,7 +103,18 @@ export const useWebRTCConnection = ({ campId }: { campId: string }) => {
 
     setSignalingServerSubscription(subscription);
 
-    subscription.on("message", async (ws) => {
+    return () => {
+      console.log("closing subscription");
+      subscription.close();
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!signalingServerSubscription) {
+      return;
+    }
+
+    const handleMessage = async (ws: any) => {
       const typedData: WebRTCSignal = ws.data as any;
       console.log("got message");
 
@@ -162,7 +173,7 @@ export const useWebRTCConnection = ({ campId }: { campId: string }) => {
 
             userConn.conn.setLocalDescription(answer);
 
-            subscription.send({
+            signalingServerSubscription.send({
               kind: "webRTC-answer",
               answer,
             });
@@ -180,7 +191,7 @@ export const useWebRTCConnection = ({ campId }: { campId: string }) => {
 
           receiverWebRTCConnection.setLocalDescription(answer);
 
-          subscription.send({
+          signalingServerSubscription.send({
             kind: "webRTC-answer",
             answer,
           });
@@ -234,13 +245,12 @@ export const useWebRTCConnection = ({ campId }: { campId: string }) => {
           return;
         }
       }
-    });
-
-    return () => {
-      console.log("closing subscription");
-      subscription.close();
     };
-  }, [webRTCConnections, receiverWebRTCConnection]);
+    signalingServerSubscription.on("message", handleMessage);
+
+    return () =>
+      signalingServerSubscription.removeEventListener("message", handleMessage);
+  }, [signalingServerSubscription, webRTCConnections]);
 
   const listenForAudio = async () => {
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
