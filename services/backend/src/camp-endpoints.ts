@@ -154,6 +154,13 @@ export const campRouter = ProtectedElysia({ prefix: "/camp" })
         );
       }
 
+      if ((data as { kind: string }).kind === "started-broadcast") {
+        ws.publish(`audio-${ws.data.params.campId}`, {
+          kind: "started-broadcast",
+          userId: ws.data.user.id,
+        });
+      }
+
       ws.publish(
         getAudioRoom({
           broadcasterId: (data as { broadcasterId: string }).broadcasterId,

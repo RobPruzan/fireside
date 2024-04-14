@@ -16,9 +16,18 @@ type WebRTCSignal =
   | { kind: "webRTC-answer"; answer: RTCSessionDescriptionInit; userId: string }
   | { kind: "user-joined"; userId: string }
   | { kind: "user-left"; userId: string }
-  | { kind: "join-channel-request"; broadcasterId: string; userId: string };
+  | { kind: "join-channel-request"; broadcasterId: string; userId: string }
+  | { kind: "started-broadcast"; userId: string };
 type AudioSubscribeType = ReturnType<typeof throwAwaySubscribeFn>;
-export const useWebRTCConnection = ({ campId }: { campId: string }) => {
+export const useWebRTCConnection = ({
+  campId,
+  options,
+}: {
+  campId: string;
+  options?: Partial<{
+    listeningToAudio: boolean;
+  }>;
+}) => {
   const [webRTCConnections, setWebRTCConnections] = useState<
     Array<{ conn: RTCPeerConnection; userId: string }>
   >([]);
@@ -316,6 +325,21 @@ export const useWebRTCConnection = ({ campId }: { campId: string }) => {
 
           return;
         }
+
+        case "started-broadcast": {
+          // signalingServerSubscription.send(JSON.stringify({
+
+          // }))
+
+          console.log("STARTED BROADCAST", options);
+
+          if (options?.listeningToAudio) {
+            console.log("attempt to listen");
+            listenToBroadcaster();
+          }
+
+          return;
+        }
       }
     };
 
@@ -332,7 +356,7 @@ export const useWebRTCConnection = ({ campId }: { campId: string }) => {
         true
       );
     };
-  }, [signalingServerSubscription, webRTCConnections]);
+  }, [signalingServerSubscription, webRTCConnections, options]);
 
   const listenForAudio = async () => {
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -344,6 +368,12 @@ export const useWebRTCConnection = ({ campId }: { campId: string }) => {
         setSenders((prev) => [...prev, { sender, userId }]);
       });
     });
+
+    signalingServerSubscription?.send(
+      JSON.stringify({
+        kind: "started-broadcast",
+      })
+    );
   };
 
   const stopListeningForAudio = () => {
@@ -365,34 +395,6 @@ export const useWebRTCConnection = ({ campId }: { campId: string }) => {
       // });
     });
   };
-
-  return {
-    signalingServerSubscription,
-    listenForAudio,
-    stopListeningForAudio,
-    receiverWebRTCConnection,
-    webRTCConnections,
-    setReceiverWebRTCConnection,
-  };
-};
-
-export const useAudioStream = ({
-  campId,
-  options,
-}: {
-  campId: string;
-  options?: Partial<{ playAudioStream: boolean }>;
-}) => {
-  const {
-    listenForAudio,
-    signalingServerSubscription,
-    receiverWebRTCConnection,
-    webRTCConnections,
-    stopListeningForAudio,
-    setReceiverWebRTCConnection,
-  } = useWebRTCConnection({ campId });
-  const user = useDefinedUser();
-  const { camp } = useGetCamp({ campId });
 
   const listenToBroadcaster = () => {
     if (!receiverWebRTCConnection) {
@@ -459,10 +461,41 @@ export const useAudioStream = ({
   };
 
   return {
-    createWebRTCOffer,
+    signalingServerSubscription,
     listenForAudio,
-    listenToBroadcaster,
-    stopListeningToBroadcast,
     stopListeningForAudio,
+    receiverWebRTCConnection,
+    webRTCConnections,
+    setReceiverWebRTCConnection,
+    createWebRTCOffer,
+    stopListeningToBroadcast,
+    listenToBroadcaster,
   };
 };
+
+// export const useAudioStream = ({
+//   campId,
+//   options,
+// }: {
+//   campId: string;
+//   options?: Partial<{ playAudioStream: boolean }>;
+// }) => {
+//   const {
+//     listenForAudio,
+//     signalingServerSubscription,
+//     receiverWebRTCConnection,
+//     webRTCConnections,
+//     stopListeningForAudio,
+//     setReceiverWebRTCConnection,
+//   } = useWebRTCConnection({ campId });
+//   const user = useDefinedUser();
+//   const { camp } = useGetCamp({ campId });
+
+//   return {
+//     createWebRTCOffer,
+//     listenForAudio,
+//     listenToBroadcaster,
+//     stopListeningToBroadcast,
+//     stopListeningForAudio,
+//   };
+// };

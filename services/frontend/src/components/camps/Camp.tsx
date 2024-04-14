@@ -97,7 +97,8 @@ import {
   useGetWhiteBoardMessages,
 } from "./whiteboard/white-board-state";
 import { LoadingSection } from "../ui/loading";
-import { useAudioStream } from "@/hooks/useAudioStream";
+import { useWebRTCConnection } from "@/hooks/useAudioStream";
+// import { useAudioStream } from "@/hooks/useAudioStream";
 const subscribeFn = client.api.protected.message.ws({
   campId: "anything",
 }).subscribe;
@@ -122,8 +123,11 @@ export const Camp = () => {
     listenForAudio,
     listenToBroadcaster,
     stopListeningForAudio,
-  } = useAudioStream({
+  } = useWebRTCConnection({
     campId,
+    options: {
+      listeningToAudio,
+    },
     // options: {
     //   playAudioStream: broadcastingAudio,
     // },
