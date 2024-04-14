@@ -248,23 +248,19 @@ export const whiteboardRoute = ProtectedElysia({ prefix: "/whiteboard" })
   .post(
     "/whiteboard-image/upload/:whiteBoardId",
     async (ctx) => {
-      const imageId = crypto.randomUUID();
-      const extension = extensionMapping[ctx.body.whiteBoardImg.type];
-      console.log("create file object");
-      const file = Bun.file(`./upload/${imageId}${extension}`);
-
-      if (!file.type.includes("image")) {
+      const uploadFileRes = await uploadFile(ctx.body.whiteBoardImg, {
+        onlyImage: true,
+      });
+      if (!uploadFileRes) {
         ctx.error("Bad Request");
         return;
       }
-      console.log("writing file object");
-      await Bun.write(file, ctx.body.whiteBoardImg);
-      console.log("finished writing");
+      const { extension, name } = uploadFileRes;
       const newImg = await db
         .insert(whiteBoardImg)
         .values({
-          imgUrl: process.env.API_URL + `/upload/${imageId}${extension}`,
-          id: imageId,
+          imgUrl: process.env.API_URL + `/upload/${name}${extension}`,
+          id: name,
           whiteBoardId: ctx.params.whiteBoardId,
           x: Number(ctx.body.x),
           y: Number(ctx.body.y),
@@ -298,3 +294,26 @@ export const whiteboardRoute = ProtectedElysia({ prefix: "/whiteboard" })
       }),
     }
   );
+
+export const uploadFile = async (
+  file: File,
+  options?: Partial<{ onlyImage: boolean }>
+) => {
+  const fileId = crypto.randomUUID();
+  const extension = extensionMapping[file.type];
+  const targetFile = Bun.file(`./upload/${fileId}${extension}`);
+
+  if (options?.onlyImage) {
+    if (!file.type.includes("image")) {
+      return null;
+    }
+  }
+
+  await Bun.write(targetFile, file);
+
+  return {
+    name: fileId,
+    extension,
+    targetFile,
+  };
+};

@@ -34,7 +34,7 @@ export const RootCampLayout = () => {
           "min-w-[25%] h-[100dvh] overflow-y-auto flex flex-col relative",
 
           "hidden lg:flex",
-          !sideBarOpen && "hidden",
+          sideBarOpen ? "flex" : "hidden",
         ])}
       >
         {/* {visualViewport} */}
