@@ -117,13 +117,17 @@ export const Camp = () => {
   const [listeningToAudio, setListeningToAudio] = useState(false);
   const [broadcastingAudio, setBroadcastingAudio] = useState(false);
 
-  const { createWebRTCOffer, listenForAudio, listenToBroadcaster } =
-    useAudioStream({
-      campId,
-      // options: {
-      //   playAudioStream: broadcastingAudio,
-      // },
-    });
+  const {
+    createWebRTCOffer,
+    listenForAudio,
+    listenToBroadcaster,
+    stopListeningForAudio,
+  } = useAudioStream({
+    campId,
+    // options: {
+    //   playAudioStream: broadcastingAudio,
+    // },
+  });
 
   useEffect(() => {
     const lastChild = scrollRef.current?.lastChild!;
@@ -152,9 +156,11 @@ export const Camp = () => {
                 onClick={() => {
                   if (!broadcastingAudio) {
                     run(async () => {
-                      await listenForAudio();
-                      createWebRTCOffer();
+                      listenForAudio();
+                      // createWebRTCOffer();
                     });
+                  } else {
+                    stopListeningForAudio();
                   }
                   setBroadcastingAudio((prev) => {
                     return !prev;

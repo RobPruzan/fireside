@@ -3,6 +3,7 @@
 import { useDefinedUser } from "@/components/camps/camps-state";
 import { useGetCamp } from "@/components/camps/message-state";
 import { client } from "@/edenClient";
+import { serverFnReturnTypeHeader } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 
 const throwAwaySubscribeFn = client.api.protected.camp.audio({
@@ -30,6 +31,12 @@ export const useWebRTCConnection = ({ campId }: { campId: string }) => {
     useState<null | RTCPeerConnection>(null);
   const [signalingServerSubscription, setSignalingServerSubscription] =
     useState<WebSocket | null>(null);
+
+  const [mediaStream, setMediaStream] = useState<MediaStream | null>(null);
+
+  const [senders, setSenders] = useState<
+    Array<{ userId: string; sender: RTCRtpSender }>
+  >([]);
 
   const { camp } = useGetCamp({ campId });
   const user = useDefinedUser();
@@ -329,19 +336,43 @@ export const useWebRTCConnection = ({ campId }: { campId: string }) => {
 
   const listenForAudio = async () => {
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    // setMediaStream(stream);
     const audioTracks = stream.getAudioTracks();
-    webRTCConnections.forEach(async ({ conn }) => {
+    webRTCConnections.forEach(async ({ conn, userId }) => {
       audioTracks.forEach((track) => {
-        conn.addTrack(track, stream);
+        const sender = conn.addTrack(track, stream);
+        setSenders((prev) => [...prev, { sender, userId }]);
       });
+    });
+  };
+
+  const stopListeningForAudio = () => {
+    // mediaStream?.getAudioTracks().forEach((track) => track.stop());
+    // const audioTracks = mediaStream?.getAudioTracks();
+    webRTCConnections.forEach(({ conn, userId }) => {
+      const senderObj = senders.find(
+        (findSender) => userId === findSender.userId
+      );
+      if (!senderObj) {
+        return;
+      }
+
+      conn.removeTrack(senderObj.sender);
+
+      // audioTracks?.forEach((track) => {
+      //   // conn.removeTrack([mediaStream]);
+
+      // });
     });
   };
 
   return {
     signalingServerSubscription,
     listenForAudio,
+    stopListeningForAudio,
     receiverWebRTCConnection,
     webRTCConnections,
+    setReceiverWebRTCConnection,
   };
 };
 
@@ -357,6 +388,8 @@ export const useAudioStream = ({
     signalingServerSubscription,
     receiverWebRTCConnection,
     webRTCConnections,
+    stopListeningForAudio,
+    setReceiverWebRTCConnection,
   } = useWebRTCConnection({ campId });
   const user = useDefinedUser();
   const { camp } = useGetCamp({ campId });
@@ -387,6 +420,22 @@ export const useAudioStream = ({
     };
   };
 
+  const stopListeningToBroadcast = () => {
+    signalingServerSubscription?.send(
+      JSON.stringify({
+        kind: "leave-channel-request",
+        broadcasterId: camp.createdBy,
+        receiverId: user.id,
+      })
+    );
+
+    const conn = new RTCPeerConnection({
+      iceServers: [{ urls: ["stun:stun2.1.google.com:19302"] }],
+    });
+
+    setReceiverWebRTCConnection(conn);
+  };
+
   const createWebRTCOffer = async () => {
     if (!signalingServerSubscription) {
       console.warn("No signaling server subscription");
@@ -413,5 +462,7 @@ export const useAudioStream = ({
     createWebRTCOffer,
     listenForAudio,
     listenToBroadcaster,
+    stopListeningToBroadcast,
+    stopListeningForAudio,
   };
 };
