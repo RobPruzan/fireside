@@ -190,11 +190,14 @@ const WhiteBoard = ({
   options?: Options;
   whiteBoardImages: Array<WhiteBoardImgSelect & { image: HTMLImageElement }>;
 }) => {
-  const match = useMatchRoute();
   const whiteBoardImagesOptions = getWhiteBoardImagesOptions({ whiteBoardId });
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [isMouseDown, setIsMouseDown] = useState(false);
-  const currentMousePositionRef = useRef<{ x: number; y: number } | null>(null);
+  // const currentMousePositionRef = useRef<{ x: number; y: number } | null>(null);
+  const [currentMousePosition, setCurrentMousePosition] = useState<{
+    x: number;
+    y: number;
+  } | null>(null);
   const [drawingPoints, setDrawingPoints] = useState<
     Array<TransformedWhiteBoardPointGroup>
   >([]);
@@ -211,7 +214,7 @@ const WhiteBoard = ({
   const drawnPoints = whiteBoard ?? [];
   const [erased, setErased] = useState<Array<{ x: number; y: number }>>([]); // todo
 
-  const mouseCords = currentMousePositionRef.current;
+  // const mouseCords = currentMousePositionRef.current;
 
   const uploadImgMutation = useMutation({
     mutationFn: async ({
@@ -395,24 +398,34 @@ const WhiteBoard = ({
     ctx.fillStyle = "white";
     ctx.lineWidth = 55;
     erased.forEach((erasedPoint) => {
-      ctx.lineTo(erasedPoint.x, erasedPoint.y);
+      // ctx.lineTo(erasedPoint.x, erasedPoint.y);
+      ctx.beginPath();
+      ctx.arc(erasedPoint.x, erasedPoint.y, 0.0001, 0, 2 * Math.PI);
+      ctx.fillStyle = "white";
+      ctx.stroke();
     });
     ctx.stroke();
-
+    // console.log(mouseCords);
     ctx.fillStyle = "black";
-    if (selectedTool.kind === "eraser" && mouseCords) {
-      const radius = 20;
+    if (selectedTool.kind === "eraser" && currentMousePosition) {
+      const radius = 25;
       const borderWidth = 1;
 
       ctx.beginPath();
-      ctx.arc(mouseCords?.x, mouseCords.y, radius, 0, 2 * Math.PI);
+      ctx.arc(
+        currentMousePosition?.x,
+        currentMousePosition.y,
+        radius,
+        0,
+        2 * Math.PI
+      );
       ctx.fillStyle = "white";
       ctx.fill();
 
       ctx.beginPath();
       ctx.arc(
-        mouseCords.x,
-        mouseCords?.y,
+        currentMousePosition.x,
+        currentMousePosition?.y,
         radius + borderWidth,
         0,
         2 * Math.PI
@@ -473,14 +486,21 @@ const WhiteBoard = ({
     const handleWheel = (e: WheelEvent) => {
       e.preventDefault();
       setCamera((prev) => ({ x: prev.x - e.deltaX, y: prev.y - e.deltaY }));
-      if (currentMousePositionRef.current) {
-        currentMousePositionRef.current = {
-          x: currentMousePositionRef.current.x + e.deltaX,
-          y: currentMousePositionRef.current.y + e.deltaY,
+      if (currentMousePosition) {
+        // currentMousePosition = {
+        //   x: currentMousePosition.x + e.deltaX,
+        //   y: currentMousePosition.y + e.deltaY,
+        // };
+
+        const newMouse = {
+          x: currentMousePosition.x + e.deltaX,
+          y: currentMousePosition.y + e.deltaY,
         };
 
+        setCurrentMousePosition(newMouse);
+
         subscriptionRef.current?.send({
-          ...currentMousePositionRef.current,
+          ...newMouse,
           id: crypto.randomUUID(),
           kind: "mouse",
           whiteBoardId,
@@ -558,7 +578,8 @@ const WhiteBoard = ({
       <canvas
         onMouseLeave={() => {
           setIsMouseDown(false);
-          currentMousePositionRef.current = null;
+          // currentMousePositionRef.current = null;
+          setCurrentMousePosition(null);
 
           queryClient.setQueryData(whiteBoardQueryKey, (prev) => [
             ...(prev ?? []),
@@ -576,23 +597,31 @@ const WhiteBoard = ({
           setDrawingPoints([]);
         }}
         onMouseMove={(e) => {
-          currentMousePositionRef.current = cameraPOV({
+          // currentMousePositionRef.current = cameraPOV({
+          //   camera,
+          //   x: e.nativeEvent.offsetX,
+          //   y: e.nativeEvent.offsetY,
+          // });
+
+          const newMouse = cameraPOV({
             camera,
             x: e.nativeEvent.offsetX,
             y: e.nativeEvent.offsetY,
           });
 
+          setCurrentMousePosition(newMouse);
+
           subscriptionRef.current?.send({
-            ...currentMousePositionRef.current,
+            ...newMouse,
             id: crypto.randomUUID(),
             kind: "mouse",
             whiteBoardId,
             userId: user.id,
             user,
           });
-          if (!mouseCords) {
-            return;
-          }
+          // if (!mouseCords) {
+          //   return;
+          // }
 
           if (!isMouseDown) {
             return;
@@ -607,7 +636,7 @@ const WhiteBoard = ({
                 return;
               }
               const newPoint = {
-                ...mouseCords,
+                ...newMouse,
                 color: selectedTool.color,
                 whiteBoardId,
                 id: genWhiteBoardPointId(),
@@ -621,21 +650,21 @@ const WhiteBoard = ({
               return;
             }
             // disable till we think of a good way to erase
-            // case "eraser": {
-            //   if (!isMouseDown) {
-            //     return;
-            //   }
-            //   setErased((prev) => [...prev, mouseCords]);
-            //   // setDrawnPoints((drawnPoints) =>
-            //   //   drawnPoints.map((points) =>
-            //   //     points.filter(
-            //   //       (point) =>
-            //   //         point.x !== e.nativeEvent.offsetX &&
-            //   //         point.y !== e.nativeEvent.offsetY
-            //   //     )
-            //   //   )
-            //   // );
-            // }
+            case "eraser": {
+              if (!isMouseDown) {
+                return;
+              }
+              setErased((prev) => [...prev, newMouse]);
+              // setDrawnPoints((drawnPoints) =>
+              //   drawnPoints.map((points) =>
+              //     points.filter(
+              //       (point) =>
+              //         point.x !== e.nativeEvent.offsetX &&
+              //         point.y !== e.nativeEvent.offsetY
+              //     )
+              //   )
+              // );
+            }
           }
         }}
         onMouseDown={(e) => {
