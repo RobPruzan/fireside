@@ -255,11 +255,11 @@ export const whiteboardRoute = ProtectedElysia({ prefix: "/whiteboard" })
         ctx.error("Bad Request");
         return;
       }
-      const { extension, name } = uploadFileRes;
+      const { extension, name, src } = uploadFileRes;
       const newImg = await db
         .insert(whiteBoardImg)
         .values({
-          imgUrl: process.env.API_URL + `/upload/${name}${extension}`,
+          imgUrl: src,
           id: name,
           whiteBoardId: ctx.params.whiteBoardId,
           x: Number(ctx.body.x),
@@ -315,5 +315,6 @@ export const uploadFile = async (
     name: fileId,
     extension,
     targetFile,
+    src: process.env.API_URL + `/upload/${fileId}${extension}`,
   };
 };
