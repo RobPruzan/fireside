@@ -1,6 +1,5 @@
 services:
   db:
-    restart: always
     image: postgres:latest
     container_name: fireside_db_prod
     environment:
