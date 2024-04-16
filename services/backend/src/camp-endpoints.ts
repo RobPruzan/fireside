@@ -11,9 +11,10 @@ import {
   and,
   campMessageInsertSchema,
   campMessage,
+  db,
 } from "@fireside/db";
 import { ProtectedElysia } from "./lib";
-import { db } from ".";
+
 import { t } from "elysia";
 
 export const getAudioRoom = ({

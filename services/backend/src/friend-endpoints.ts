@@ -7,9 +7,10 @@ import {
   user,
   getTableColumns,
   aliasedTable,
+  db,
 } from "@fireside/db";
 import { t } from "elysia";
-import { db } from ".";
+
 import { ProtectedElysia, cleanUser } from "./lib";
 
 export const friendRoute = ProtectedElysia({ prefix: "/friend" })

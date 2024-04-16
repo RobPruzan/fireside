@@ -12,9 +12,10 @@ import {
   campThread,
   requiredCampMessageInsertSchema,
   requiredThreadInsertSchema,
+  db,
 } from "@fireside/db";
 import { t, type Static } from "elysia";
-import { db } from ".";
+
 import { cleanedUserCols } from "./camp-endpoints";
 import { ProtectedElysia } from "./lib";
 

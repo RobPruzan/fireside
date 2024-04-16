@@ -3,7 +3,7 @@ import cors from "@elysiajs/cors";
 import { Elysia, t } from "elysia";
 import { userProtectedRoute, userRoute } from "./user-endpoints";
 import { campRouter } from "./camp-endpoints";
-import { createDB } from "@fireside/db";
+
 import serverTiming from "@elysiajs/server-timing";
 import { friendRoute } from "./friend-endpoints";
 import staticPlugin from "@elysiajs/static";
@@ -13,10 +13,6 @@ import { whiteboardRoute } from "./whiteboard-endpoints";
 import { logger } from "@bogeychan/elysia-logger";
 
 const port = 8080;
-
-export const { db } = createDB({
-  connString: process.env.CONNECTION_STRING!,
-});
 
 const authRoutes = new Elysia()
   .use(campRouter)

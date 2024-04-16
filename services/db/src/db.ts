@@ -2,22 +2,30 @@ import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 import { config } from "dotenv";
 import { join } from "path";
-// yolo
+
 config({ path: join(__dirname, "..", ".env") });
 config({ path: join(__dirname, ".env") });
 
-export const createDB = ({ connString }: { connString: string }) => {
-  console.log(connString);
-  const sql = postgres(connString, {
+export let drizzleSql: ReturnType<typeof postgres>;
+export let db: ReturnType<typeof drizzle>;
+
+const connectDB = ({ connString }: { connString: string }) => {
+  drizzleSql = postgres(connString, {
     onnotice: (notice) => {
       console.log("PG NOTICE", notice);
     },
-    onclose: (connId) => {
-      console.log("PG CLOSE", config);
+    onclose: () => {
+      console.log("Connection closed, attempting to reconnect...");
+      setTimeout(() => connectDB({ connString }), 3000);
     },
     onparameter: (key, value) => {
       console.log("PARAM CHANGE", key, value);
     },
   });
-  return { db: drizzle(sql), sql };
+  console.log("connecting...");
+  db = drizzle(drizzleSql);
 };
+
+console.log("calling connectDb");
+
+connectDB({ connString: process.env.CONNECTION_STRING! });

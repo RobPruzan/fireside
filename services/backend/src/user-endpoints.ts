@@ -5,13 +5,13 @@ import {
   count,
   type User,
   token,
+  db,
   // alias,
 } from "@fireside/db";
 
 import { Elysia, t, type CookieOptions } from "elysia";
 import { ProtectedElysia, getDeleteAuthCookie } from "./lib";
 
-import { db } from ".";
 import { cleanedUserCols } from "./camp-endpoints";
 
 const getHash = ({ str }: { str: string }) =>

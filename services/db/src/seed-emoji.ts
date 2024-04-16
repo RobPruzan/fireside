@@ -1,12 +1,9 @@
 import { eq } from "drizzle-orm";
-import { createDB } from "./db";
+
 import { emojis, reactionAsset } from "./schema";
+import { db, drizzleSql } from "./db";
 
 (async () => {
-  const { db, sql } = createDB({
-    connString: process.env.CONNECTION_STRING,
-  });
-
   await Promise.all(
     emojis.map(async (emoji) => {
       const hasEmoji = (
@@ -27,5 +24,5 @@ import { emojis, reactionAsset } from "./schema";
     })
   );
 
-  sql.end();
+  drizzleSql.end();
 })();

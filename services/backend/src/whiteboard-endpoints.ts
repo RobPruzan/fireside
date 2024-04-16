@@ -19,9 +19,10 @@ import {
   messageWhiteBoardSchema,
   messageWhiteBoard,
   whiteBoardImg,
+  db,
 } from "@fireside/db";
 import { ProtectedElysia } from "./lib";
-import { db } from ".";
+
 import { t, type Static } from "elysia";
 import { run } from "@fireside/utils";
 import { cleanedUserCols } from "./camp-endpoints";

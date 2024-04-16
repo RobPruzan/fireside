@@ -5,12 +5,13 @@ import {
   campThreadInsertSchema,
   campThreadMessage,
   campThreadMessageInsertSchema,
+  db,
   eq,
   getTableColumns,
   user,
 } from "@fireside/db";
 import { ProtectedElysia } from "./lib";
-import { db } from ".";
+
 import { t } from "elysia";
 import { cleanedUserCols } from "./camp-endpoints";
 
