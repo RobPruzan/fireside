@@ -165,7 +165,7 @@ export const Camp = () => {
         >
           {camp.createdBy === user.id ? (
             <div className="flex flex-col w-full">
-              <div className="flex gap-x-4 items-center">
+              <div className="flex gap-x-4 items-center justify-center">
                 <Button variant={"ghost"}>
                   <Presentation />
                 </Button>
