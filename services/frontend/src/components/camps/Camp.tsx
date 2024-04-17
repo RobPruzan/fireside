@@ -155,38 +155,51 @@ export const Camp = () => {
   return (
     <div className="flex  w-full h-full  pb-5 relative">
       <div className="w-full flex  justify-center  absolute top-0">
-        <div className="flex  border border-t-0 rounded-b-md justify-center gap-x-4 items-center w-2/5 h-20 backdrop-blur z-10 text-muted-foreground bg-opacity-90">
-          <div className="flex flex-col w-full">
-            {broadcastingToUsers.map((userId) => (
-              <div className="border rounded-md p-3">{userId}</div>
-            ))}
-          </div>
+        <div
+          className={cn([
+            "flex  border border-t-0 rounded-b-md justify-center gap-x-4 items-center w-2/5  backdrop-blur z-10 text-muted-foreground bg-opacity-90",
+            camp.createdBy === user.id && broadcastingToUsers.length !== 0
+              ? "h-32"
+              : "h-20",
+          ])}
+        >
           {camp.createdBy === user.id ? (
-            <div>
-              <Button variant={"ghost"}>
-                <Presentation />
-              </Button>
-              <Button
-                onClick={() => {
-                  if (!broadcastingAudio) {
-                    listenForAudio();
-                  } else {
-                    stopListeningForAudio();
-                  }
-                  setBroadcastingAudio((prev) => {
-                    return !prev;
-                  });
-                }}
-                variant={"ghost"}
-              >
-                <Megaphone
-                  className={cn([broadcastingAudio && "text-green-500"])}
-                />
-              </Button>
+            <div className="flex flex-col w-full">
+              <div className="flex gap-x-4 items-center">
+                <Button variant={"ghost"}>
+                  <Presentation />
+                </Button>
+                <Button
+                  onClick={() => {
+                    if (!broadcastingAudio) {
+                      listenForAudio();
+                    } else {
+                      stopListeningForAudio();
+                    }
+                    setBroadcastingAudio((prev) => {
+                      return !prev;
+                    });
+                  }}
+                  variant={"ghost"}
+                >
+                  <Megaphone
+                    className={cn([broadcastingAudio && "text-green-500"])}
+                  />
+                </Button>
 
-              <Button variant={"ghost"}>
-                <BookCheck />
-              </Button>
+                <Button variant={"ghost"}>
+                  <BookCheck />
+                </Button>
+              </div>
+              {broadcastingToUsers.length > 0 && (
+                <div className="flex overflow-x-auto items-center p-3">
+                  {broadcastingToUsers.map((userId) => (
+                    <div className="border  p-3 text-xs rounded-full">
+                      {userId.slice(1, 5)}
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           ) : (
             <Button
