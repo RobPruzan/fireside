@@ -3,8 +3,17 @@ import postgres from "postgres";
 import { config } from "dotenv";
 import { join } from "path";
 
-config({ path: join(__dirname, "..", ".env") });
-config({ path: join(__dirname, ".env") });
+if (process.env.NODE_ENV === "production") {
+  config({ path: join(__dirname, "..", ".env") });
+  config({ path: join(__dirname, ".env") });
+  config({ path: join(__dirname, "..", ".env.production") });
+  config({ path: join(__dirname, ".env.production") });
+} else {
+  config({ path: join(__dirname, "..", ".env") });
+  config({ path: join(__dirname, ".env") });
+  config({ path: join(__dirname, "..", ".env.development") });
+  config({ path: join(__dirname, ".env.development") });
+}
 
 export let drizzleSql: ReturnType<typeof postgres>;
 export let db: ReturnType<typeof drizzle>;

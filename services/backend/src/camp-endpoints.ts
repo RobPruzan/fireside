@@ -145,7 +145,32 @@ export const campRouter = ProtectedElysia({ prefix: "/camp" })
         );
       }
 
+      if ((data as { kind: string }).kind === "ended-broadcast") {
+        ws.publish(`audio-${ws.data.params.campId}`, {
+          kind: "ended-broadcast",
+          userId: ws.data.user.id,
+        });
+      }
+
+      // if ((data as { kind: string }).kind === "user-joined") {
+      //   ws.publish(`audio-${ws.data.params.campId}`, {
+      //     kind: "user-joined",
+      //     userId: ws.data.user.id,
+      //   });
+      // }
+
       if ((data as { kind: string }).kind === "leave-channel-request") {
+        ws.publish(
+          getAudioRoom({
+            broadcasterId: (data as { broadcasterId: string }).broadcasterId,
+            campId: ws.data.params.campId,
+            receiverId: (data as { receiverId: string }).receiverId,
+          }),
+          {
+            ...(data as any),
+            userId: ws.data.user.id,
+          }
+        );
         ws.unsubscribe(
           getAudioRoom({
             broadcasterId: (data as { broadcasterId: string }).broadcasterId,

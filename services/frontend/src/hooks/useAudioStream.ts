@@ -4,6 +4,7 @@ import { useDefinedUser } from "@/components/camps/camps-state";
 import { useGetCamp } from "@/components/camps/message-state";
 import { client } from "@/edenClient";
 import { serverFnReturnTypeHeader } from "@tanstack/react-router";
+import { ReceiptRussianRuble } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
 const throwAwaySubscribeFn = client.api.protected.camp.audio({
@@ -17,7 +18,9 @@ type WebRTCSignal =
   | { kind: "user-joined"; userId: string }
   | { kind: "user-left"; userId: string }
   | { kind: "join-channel-request"; broadcasterId: string; userId: string }
-  | { kind: "started-broadcast"; userId: string };
+  | { kind: "leave-channel-request"; broadcasterId: string; userId: string }
+  | { kind: "started-broadcast"; userId: string }
+  | { kind: "ended-broadcast"; userId: string };
 type AudioSubscribeType = ReturnType<typeof throwAwaySubscribeFn>;
 export const useWebRTCConnection = ({
   campId,
@@ -26,6 +29,7 @@ export const useWebRTCConnection = ({
   campId: string;
   options?: Partial<{
     listeningToAudio: boolean;
+    broadcastingAudio: boolean;
   }>;
 }) => {
   const [webRTCConnections, setWebRTCConnections] = useState<
@@ -46,6 +50,12 @@ export const useWebRTCConnection = ({
   const [senders, setSenders] = useState<
     Array<{ userId: string; sender: RTCRtpSender }>
   >([]);
+
+  const [broadcastingToUsers, setBroadcastingToUsers] = useState<Array<string>>(
+    []
+  );
+
+  const [isBroadcasting, setIsBroadcasting] = useState(false);
 
   const { camp } = useGetCamp({ campId });
   const user = useDefinedUser();
@@ -261,7 +271,7 @@ export const useWebRTCConnection = ({
 
           return;
         }
-
+        case "leave-channel-request":
         case "user-left": {
           if (isBroadcaster) {
             setWebRTCConnections((prev) =>
@@ -273,6 +283,10 @@ export const useWebRTCConnection = ({
 
                 return true;
               })
+            );
+
+            setBroadcastingToUsers((prev) =>
+              prev.filter((id) => id !== typedData.userId)
             );
 
             signalingServerSubscription?.send(
@@ -296,6 +310,14 @@ export const useWebRTCConnection = ({
         }
 
         case "join-channel-request": {
+          if (!isBroadcaster) {
+            return;
+          }
+          console.log("join-channel-request", options);
+          if (!options?.broadcastingAudio) {
+            return;
+          }
+
           console.log("got join channel request");
           const userConn = webRTCConnections.find(
             (existingConn) => existingConn.userId === typedData.userId
@@ -303,6 +325,8 @@ export const useWebRTCConnection = ({
           if (!userConn) {
             return;
           }
+
+          setBroadcastingToUsers((prev) => [...prev, typedData.userId]);
 
           // webRTCConnections.forEach(async ({ conn, userId }) => {
           //   console.log({ conn });
@@ -331,6 +355,8 @@ export const useWebRTCConnection = ({
 
           // }))
 
+          setIsBroadcasting(true);
+
           console.log("STARTED BROADCAST", options);
 
           if (options?.listeningToAudio) {
@@ -338,6 +364,16 @@ export const useWebRTCConnection = ({
             listenToBroadcaster();
           }
 
+          return;
+        }
+
+        case "ended-broadcast": {
+          if (isBroadcaster) {
+            return;
+          }
+          console.log("ended broadcast");
+          setIsBroadcasting(false);
+          stopListeningToBroadcast();
           return;
         }
       }
@@ -356,7 +392,13 @@ export const useWebRTCConnection = ({
         true
       );
     };
-  }, [signalingServerSubscription, webRTCConnections, options]);
+  }, [
+    signalingServerSubscription,
+    webRTCConnections,
+    options?.listeningToAudio,
+    options?.broadcastingAudio,
+    receiverWebRTCConnection,
+  ]);
 
   const listenForAudio = async () => {
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -379,6 +421,14 @@ export const useWebRTCConnection = ({
   const stopListeningForAudio = () => {
     // mediaStream?.getAudioTracks().forEach((track) => track.stop());
     // const audioTracks = mediaStream?.getAudioTracks();
+    console.log("not listenign to audio");
+    signalingServerSubscription?.send(
+      JSON.stringify({
+        kind: "ended-broadcast",
+        broadcasterId: camp.createdBy,
+        receiverId: user.id,
+      })
+    );
     webRTCConnections.forEach(({ conn, userId }) => {
       const senderObj = senders.find(
         (findSender) => userId === findSender.userId
@@ -423,6 +473,7 @@ export const useWebRTCConnection = ({
   };
 
   const stopListeningToBroadcast = () => {
+    console.log("no longer listening");
     signalingServerSubscription?.send(
       JSON.stringify({
         kind: "leave-channel-request",
@@ -434,6 +485,8 @@ export const useWebRTCConnection = ({
     const conn = new RTCPeerConnection({
       iceServers: [{ urls: ["stun:stun2.1.google.com:19302"] }],
     });
+
+    receiverWebRTCConnection?.close();
 
     setReceiverWebRTCConnection(conn);
   };
@@ -470,6 +523,8 @@ export const useWebRTCConnection = ({
     createWebRTCOffer,
     stopListeningToBroadcast,
     listenToBroadcaster,
+    broadcastingToUsers,
+    isBroadcasting,
   };
 };
 

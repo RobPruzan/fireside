@@ -53,6 +53,7 @@ import {
   BookCheck,
   Edit,
   Image,
+  Info,
   Lock,
   Megaphone,
   MessageCircle,
@@ -123,10 +124,14 @@ export const Camp = () => {
     listenForAudio,
     listenToBroadcaster,
     stopListeningForAudio,
+    stopListeningToBroadcast,
+    broadcastingToUsers,
+    isBroadcasting,
   } = useWebRTCConnection({
     campId,
     options: {
       listeningToAudio,
+      broadcastingAudio,
     },
     // options: {
     //   playAudioStream: broadcastingAudio,
@@ -151,18 +156,20 @@ export const Camp = () => {
     <div className="flex  w-full h-full  pb-5 relative">
       <div className="w-full flex  justify-center  absolute top-0">
         <div className="flex  border border-t-0 rounded-b-md justify-center gap-x-4 items-center w-2/5 h-20 backdrop-blur z-10 text-muted-foreground bg-opacity-90">
+          <div className="flex flex-col w-full">
+            {broadcastingToUsers.map((userId) => (
+              <div className="border rounded-md p-3">{userId}</div>
+            ))}
+          </div>
           {camp.createdBy === user.id ? (
-            <>
+            <div>
               <Button variant={"ghost"}>
                 <Presentation />
               </Button>
               <Button
                 onClick={() => {
                   if (!broadcastingAudio) {
-                    run(async () => {
-                      listenForAudio();
-                      // createWebRTCOffer();
-                    });
+                    listenForAudio();
                   } else {
                     stopListeningForAudio();
                   }
@@ -176,22 +183,30 @@ export const Camp = () => {
                   className={cn([broadcastingAudio && "text-green-500"])}
                 />
               </Button>
+
               <Button variant={"ghost"}>
                 <BookCheck />
               </Button>
-            </>
+            </div>
           ) : (
             <Button
               onClick={() => {
+                if (!listeningToAudio) {
+                  console.log("listening");
+                  listenToBroadcaster();
+                } else {
+                  stopListeningToBroadcast();
+                }
                 setListeningToAudio((prev) => {
-                  if (!prev) {
-                    listenToBroadcaster();
-                  }
                   return !prev;
                 });
               }}
+              className="relative"
               variant={"ghost"}
             >
+              {isBroadcasting && (
+                <Info className="text-green-500 absolute -top-3 -right-3" />
+              )}
               <AudioLines
                 className={cn([listeningToAudio && "text-green-500"])}
               />
