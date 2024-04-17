@@ -194,7 +194,10 @@ export const Camp = () => {
               {broadcastingToUsers.length > 0 && (
                 <div className="flex overflow-x-auto items-center p-3">
                   {broadcastingToUsers.map((userId) => (
-                    <div className="border  p-3 text-xs rounded-full">
+                    <div
+                      key={userId}
+                      className="border  p-3 text-xs rounded-full"
+                    >
                       {userId.slice(1, 5)}
                     </div>
                   ))}

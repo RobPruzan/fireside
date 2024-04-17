@@ -31,7 +31,7 @@ export const RootCampLayout = () => {
       </div>
       <div
         className={cn([
-          "min-w-[25%] h-[100dvh] overflow-y-auto flex flex-col relative",
+          "w-[25%] min-w-[200px] h-[100dvh] overflow-y-auto flex flex-col relative",
 
           "hidden lg:flex",
           sideBarOpen ? "flex" : "hidden lg:hidden",

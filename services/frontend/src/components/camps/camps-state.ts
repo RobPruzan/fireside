@@ -17,8 +17,10 @@ import {
 import { useSetAtom } from "jotai";
 import { Nullish } from "@fireside/utils";
 import { redirect } from "@tanstack/react-router";
-
-export const dynamicSideBarOpen = atom(true);
+console.log(visualViewport, visualViewport && visualViewport.width < 1500);
+export const dynamicSideBarOpen = atom(
+  visualViewport && visualViewport.width > 900
+);
 export const createCampModalOpen = atom(false);
 
 export const useDefinedUser = (opts?: Opts) => {

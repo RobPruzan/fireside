@@ -16,6 +16,8 @@ import {
 import { ProtectedElysia } from "./lib";
 
 import { t } from "elysia";
+import type { ElysiaWS } from "elysia/ws";
+import type { ServerWebSocket } from "bun";
 
 export const getAudioRoom = ({
   broadcasterId,
@@ -135,7 +137,28 @@ export const campRouter = ProtectedElysia({ prefix: "/camp" })
   })
   .ws("/audio/:campId", {
     message: async (ws, data) => {
+      if ((data as { kind: string }).kind === "user-joined") {
+        ws.publish(`audio-${ws.data.params.campId}`, {
+          kind: "user-joined",
+          userId: ws.data.user.id,
+        });
+      }
       if ((data as { kind: string }).kind === "join-channel-request") {
+        ws.publish(`audio-${ws.data.params.campId}`, {
+          kind: "join-channel-request",
+          userId: ws.data.user.id,
+          ...(data as any),
+        });
+        ws.subscribe(
+          getAudioRoom({
+            broadcasterId: (data as { broadcasterId: string }).broadcasterId,
+            campId: ws.data.params.campId,
+            receiverId: (data as { receiverId: string }).receiverId,
+          })
+        );
+      }
+
+      if ((data as { kind: string }).kind === "join-channel-response") {
         ws.subscribe(
           getAudioRoom({
             broadcasterId: (data as { broadcasterId: string }).broadcasterId,
@@ -203,10 +226,10 @@ export const campRouter = ProtectedElysia({ prefix: "/camp" })
       console.log("joined", ws.data.user.email);
       ws.subscribe(`audio-${ws.data.params.campId}`);
 
-      ws.publish(`audio-${ws.data.params.campId}`, {
-        kind: "user-joined",
-        userId: ws.data.user.id,
-      });
+      // ws.publish(`audio-${ws.data.params.campId}`, {
+      //   kind: "user-joined",
+      //   userId: ws.data.user.id,
+      // });
     },
     close: (ws) => {
       ws.publish(`audio-${ws.data.params.campId}`, {
