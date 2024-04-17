@@ -66,6 +66,8 @@ export const useWebRTCConnection = ({
     []
   );
 
+  // const [stream, setStream] = useState<MediaStream | null>(null)
+
   const [isBroadcasting, setIsBroadcasting] = useState(false);
 
   const { camp } = useGetCamp({ campId });
@@ -78,6 +80,7 @@ export const useWebRTCConnection = ({
     if (camp.createdBy === user.id) {
       webRTCConnections.forEach(({ conn, userId }) => {
         conn.onicecandidate = ({ candidate }: RTCPeerConnectionIceEvent) => {
+          console.log("candidate");
           if (!candidate) {
             return;
           }
@@ -156,7 +159,7 @@ export const useWebRTCConnection = ({
 
     const handleMessage = async (ws: any) => {
       const typedData: WebRTCSignal = JSON.parse(ws.data);
-
+      console.log("kind:", typedData.kind);
       const isBroadcaster = camp.createdBy === user.id;
 
       switch (typedData.kind) {
@@ -203,33 +206,33 @@ export const useWebRTCConnection = ({
           return;
         }
         case "webRTC-offer": {
-          if (isBroadcaster) {
-            const userConn = webRTCConnections.find(
-              (existingConn) => existingConn.userId === typedData.userId
-            );
-            if (!userConn) {
-              return;
-            }
+          // if (isBroadcaster) {
+          //   const userConn = webRTCConnections.find(
+          //     (existingConn) => existingConn.userId === typedData.userId
+          //   );
+          //   if (!userConn) {
+          //     return;
+          //   }
 
-            userConn.conn.setRemoteDescription(
-              new RTCSessionDescription(typedData.offer)
-            );
+          //   userConn.conn.setRemoteDescription(
+          //     new RTCSessionDescription(typedData.offer)
+          //   );
 
-            const answer = await userConn.conn.createAnswer();
+          //   const answer = await userConn.conn.createAnswer();
 
-            userConn.conn.setLocalDescription(answer);
+          //   userConn.conn.setLocalDescription(answer);
 
-            signalingServerSubscription.send(
-              JSON.stringify({
-                kind: "webRTC-answer",
-                answer,
-                broadcasterId: camp.createdBy,
-                receiverId: userConn.userId,
-              })
-            );
+          //   signalingServerSubscription.send(
+          //     JSON.stringify({
+          //       kind: "webRTC-answer",
+          //       answer,
+          //       broadcasterId: camp.createdBy,
+          //       receiverId: userConn.userId,
+          //     })
+          //   );
 
-            return;
-          }
+          //   return;
+          // }
 
           if (!receiverWebRTCConnection) {
             return;
@@ -255,10 +258,25 @@ export const useWebRTCConnection = ({
         }
 
         case "user-joined": {
-          console.log("user-joined");
           if (isBroadcaster) {
+            if (!options?.broadcastingAudio) {
+              return;
+            }
             const conn = new RTCPeerConnection({
               iceServers: [{ urls: ["stun:stun2.1.google.com:19302"] }],
+            });
+            if (!mediaStream) {
+              conn.close();
+              return;
+            }
+            const audioTracks = mediaStream.getAudioTracks();
+
+            audioTracks.forEach((track) => {
+              const sender = conn.addTrack(track, mediaStream);
+              setSenders((prev) => [
+                ...prev,
+                { sender, userId: typedData.userId },
+              ]);
             });
 
             setWebRTCConnections((prev) => [
@@ -322,6 +340,7 @@ export const useWebRTCConnection = ({
           return;
         }
         case "join-channel-response": {
+          // console.log("got join channel response");
           if (!isBroadcaster) {
             return;
           }
@@ -331,14 +350,15 @@ export const useWebRTCConnection = ({
             return;
           }
 
-          console.log("got join channel request");
           const userConn = webRTCConnections.find(
-            (existingConn) => existingConn.userId === typedData.userId
+            (existingConn) => existingConn.userId === typedData.receiverId
           );
           if (!userConn) {
             console.log("early return");
             return;
           }
+
+          // userConn.
 
           setBroadcastingToUsers((prev) => [...prev, typedData.userId]);
 
@@ -347,8 +367,9 @@ export const useWebRTCConnection = ({
           // if (conn.state) {
           //   return;
           // }
+          console.log("creating offer for this conn", { userConn });
           const offer = await userConn.conn.createOffer({
-            // offerToReceiveAudio: true,
+            offerToReceiveAudio: true,
           });
 
           userConn.conn.setLocalDescription(offer);
@@ -367,63 +388,15 @@ export const useWebRTCConnection = ({
         }
 
         case "join-channel-request": {
-          console.log(
-            "got req",
-            isBroadcaster,
-            typedData,
-            options,
-            webRTCConnections
-          );
-          if (!isBroadcaster) {
-            if (typedData.receiverId === user.id) {
-              console.log("sending response");
-              signalingServerSubscription?.send(
-                JSON.stringify({
-                  kind: "join-channel-response",
-                  broadcasterId: camp.createdBy,
-                  receiverId: user.id,
-                })
-              );
-            }
-            // we need to ack the request to join the audio channel. This would be cleaner if it was an audio channel response
-
-            return;
+          if (!isBroadcaster && typedData.receiverId === user.id) {
+            signalingServerSubscription?.send(
+              JSON.stringify({
+                kind: "join-channel-response",
+                broadcasterId: camp.createdBy,
+                receiverId: user.id,
+              })
+            );
           }
-          console.log("join-channel-request", options);
-          if (!options?.broadcastingAudio) {
-            console.log("not broadcasting");
-            return;
-          }
-
-          // console.log("got join channel request");
-          // const userConn = webRTCConnections.find(
-          //   (existingConn) => existingConn.userId === typedData.userId
-          // );
-          // if (!userConn) {
-          //   console.log("early return");
-          //   return;
-          // }
-
-          // setBroadcastingToUsers((prev) => [...prev, typedData.userId]);
-
-          // // webRTCConnections.forEach(async ({ conn, userId }) => {
-          // //   console.log({ conn });
-          // // if (conn.state) {
-          // //   return;
-          // // }
-          // const offer = await userConn.conn.createOffer();
-
-          // userConn.conn.setLocalDescription(offer);
-
-          // signalingServerSubscription.send(
-          //   JSON.stringify({
-          //     kind: "webRTC-offer",
-          //     offer,
-          //     broadcasterId: camp.createdBy,
-          //     receiverId: typedData.userId,
-          //   })
-          // );
-          // // });
 
           return;
         }
@@ -476,11 +449,12 @@ export const useWebRTCConnection = ({
     options?.listeningToAudio,
     options?.broadcastingAudio,
     receiverWebRTCConnection,
+    mediaStream,
   ]);
 
   const listenForAudio = async () => {
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    // setMediaStream(stream);
+    setMediaStream(stream);
     const audioTracks = stream.getAudioTracks();
     webRTCConnections.forEach(async ({ conn, userId }) => {
       audioTracks.forEach((track) => {
@@ -514,8 +488,11 @@ export const useWebRTCConnection = ({
       if (!senderObj) {
         return;
       }
-
-      conn.removeTrack(senderObj.sender);
+      try {
+        conn.removeTrack(senderObj.sender);
+      } catch (e) {
+        console.log("bad remove track call");
+      }
 
       // audioTracks?.forEach((track) => {
       //   // conn.removeTrack([mediaStream]);
@@ -528,14 +505,6 @@ export const useWebRTCConnection = ({
     if (!receiverWebRTCConnection) {
       return;
     }
-
-    signalingServerSubscription?.send(
-      JSON.stringify({
-        kind: "user-joined",
-        // broadcasterId: camp.createdBy,
-        // receiverId: user.id,
-      })
-    );
 
     // signalingServerSubscription?.send(
     //   JSON.stringify({
@@ -556,6 +525,14 @@ export const useWebRTCConnection = ({
 
       audioElement.srcObject = audioStream;
     };
+
+    signalingServerSubscription?.send(
+      JSON.stringify({
+        kind: "user-joined",
+        // broadcasterId: camp.createdBy,
+        // receiverId: user.id,
+      })
+    );
   };
 
   const stopListeningToBroadcast = () => {

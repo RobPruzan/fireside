@@ -142,6 +142,7 @@ export const campRouter = ProtectedElysia({ prefix: "/camp" })
           kind: "user-joined",
           userId: ws.data.user.id,
         });
+        return;
       }
       if ((data as { kind: string }).kind === "join-channel-request") {
         ws.publish(`audio-${ws.data.params.campId}`, {

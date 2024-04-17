@@ -176,6 +176,7 @@ export const Camp = () => {
                     } else {
                       stopListeningForAudio();
                     }
+
                     setBroadcastingAudio((prev) => {
                       return !prev;
                     });
