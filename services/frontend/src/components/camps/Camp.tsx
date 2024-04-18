@@ -158,7 +158,7 @@ export const Camp = () => {
   const search = useSearch({ from: "/root-auth/camp-layout/camp/$campId" });
   const searchEntries = Object.entries(search);
   const toggleUsers = () => setShowUsers(!showUsers);
-  console.log("Active Users: ",activeUsers);
+  // console.log("Active Users: ",activeUsers);
   return (
     <div className="flex  w-full h-full  pb-5 relative">
       <div className="w-full flex  justify-center  absolute top-0">
