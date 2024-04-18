@@ -386,14 +386,14 @@ const MessageSection = memo(({ campId }: { campId: string }) => {
   };
   const subscriptionRef = useRef<null | ReturnType<typeof subscribeFn>>(null);
 const activeUsersRef = useRef<string[]>([]);
-
+console.log("ActiveUsersRef: ",activeUsers)
 useEffect(() => {
   const newSubscription = client.api.protected.message
     .ws({ campId })
     .subscribe();
 
   activeUsers.push(user.id);
-  activeUsersRef.current = activeUsers;
+  // activeUsersRef.current = activeUsers;
 
   newSubscription.on("message", (event) => {
     updateMessageCache(event.data as PublishedMessage);

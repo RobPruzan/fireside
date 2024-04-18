@@ -17,7 +17,7 @@ type WebRTCSignal =
   | { kind: "webRTC-answer"; answer: RTCSessionDescriptionInit; userId: string }
   | { kind: "user-joined"; userId: string }
   | { kind: "user-left"; userId: string }
-  | { kind: "active-users"; users: []; userId: string}
+  // | { kind: "active-users"; users: []; userId: string}
   | {
       kind: "join-channel-request";
       broadcasterId: string;
@@ -70,8 +70,6 @@ export const useWebRTCConnection = ({
   // const [stream, setStream] = useState<MediaStream | null>(null)
 
   const [isBroadcasting, setIsBroadcasting] = useState(false);
-  const [activeUsers, setActiveUsers] = useState([]);
-  console.log("Active Users: ",activeUsers);
   const { camp } = useGetCamp({ campId });
   const user = useDefinedUser();
   useEffect(() => {
@@ -428,13 +426,6 @@ export const useWebRTCConnection = ({
           setIsBroadcasting(false);
           stopListeningToBroadcast();
           return;
-        }
-
-        case "active-users": {
-          // console.log("Active users updated:", );
-          console.log("User Id: ", typedData.userId);
-          setActiveUsers(typedData.users);
-          break;
         }
       }
     };
