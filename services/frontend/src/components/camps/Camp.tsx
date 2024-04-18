@@ -65,6 +65,7 @@ import {
   Trash,
   Unlock,
   XIcon,
+  Users,
 } from "lucide-react";
 import { Button, buttonVariants } from "../ui/button";
 import { Avatar } from "../ui/avatar";
@@ -91,6 +92,7 @@ import { client } from "@/edenClient";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { PublishedMessage } from "@fireside/backend/src/message-endpoints";
 import { threadId } from "worker_threads";
+import UserList from "./UserList.tsx"
 import { WhiteBoardLoader } from "./whiteboard/WhiteBoard";
 import {
   useCreateWhiteBoardMessageMutation,
@@ -110,6 +112,8 @@ const SocketMessageContext = createContext<{
 }>({
   subscriptionRef: null,
 });
+let activeUsers:string[] = [];
+
 export const Camp = () => {
   const { campId } = useParams({ from: "/root-auth/camp-layout/camp/$campId" });
   const { messages } = useGetMessages({ campId });
@@ -118,7 +122,8 @@ export const Camp = () => {
   const user = useDefinedUser();
   const [listeningToAudio, setListeningToAudio] = useState(false);
   const [broadcastingAudio, setBroadcastingAudio] = useState(false);
-
+  const [showUsers, setShowUsers] = useState(false);
+  
   const {
     createWebRTCOffer,
     listenForAudio,
@@ -152,6 +157,8 @@ export const Camp = () => {
 
   const search = useSearch({ from: "/root-auth/camp-layout/camp/$campId" });
   const searchEntries = Object.entries(search);
+  const toggleUsers = () => setShowUsers(!showUsers);
+  console.log("Active Users: ",activeUsers);
   return (
     <div className="flex  w-full h-full  pb-5 relative">
       <div className="w-full flex  justify-center  absolute top-0">
@@ -187,9 +194,11 @@ export const Camp = () => {
                     className={cn([broadcastingAudio && "text-green-500"])}
                   />
                 </Button>
-
                 <Button variant={"ghost"}>
                   <BookCheck />
+                </Button>
+                <Button variant="ghost" onClick={toggleUsers}>
+                  <Users />
                 </Button>
               </div>
               {broadcastingToUsers.length > 0 && (
@@ -325,7 +334,6 @@ export const Camp = () => {
     </div>
   );
 };
-
 const MessageSection = memo(({ campId }: { campId: string }) => {
   const [userMessage, setUserMessage] = useState("");
 
@@ -377,20 +385,28 @@ const MessageSection = memo(({ campId }: { campId: string }) => {
     ]);
   };
   const subscriptionRef = useRef<null | ReturnType<typeof subscribeFn>>(null);
+const activeUsersRef = useRef<string[]>([]);
 
-  useEffect(() => {
-    const newSubscription = client.api.protected.message
-      .ws({ campId })
-      .subscribe();
+useEffect(() => {
+  const newSubscription = client.api.protected.message
+    .ws({ campId })
+    .subscribe();
 
-    newSubscription.on("message", (event) => {
-      updateMessageCache(event.data as PublishedMessage);
-    });
-    subscriptionRef.current = newSubscription;
-    return () => {
-      newSubscription.close();
-    };
-  }, []);
+  activeUsers.push(user.id);
+  activeUsersRef.current = activeUsers;
+
+  newSubscription.on("message", (event) => {
+    updateMessageCache(event.data as PublishedMessage);
+  });
+
+  subscriptionRef.current = newSubscription;
+
+  return () => {
+
+    activeUsersRef.current = activeUsers.filter((id) => id !== user.id);
+    newSubscription.close();
+  };
+}, []);
 
   const [messageWithContextMenuId, setMessageWithContextMenuId] = useState<
     null | string

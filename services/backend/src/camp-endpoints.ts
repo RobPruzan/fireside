@@ -135,6 +135,10 @@ export const campRouter = ProtectedElysia({ prefix: "/camp" })
 
     return res;
   })
+  .get("/user/active-user", async (ctx) => {
+    
+  })
+
   .ws("/audio/:campId", {
     message: async (ws, data) => {
       if ((data as { kind: string }).kind === "user-joined") {

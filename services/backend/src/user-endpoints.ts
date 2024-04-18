@@ -229,7 +229,7 @@ export const userRoute = new Elysia({
     set.status = 200;
     return isAuthResult;
   });
-
+  
 export const userProtectedRoute = ProtectedElysia({
   prefix: "/user",
 })
