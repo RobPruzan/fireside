@@ -700,7 +700,7 @@ const Message = memo(
                     <Image size={20} />
                   </Avatar>
                   <div className="text-sm font-medium leading-none">
-                    <h3 className="text-base">{messageObj.user.email}</h3>
+                    <h3 className="text-base">{messageObj.user.username}</h3>
                     <span className="text-sm text-gray-500 dark:text-gray-400">
                       <div className="flex gap-x-1">
                         <span>

@@ -57,7 +57,7 @@ const messageBodySchema = t.Union([
     t.Object({
       user: t.Object({
         id: t.String(),
-        email: t.String(),
+        username: t.String(),
         displayName: t.String(),
       }),
     }),

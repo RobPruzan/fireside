@@ -29,7 +29,7 @@ export const user = pgTable("user", {
   id: uuid("id").defaultRandom().primaryKey(),
   displayName: text("name").notNull(),
   token: text("token").references(() => token.value),
-  email: text("email").notNull(),
+  username: text("username").notNull(),
   password: text("password").notNull(),
   role: text("role").$type<"instructor" | "student">().notNull(),
   createdAt: timestamp("createdAt", { mode: "string", withTimezone: true })

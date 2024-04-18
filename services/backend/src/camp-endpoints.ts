@@ -224,7 +224,7 @@ export const campRouter = ProtectedElysia({ prefix: "/camp" })
       );
     },
     open: (ws) => {
-      console.log("joined", ws.data.user.email);
+      console.log("joined", ws.data.user.username);
       ws.subscribe(`audio-${ws.data.params.campId}`);
 
       // ws.publish(`audio-${ws.data.params.campId}`, {

@@ -74,7 +74,7 @@ export const ProfileDropdown = () => {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent>
-                <DropdownMenuLabel>{user.data.email}</DropdownMenuLabel>
+                <DropdownMenuLabel>{user.data.username}</DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={() => navigate({ to: "/profile" })}>
                   Profile

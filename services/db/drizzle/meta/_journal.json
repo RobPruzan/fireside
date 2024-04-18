@@ -232,6 +232,13 @@
       "when": 1712939514197,
       "tag": "0032_lying_scarlet_witch",
       "breakpoints": true
+    },
+    {
+      "idx": 33,
+      "version": "5",
+      "when": 1713400483067,
+      "tag": "0033_majestic_magdalene",
+      "breakpoints": true
     }
   ]
 }

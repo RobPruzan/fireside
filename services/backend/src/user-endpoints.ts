@@ -88,7 +88,7 @@ export const userRoute = new Elysia({
         await db
           .select({ count: count() })
           .from(user)
-          .where(eq(user.email, ctx.body.email))
+          .where(eq(user.username, ctx.body.username))
       ).at(0);
       if (!userWithSameEmail) {
         ctx.set.status = 500;
@@ -125,7 +125,7 @@ export const userRoute = new Elysia({
           .insert(user)
           .values({
             displayName: "todo: random names",
-            email: ctx.body.email,
+            username: ctx.body.username,
             password: passwordHash,
             token: hashedToken,
             role: "student",
@@ -153,7 +153,7 @@ export const userRoute = new Elysia({
     },
     {
       body: t.Object({
-        email: t.String(),
+        username: t.String(),
         password: t.String(),
         confirmedPassword: t.String(),
       }),
@@ -163,11 +163,11 @@ export const userRoute = new Elysia({
     "/login",
     async (ctx) => {
       const potentialUser = (
-        await db.select().from(user).where(eq(user.email, ctx.body.email))
+        await db.select().from(user).where(eq(user.username, ctx.body.username))
       ).at(0);
       if (!potentialUser) {
         ctx.set.status = 400;
-        throw new Error(`No user with email: ${ctx.body.email} found`);
+        throw new Error(`No user with username: ${ctx.body.username} found`);
       }
 
       const verified = await Bun.password.verify(
@@ -176,7 +176,7 @@ export const userRoute = new Elysia({
       );
       if (!verified) {
         ctx.set.status = 401;
-        throw new Error(`Invalid password for ${ctx.body.email}`);
+        throw new Error(`Invalid password for ${ctx.body.username}`);
       }
       const originalToken = crypto.randomUUID();
       const hashedToken = await getHash({ str: originalToken });
@@ -219,7 +219,7 @@ export const userRoute = new Elysia({
     },
     {
       body: t.Object({
-        email: t.String(),
+        username: t.String(),
         password: t.String(),
       }),
     }

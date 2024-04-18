@@ -83,7 +83,7 @@ export const Thread = ({ threadId }: { threadId: string }) => {
                 index === 0 && "pt-4",
               ])}
             >
-              {threadMessage.user.email}
+              {threadMessage.user.username}
               <div className="flex">
                 <div
                   className={cn([

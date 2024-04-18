@@ -364,7 +364,7 @@ const WhiteBoard = ({
       }
 
       // ctx.font = "10px";
-      // ctx.fillText(mousePoint.user.email, mousePoint.x - 15, mousePoint.y - 5);
+      // ctx.fillText(mousePoint.user.username, mousePoint.x - 15, mousePoint.y - 5);
     });
 
     const drawLine = ({
@@ -441,7 +441,11 @@ const WhiteBoard = ({
       }
 
       ctx.font = "10px";
-      ctx.fillText(mousePoint.user.email, mousePoint.x - 15, mousePoint.y - 5);
+      ctx.fillText(
+        mousePoint.user.username,
+        mousePoint.x - 15,
+        mousePoint.y - 5
+      );
     });
 
     ctx.stroke();
