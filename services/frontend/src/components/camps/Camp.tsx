@@ -334,7 +334,8 @@ const MessageSection = memo(({ campId }: { campId: string }) => {
   const queryClient = useQueryClient();
   const { messagesQueryKey } = useGetMessages({ campId });
   const { threadsQueryKey } = useGetThreads({ campId });
-  const { whiteBoardMessages } = useGetWhiteBoardMessages({ campId });
+  const { whiteBoardMessages, whiteBoardMessagesQuery } =
+    useGetWhiteBoardMessages({ campId });
   const createWhiteBoardMessageMutation = useCreateWhiteBoardMessageMutation({
     campId,
   });
@@ -386,6 +387,7 @@ const MessageSection = memo(({ campId }: { campId: string }) => {
     newSubscription.on("message", (event) => {
       updateMessageCache(event.data as PublishedMessage);
     });
+    whiteBoardMessagesQuery.refetch();
     subscriptionRef.current = newSubscription;
     return () => {
       newSubscription.close();
