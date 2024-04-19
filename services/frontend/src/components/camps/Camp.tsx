@@ -88,11 +88,10 @@ import { Thread } from "./Thread";
 import { useGetThreads } from "./thread-state";
 import { toast } from "../ui/use-toast";
 import { Textarea } from "../ui/textarea";
-import { client } from "@/edenClient";
+import { client, dataOrThrow } from "@/edenClient";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { PublishedMessage } from "@fireside/backend/src/message-endpoints";
 import { threadId } from "worker_threads";
-import UserList from "./UserList.tsx"
 import { WhiteBoardLoader } from "./whiteboard/WhiteBoard";
 import {
   useCreateWhiteBoardMessageMutation,
@@ -112,7 +111,6 @@ const SocketMessageContext = createContext<{
 }>({
   subscriptionRef: null,
 });
-let activeUsers:string[] = [];
 
 export const Camp = () => {
   const { campId } = useParams({ from: "/root-auth/camp-layout/camp/$campId" });
@@ -155,10 +153,11 @@ export const Camp = () => {
     }
   }, [messages.length]);
 
+  const res = client.api.user.connectedUsers.get();
+  
+  
   const search = useSearch({ from: "/root-auth/camp-layout/camp/$campId" });
   const searchEntries = Object.entries(search);
-  const toggleUsers = () => setShowUsers(!showUsers);
-  // console.log("Active Users: ",activeUsers);
   return (
     <div className="flex  w-full h-full  pb-5 relative">
       <div className="w-full flex  justify-center  absolute top-0">
@@ -385,28 +384,19 @@ const MessageSection = memo(({ campId }: { campId: string }) => {
     ]);
   };
   const subscriptionRef = useRef<null | ReturnType<typeof subscribeFn>>(null);
-const activeUsersRef = useRef<string[]>([]);
-console.log("ActiveUsersRef: ",activeUsers)
-useEffect(() => {
-  const newSubscription = client.api.protected.message
-    .ws({ campId })
-    .subscribe();
-
-  activeUsers.push(user.id);
-  // activeUsersRef.current = activeUsers;
-
-  newSubscription.on("message", (event) => {
-    updateMessageCache(event.data as PublishedMessage);
-  });
-
-  subscriptionRef.current = newSubscription;
-
-  return () => {
-
-    activeUsersRef.current = activeUsers.filter((id) => id !== user.id);
-    newSubscription.close();
-  };
-}, []);
+  useEffect(() => {
+    const newSubscription = client.api.protected.message
+      .ws({ campId })
+      .subscribe();
+    
+    newSubscription.on("message", (event) => {
+      updateMessageCache(event.data as PublishedMessage);
+    });
+    subscriptionRef.current = newSubscription;
+    return () => {
+      newSubscription.close();
+    };
+  }, []);
 
   const [messageWithContextMenuId, setMessageWithContextMenuId] = useState<
     null | string

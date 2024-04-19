@@ -73,7 +73,7 @@ export const getSession = async ({ authToken }: { authToken: string }) => {
     user: cleanUser(authUser),
   };
 };
-
+const users: {current: Array<string>} ={current: []};
 export const userRoute = new Elysia({
   prefix: "/user",
 })
@@ -228,8 +228,25 @@ export const userRoute = new Elysia({
     const isAuthResult = await getSession({ authToken: auth.value });
     set.status = 200;
     return isAuthResult;
-  });
-  
+  })
+  .ws("connected-users",{
+    open: (ws) => {
+      ws.subscribe(`connected-users-${ws.data.params.campId}`);
+      users.current.push(ws.data.user.id);
+      ws.publish(`connected-users-${ws.data.params.campId}`, users.current);
+    },
+    close: (ws) => {
+      users.current = users.current.filter(userId => userId !== ws.data.user.id)
+      ws.publish(`connected-users-${ws.data.params.campId}`, users.current)
+    },
+    params: t.Object({
+      campId: t.String(), 
+    }),
+    body: t.Unknown(),
+  })
+
+  .get('/connectedUsers', () => users.current);
+
 export const userProtectedRoute = ProtectedElysia({
   prefix: "/user",
 })
@@ -242,4 +259,4 @@ export const userProtectedRoute = ProtectedElysia({
       .where(eq(user.id, ctx.user.id));
     ctx.cookie.auth.set(getDeleteAuthCookie());
   })
-  .get("/get-all", () => db.select(cleanedUserCols).from(user));
+  .get("/get-all", () => db.select(cleanedUserCols).from(user))

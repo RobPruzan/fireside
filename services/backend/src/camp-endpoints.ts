@@ -30,7 +30,6 @@ export const getAudioRoom = ({
   broadcasterId: string;
   receiverId: string;
 }) => `audio/${campId}/${broadcasterId}/${receiverId}`;
-
 export const campRouter = ProtectedElysia({ prefix: "/camp" })
   .get(
     "/retrieve/:campId",
@@ -137,10 +136,6 @@ export const campRouter = ProtectedElysia({ prefix: "/camp" })
 
     return res;
   })
-  .get("/user/active-user", async (ctx) => {
-    
-  })
-
 
   .ws("/audio/:campId", {
     message: async (ws, data) => {
@@ -233,25 +228,12 @@ export const campRouter = ProtectedElysia({ prefix: "/camp" })
     open: (ws) => {
       console.log("joined", ws.data.user.email);
       ws.subscribe(`audio-${ws.data.params.campId}`);
-      // ws.subscribe(`userlist-${ws.data.params.campId}`);
-      // addActiveUser(ws.data.params.campId, ws.data.user.id);
-      // broadcastActiveUsers(ws.data.params.campId,ws);
-      // ws.publish(`audio-${ws.data.params.campId}`, {
-      //   kind: "user-joined",
-      //   userId: ws.data.user.id,
-      // });
     },
     close: (ws) => {
-      // removeActiveUser(ws.data.params.campId, ws.data.user.id);
-      // broadcastActiveUsers(ws.data.params.campId,ws);
       ws.publish(`audio-${ws.data.params.campId}`, {
         kind: "user-left",
         userId: ws.data.user.id,
       });
-      // ws.publish(`userlist-${ws.data.params.campId}`, {
-      //   kind: "user-left",
-      //   userId: ws.data.user.id,
-      // });
     },
     params: t.Object({
       campId: t.String(),
@@ -259,36 +241,10 @@ export const campRouter = ProtectedElysia({ prefix: "/camp" })
     body: t.Unknown(),
   });
 
+  
+
 export const {
   token: tk,
   password: pwd,
   ...cleanedUserCols
 } = getTableColumns(user);
-// const getCampsWithCount = ({}:{campId:string,camMember}) => {}
-//
-// const activeUsers: Record<string, Set<string>> = {};
-
-// function addActiveUser(campId: string, userId: string) {
-//   if (!activeUsers[campId]) {
-//       activeUsers[campId] = new Set<string>();
-//   }
-//   activeUsers[campId].add(userId);
-// }
-
-// function removeActiveUser(campId: string, userId: string) {
-//   if (activeUsers[campId]) {
-//       activeUsers[campId].delete(userId);
-//       if (activeUsers[campId].size === 0) {
-//           delete activeUsers[campId]; // Optionally remove the set if empty
-//       }
-//   }
-// }
-// function broadcastActiveUsers(campId: string, ws: any){
-//   console.log("penis");
-//   const userList = Array.from(activeUsers[campId]);
-//   ws.publish(`userlist-${campId}`, {
-//     kind: "active-users",
-//     users: userList,
-//     userId: ws.data.user.id,
-//   });
-// }
