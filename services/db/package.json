@@ -26,6 +26,6 @@
   },
   "devDependencies": {
     "@types/node": "^20.11.19",
-    "drizzle-kit": "^0.20.14"
+    "drizzle-kit": "^0.20.16"
   }
 }
