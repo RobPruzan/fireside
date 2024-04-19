@@ -84,18 +84,18 @@ export const userRoute = new Elysia({
         throw new Error("Pass and confirmed password not equal");
       }
 
-      const userWithSameEmail = (
+      const userWithSameUsername = (
         await db
           .select({ count: count() })
           .from(user)
           .where(eq(user.username, ctx.body.username))
       ).at(0);
-      if (!userWithSameEmail) {
+      if (!userWithSameUsername) {
         ctx.set.status = 500;
         throw new Error("Failed to fetch users");
       }
 
-      if (userWithSameEmail.count > 0) {
+      if (userWithSameUsername.count > 0) {
         ctx.set.status = 409;
         throw new Error("User with email already registered");
       }

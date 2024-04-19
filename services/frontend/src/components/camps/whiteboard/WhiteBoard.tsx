@@ -434,19 +434,20 @@ const WhiteBoard = ({
       ctx.lineWidth = borderWidth;
       ctx.stroke();
     }
+    if (!options?.readOnly) {
+      whiteBoardMousePoints?.forEach((mousePoint) => {
+        if (pencilImage.complete) {
+          ctx.drawImage(pencilImage, mousePoint.x, mousePoint.y, 20, 20);
+        }
 
-    whiteBoardMousePoints?.forEach((mousePoint) => {
-      if (pencilImage.complete) {
-        ctx.drawImage(pencilImage, mousePoint.x, mousePoint.y, 20, 20);
-      }
-
-      ctx.font = "10px";
-      ctx.fillText(
-        mousePoint.user.username,
-        mousePoint.x - 15,
-        mousePoint.y - 5
-      );
-    });
+        ctx.font = "10px";
+        ctx.fillText(
+          mousePoint.user.username,
+          mousePoint.x - 15,
+          mousePoint.y - 5
+        );
+      });
+    }
 
     ctx.stroke();
 

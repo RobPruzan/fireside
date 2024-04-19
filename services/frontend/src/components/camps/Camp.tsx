@@ -352,28 +352,32 @@ const MessageSection = memo(({ campId }: { campId: string }) => {
       lastChild.scrollIntoView({
         behavior: "instant",
         block: "end",
-        inline: "nearest",
       });
     }
-  }, [messages.length]);
+  }, [messages.length, whiteBoardMessages.length]);
 
-  const updateMessageCache = ({ message, thread }: PublishedMessage) => {
+  const updateMessageCache = (publishedMessage: PublishedMessage) => {
     queryClient.setQueryData(messagesQueryKey, (prev) => [
       ...(prev ?? []),
       {
-        user,
-        userId: user.id,
-        ...message,
+        message: publishedMessage.message.message,
+        user: publishedMessage.user,
+        campId: publishedMessage.message.campId,
+        createdAt: publishedMessage.message.createdAt,
+        id: publishedMessage.message.id,
+        userId: publishedMessage.user.id,
+        // userId: user.id,
+        // ...message,
       },
     ]);
 
     queryClient.setQueryData(threadsQueryKey, (prev) => [
       ...(prev ?? []),
       {
-        userId: user.id,
-        campId,
-        createdBy: user.id,
-        ...thread,
+        userId: publishedMessage.user.id,
+        campId: publishedMessage.message.campId,
+        createdBy: publishedMessage.thread.createdBy!,
+        ...publishedMessage.thread,
       },
     ]);
   };
@@ -386,8 +390,9 @@ const MessageSection = memo(({ campId }: { campId: string }) => {
 
     newSubscription.on("message", (event) => {
       updateMessageCache(event.data as PublishedMessage);
+      whiteBoardMessagesQuery.refetch();
     });
-    whiteBoardMessagesQuery.refetch();
+
     subscriptionRef.current = newSubscription;
     return () => {
       newSubscription.close();
@@ -468,11 +473,13 @@ const MessageSection = memo(({ campId }: { campId: string }) => {
                 subscriptionRef.current?.send({
                   message: newMessage,
                   thread: newThread,
+                  user,
                 });
 
                 updateMessageCache({
                   message: newMessage,
                   thread: newThread,
+                  user,
                 });
 
                 if (nonCreatedMessageWhiteBoardInfo) {

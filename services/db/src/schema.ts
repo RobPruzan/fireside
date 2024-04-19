@@ -31,17 +31,26 @@ export const user = pgTable("user", {
   token: text("token").references(() => token.value),
   username: text("username").notNull(),
   password: text("password").notNull(),
-  role: text("role").$type<"instructor" | "student">().notNull(),
   createdAt: timestamp("createdAt", { mode: "string", withTimezone: true })
     .$defaultFn(() => new Date().toISOString())
     .notNull(),
   updatedAt: timestamp("updated_at", { mode: "string" }),
 });
 
-export const safeUserSelectSchema = createSelectSchema(user, {
-  token: t.Optional(t.Never()),
-  password: t.Optional(t.Never()),
-});
+export const userSelectSchema = createSelectSchema(user);
+
+export const safeUserSelectSchema = t.Intersect([
+  t.Omit(userSelectSchema, ["token", "password"]),
+  t.Object({
+    id: t.String(),
+    createdAt: t.String(),
+  }),
+]);
+
+// export const safeUserInsertSchema = createInsertSchema(user, {
+//   token: t.Optional(t.Never()),
+//   password: t.Optional(t.Never()),
+// });
 
 export type User = InferSelectModel<typeof user>;
 

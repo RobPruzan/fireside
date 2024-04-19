@@ -1,5 +1,5 @@
 import { Camp } from "@/components/camps/Camp";
-import { Explore } from "@/components/camps/Explore.1";
+import { Explore } from "@/components/camps/Explore";
 import { Friends } from "@/components/camps/Friends";
 import { RootCampLayout } from "@/components/camps/RootCampLayout";
 import {
