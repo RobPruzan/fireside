@@ -246,6 +246,27 @@
       "when": 1713525467605,
       "tag": "0034_vengeful_doctor_faustus",
       "breakpoints": true
+    },
+    {
+      "idx": 35,
+      "version": "5",
+      "when": 1713526981579,
+      "tag": "0035_chubby_yellow_claw",
+      "breakpoints": true
+    },
+    {
+      "idx": 36,
+      "version": "5",
+      "when": 1713531728849,
+      "tag": "0036_productive_sebastian_shaw",
+      "breakpoints": true
+    },
+    {
+      "idx": 37,
+      "version": "5",
+      "when": 1713531921905,
+      "tag": "0037_abandoned_mandrill",
+      "breakpoints": true
     }
   ]
 }

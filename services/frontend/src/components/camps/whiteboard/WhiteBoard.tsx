@@ -84,6 +84,19 @@ const getWhiteBoardMousePointsOptions = ({
       ),
   });
 
+const getWhiteBoardMouseEraserOptions = ({
+  whiteBoardId,
+}: {
+  whiteBoardId: string;
+}) =>
+  queryOptions({
+    queryKey: ["white-board-eraser-points", whiteBoardId],
+    queryFn: () =>
+      promiseDataOrThrow(
+        client.api.protected.whiteboard.eraser.retrieve({ whiteBoardId }).get()
+      ),
+  });
+
 const getWhiteBoardImagesOptions = ({
   whiteBoardId,
 }: {
@@ -124,22 +137,24 @@ export const WhiteBoardLoader = ({
     getWhiteBoardImagesOptions({ whiteBoardId })
   );
 
-  switch (whiteBoardImagesQuery.status) {
-    case "error": {
-      return <div> something went wrong</div>;
-    }
-    case "pending": {
-      return <LoadingSection />;
-    }
+  const whiteBoardEraserQuery = useQuery(
+    getWhiteBoardMouseEraserOptions({ whiteBoardId })
+  );
+
+  if (
+    whiteBoardMousePointsQuery.isLoading ||
+    whiteBoardImagesQuery.isLoading ||
+    whiteBoardEraserQuery.isLoading
+  ) {
+    return <LoadingSection />;
   }
 
-  switch (whiteBoardMousePointsQuery.status) {
-    case "error": {
-      return <div> something went wrong</div>;
-    }
-    case "pending": {
-      return <LoadingSection />;
-    }
+  if (
+    whiteBoardMousePointsQuery.isError ||
+    whiteBoardImagesQuery.isError ||
+    whiteBoardEraserQuery.isError
+  ) {
+    return <div> something went wrong</div>;
   }
 
   switch (whiteBoardQuery.status) {
@@ -152,8 +167,9 @@ export const WhiteBoardLoader = ({
     case "success": {
       return (
         <WhiteBoard
-          whiteBoardImages={whiteBoardImagesQuery.data}
-          whiteBoardMousePoints={whiteBoardMousePointsQuery.data}
+          whiteBoardEraserPoints={whiteBoardEraserQuery.data ?? []}
+          whiteBoardImages={whiteBoardImagesQuery.data ?? []}
+          whiteBoardMousePoints={whiteBoardMousePointsQuery.data ?? []}
           whiteBoardId={whiteBoardId}
           whiteBoard={whiteBoardQuery.data}
           options={options}
@@ -169,6 +185,10 @@ const onlyForTheType = client.api.protected.whiteboard.retrieve({
 const onlyForTheTypeAgain = client.api.protected.whiteboard.mouse.retrieve({
   whiteBoardId: "whatever",
 }).get;
+const onlyForTheTypeAgainAgain =
+  client.api.protected.whiteboard.eraser.retrieve({
+    whiteBoardId: "whatever",
+  }).get;
 
 const WhiteBoard = ({
   whiteBoard,
@@ -176,6 +196,7 @@ const WhiteBoard = ({
   whiteBoardMousePoints,
   options,
   whiteBoardImages,
+  whiteBoardEraserPoints,
 }: {
   whiteBoard: (ReturnType<typeof onlyForTheType> extends Promise<infer R>
     ? R
@@ -183,6 +204,12 @@ const WhiteBoard = ({
 
   whiteBoardMousePoints: (ReturnType<
     typeof onlyForTheTypeAgain
+  > extends Promise<infer R>
+    ? R
+    : never)["data"];
+
+  whiteBoardEraserPoints: {} & (ReturnType<
+    typeof onlyForTheTypeAgainAgain
   > extends Promise<infer R>
     ? R
     : never)["data"];
@@ -211,8 +238,14 @@ const WhiteBoard = ({
     whiteBoardId,
   }).queryKey;
 
+  const whiteBoardEraserQueryKey = getWhiteBoardMouseEraserOptions({
+    whiteBoardId,
+  }).queryKey;
+
   const drawnPoints = whiteBoard ?? [];
-  const [erased, setErased] = useState<Array<{ x: number; y: number }>>([]); // todo
+
+  // console.log({ drawnPoints });
+  // const [erased, setErased] = useState<Array<{ x: number; y: number }>>([]); // todo
 
   // const mouseCords = currentMousePositionRef.current;
 
@@ -309,6 +342,16 @@ const WhiteBoard = ({
 
             return [...withoutCurrentMousePosition, publishedData];
           });
+
+          return;
+        }
+
+        case "eraser": {
+          queryClient.setQueryData(whiteBoardEraserQueryKey, (prev) => {
+            return [...(prev ?? []), publishedData];
+          });
+
+          return;
         }
       }
     };
@@ -352,21 +395,6 @@ const WhiteBoard = ({
 
     ctx.translate(camera.x, camera.y);
 
-    whiteBoardImages.forEach((whiteBoardImg) => {
-      if (whiteBoardImg.image.complete) {
-        ctx.drawImage(
-          whiteBoardImg.image,
-          whiteBoardImg.x,
-          whiteBoardImg.y,
-          200,
-          200
-        );
-      }
-
-      // ctx.font = "10px";
-      // ctx.fillText(mousePoint.user.username, mousePoint.x - 15, mousePoint.y - 5);
-    });
-
     const drawLine = ({
       points,
       initialPoint,
@@ -384,30 +412,120 @@ const WhiteBoard = ({
       });
     };
 
-    const pointsArr = [drawingPoints, ...drawnPoints];
-
-    pointsArr.forEach((points) => {
-      const initialPoint = points.at(0);
-      if (initialPoint) {
-        drawLine({ points, initialPoint });
-      }
-    });
-
-    ctx.beginPath();
-    ctx.strokeStyle = "white";
-    ctx.fillStyle = "white";
-    ctx.lineWidth = 55;
-    erased.forEach((erasedPoint) => {
-      // ctx.lineTo(erasedPoint.x, erasedPoint.y);
+    const erasePoints = ({
+      erasedPoints,
+      color,
+    }: {
+      erasedPoints: typeof whiteBoardEraserPoints;
+      color?: string;
+    }) => {
       ctx.beginPath();
-      ctx.arc(erasedPoint.x, erasedPoint.y, 0.0001, 0, 2 * Math.PI);
-      ctx.fillStyle = "white";
-      ctx.stroke();
+      ctx.strokeStyle = color ?? "white";
+      ctx.fillStyle = color ?? "white";
+      ctx.lineWidth = 53.5;
+
+      erasedPoints.forEach((erasedPoint) => {
+        ctx.beginPath();
+        ctx.arc(erasedPoint.x, erasedPoint.y, 0.0001, 0, 2 * Math.PI);
+        ctx.fillStyle = "white";
+        ctx.stroke();
+      });
+    };
+
+    const pointsArr = [...drawnPoints, drawingPoints];
+    const distributedErasedPoints = { current: whiteBoardEraserPoints };
+    const initialCreatedAt = pointsArr.flat().reduce((prev, curr) => {
+      if (!prev) {
+        return curr;
+      }
+      if (
+        new Date(curr.createdAt!).getTime() <
+        new Date(prev.createdAt!).getTime()
+      ) {
+        return curr;
+      }
+      return prev;
+    }, pointsArr.flat().at(0));
+
+    if (initialCreatedAt) {
+      const claimedErasedPoints: (typeof distributedErasedPoints)["current"] =
+        [];
+      distributedErasedPoints.current.forEach((erasedPoint) => {
+        if (!erasedPoint.createdAt) {
+          console.log("bitch");
+          return;
+        }
+
+        if (
+          new Date(erasedPoint.createdAt).getTime() <
+          new Date(initialCreatedAt.createdAt!).getTime()
+        ) {
+          claimedErasedPoints.push(erasedPoint);
+          distributedErasedPoints.current =
+            distributedErasedPoints.current.filter(
+              (toRemoveErasedPoint) => toRemoveErasedPoint.id !== erasedPoint.id
+            );
+        }
+      });
+
+      erasePoints({ color: "white", erasedPoints: claimedErasedPoints });
+    }
+
+    pointsArr
+      .toSorted((a, b) => {
+        const aGroupCreatedAt = a.at(0)?.createdAt;
+        const bGroupCreatedAt = b.at(0)?.createdAt;
+
+        if (!aGroupCreatedAt || !bGroupCreatedAt) {
+          return -1;
+        }
+
+        return (
+          new Date(aGroupCreatedAt).getTime() -
+          new Date(bGroupCreatedAt).getTime()
+        );
+      })
+      .forEach((points) => {
+        const initialPoint = points.at(0);
+
+        if (!initialPoint) {
+          return;
+        }
+
+        const claimedErasedPoints: (typeof distributedErasedPoints)["current"] =
+          [];
+
+        distributedErasedPoints.current.forEach((erasedPoint) => {
+          if (!erasedPoint.createdAt || !initialPoint.createdAt) {
+            return;
+          }
+
+          if (
+            new Date(erasedPoint.createdAt).getTime() <
+            new Date(initialPoint.createdAt).getTime()
+          ) {
+            claimedErasedPoints.push(erasedPoint);
+            distributedErasedPoints.current =
+              distributedErasedPoints.current.filter(
+                (toRemoveErasedPoint) =>
+                  toRemoveErasedPoint.id !== erasedPoint.id
+              );
+          }
+        });
+
+        erasePoints({ color: "white", erasedPoints: claimedErasedPoints });
+        ctx.stroke();
+
+        drawLine({ points, initialPoint });
+      });
+
+    erasePoints({
+      color: "white",
+      erasedPoints: distributedErasedPoints.current,
     });
-    ctx.stroke();
-    // console.log(mouseCords);
-    ctx.fillStyle = "black";
+
     if (selectedTool.kind === "eraser" && currentMousePosition) {
+      ctx.fillStyle = "black";
       const radius = 25;
       const borderWidth = 1;
 
@@ -434,20 +552,31 @@ const WhiteBoard = ({
       ctx.lineWidth = borderWidth;
       ctx.stroke();
     }
-    if (!options?.readOnly) {
-      whiteBoardMousePoints?.forEach((mousePoint) => {
-        if (pencilImage.complete) {
-          ctx.drawImage(pencilImage, mousePoint.x, mousePoint.y, 20, 20);
-        }
 
-        ctx.font = "10px";
-        ctx.fillText(
-          mousePoint.user.username,
-          mousePoint.x - 15,
-          mousePoint.y - 5
+    whiteBoardImages.forEach((whiteBoardImg) => {
+      if (whiteBoardImg.image.complete) {
+        ctx.drawImage(
+          whiteBoardImg.image,
+          whiteBoardImg.x,
+          whiteBoardImg.y,
+          200,
+          200
         );
-      });
-    }
+      }
+    });
+    whiteBoardMousePoints?.forEach((mousePoint) => {
+      if (pencilImage.complete) {
+        ctx.drawImage(pencilImage, mousePoint.x, mousePoint.y, 20, 20);
+      }
+
+      ctx.font = "10px";
+      ctx.fillText(
+        mousePoint.user.username,
+        mousePoint.x - 15,
+        mousePoint.y - 5
+      );
+    });
+    // }
 
     ctx.stroke();
 
@@ -477,7 +606,7 @@ const WhiteBoard = ({
 
     const intervalId = setInterval(() => {
       render(false);
-    }, 250); // run every 250ms to catch any stale changes not being reacted to
+    }, 500); // run every 500ms to catch any stale changes not being reacted to
 
     return () => {
       clearInterval(intervalId);
@@ -497,27 +626,133 @@ const WhiteBoard = ({
         //   y: currentMousePosition.y + e.deltaY,
         // };
 
-        const newMouse = {
-          x: currentMousePosition.x + e.deltaX,
-          y: currentMousePosition.y + e.deltaY,
-        };
+        // const newMouse = {
+        //   x: currentMousePosition.x + e.deltaX,
+        //   y: currentMousePosition.y + e.deltaY,
+        // };
 
-        setCurrentMousePosition(newMouse);
-
-        subscriptionRef.current?.send({
-          ...newMouse,
-          id: crypto.randomUUID(),
-          kind: "mouse",
-          whiteBoardId,
-          userId: user.id,
-          user,
+        setCurrentMousePosition((prev) => {
+          if (!prev) {
+            return prev;
+          }
+          const newMouse = {
+            x: prev.x + e.deltaX,
+            y: prev.y + e.deltaY,
+          };
+          subscriptionRef.current?.send({
+            ...newMouse,
+            id: crypto.randomUUID(),
+            kind: "mouse",
+            whiteBoardId,
+            userId: user.id,
+            user,
+            createdAt: new Date().toISOString(),
+          });
+          return newMouse;
         });
       }
     };
     canvasRef.current?.addEventListener("wheel", handleWheel);
 
     return () => canvasRef.current?.removeEventListener("wheel", handleWheel);
-  }, [options?.canPan]);
+  }, [options?.canPan, currentMousePosition !== null]);
+
+  const handleMouseInteraction = (
+    e: React.MouseEvent<HTMLCanvasElement, MouseEvent>,
+    isMouseDownOverride?: boolean
+  ) => {
+    const newMouse = cameraPOV({
+      camera,
+      x: e.nativeEvent.offsetX,
+      y: e.nativeEvent.offsetY,
+    });
+
+    setCurrentMousePosition(newMouse);
+
+    subscriptionRef.current?.send({
+      ...newMouse,
+      id: crypto.randomUUID(),
+      kind: "mouse",
+      whiteBoardId,
+      userId: user.id,
+      user,
+      createdAt: new Date().toISOString(),
+    });
+    // if (!mouseCords) {
+    //   return;
+    // }
+
+    if (!isMouseDown && !isMouseDownOverride) {
+      if (selectedTool.kind === "eraser") {
+        console.log("kill");
+      }
+
+      return;
+    }
+
+    if (!newGroupIdRef.current) {
+      if (selectedTool.kind === "eraser") {
+        console.log("kill2");
+      }
+      return;
+    }
+    switch (selectedTool.kind) {
+      case "marker": {
+        if (options?.readOnly) {
+          return;
+        }
+        const newPoint = {
+          ...newMouse,
+          color: selectedTool.color,
+          whiteBoardId,
+          id: genWhiteBoardPointId(),
+          whiteBoardPointGroupId: newGroupIdRef.current,
+          kind: "point" as const,
+          createdAt: new Date().getTime(),
+        };
+        setDrawingPoints((prev) => [...prev, newPoint]);
+
+        subscriptionRef.current?.send({ ...newPoint, kind: "point" });
+
+        return;
+      }
+      // disable till we think of a good way to erase
+      case "eraser": {
+        const newEraserPoint = {
+          ...newMouse,
+          id: crypto.randomUUID(),
+          kind: "eraser" as const,
+          userId: user.id,
+          whiteBoardId,
+          createdAt: new Date().toISOString(),
+        };
+
+        // setErased((prev) => [...prev, newMouse]);
+        queryClient.setQueryData(whiteBoardEraserQueryKey, (prev) => [
+          ...(prev ?? []),
+          {
+            ...newMouse,
+            id: crypto.randomUUID(),
+            kind: "eraser" as const,
+            userId: user.id,
+            whiteBoardId,
+            createdAt: new Date().toISOString(),
+          },
+        ]);
+
+        subscriptionRef.current?.send(newEraserPoint);
+        // setDrawnPoints((drawnPoints) =>
+        //   drawnPoints.map((points) =>
+        //     points.filter(
+        //       (point) =>
+        //         point.x !== e.nativeEvent.offsetX &&
+        //         point.y !== e.nativeEvent.offsetY
+        //     )
+        //   )
+        // );
+      }
+    }
+  };
 
   return (
     <div ref={parentCanvasRef} className="w-full h-full relative">
@@ -575,7 +810,7 @@ const WhiteBoard = ({
             <Eraser className="text-black" />
           </Button>
           <div className="text-black w-[50px]">
-            ({camera.x},{camera.y})
+            ({camera.x.toFixed(1)},{camera.y.toFixed(1)})
           </div>
         </div>
       )}
@@ -585,6 +820,10 @@ const WhiteBoard = ({
           setIsMouseDown(false);
           // currentMousePositionRef.current = null;
           setCurrentMousePosition(null);
+
+          if (drawingPoints.length === 0) {
+            return;
+          }
 
           queryClient.setQueryData(whiteBoardQueryKey, (prev) => [
             ...(prev ?? []),
@@ -601,80 +840,12 @@ const WhiteBoard = ({
           ]);
           setDrawingPoints([]);
         }}
-        onMouseMove={(e) => {
-          // currentMousePositionRef.current = cameraPOV({
-          //   camera,
-          //   x: e.nativeEvent.offsetX,
-          //   y: e.nativeEvent.offsetY,
-          // });
-
-          const newMouse = cameraPOV({
-            camera,
-            x: e.nativeEvent.offsetX,
-            y: e.nativeEvent.offsetY,
-          });
-
-          setCurrentMousePosition(newMouse);
-
-          subscriptionRef.current?.send({
-            ...newMouse,
-            id: crypto.randomUUID(),
-            kind: "mouse",
-            whiteBoardId,
-            userId: user.id,
-            user,
-          });
-          // if (!mouseCords) {
-          //   return;
-          // }
-
-          if (!isMouseDown) {
-            return;
-          }
-
-          if (!newGroupIdRef.current) {
-            return;
-          }
-          switch (selectedTool.kind) {
-            case "marker": {
-              if (options?.readOnly) {
-                return;
-              }
-              const newPoint = {
-                ...newMouse,
-                color: selectedTool.color,
-                whiteBoardId,
-                id: genWhiteBoardPointId(),
-                whiteBoardPointGroupId: newGroupIdRef.current,
-                kind: "point" as const,
-              };
-              setDrawingPoints((prev) => [...prev, newPoint]);
-
-              subscriptionRef.current?.send({ ...newPoint, kind: "point" });
-
-              return;
-            }
-            // disable till we think of a good way to erase
-            case "eraser": {
-              if (!isMouseDown) {
-                return;
-              }
-              setErased((prev) => [...prev, newMouse]);
-              // setDrawnPoints((drawnPoints) =>
-              //   drawnPoints.map((points) =>
-              //     points.filter(
-              //       (point) =>
-              //         point.x !== e.nativeEvent.offsetX &&
-              //         point.y !== e.nativeEvent.offsetY
-              //     )
-              //   )
-              // );
-            }
-          }
-        }}
+        onMouseMove={handleMouseInteraction}
         onMouseDown={(e) => {
           newGroupIdRef.current = crypto.randomUUID();
           setIsMouseDown(true);
+
+          handleMouseInteraction(e, true);
         }}
         className="bg-white w-full h-full overflow-hidden touch-none"
         ref={canvasRef}
