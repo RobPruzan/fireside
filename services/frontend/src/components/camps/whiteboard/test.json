@@ -1,0 +1,533 @@
+[
+  {
+    "id": "white_board_point_15833225-7849-4b71-b8a0-85e88cd9b8f3",
+    "whiteBoardPointGroupId": "75875291-0175-463f-9a0f-b12466470137",
+    "x": 374,
+    "y": 48,
+    "kind": "point",
+    "createdAt": "2024-04-19T12:47:17.994Z",
+    "color": "blue"
+  },
+  {
+    "id": "white_board_point_578390ee-8839-43d3-b5f0-170519398ae4",
+    "whiteBoardPointGroupId": "75875291-0175-463f-9a0f-b12466470137",
+    "x": 372,
+    "y": 48,
+    "kind": "point",
+    "createdAt": "2024-04-19T12:47:18.008Z",
+    "color": "blue"
+  },
+  {
+    "id": "white_board_point_d8cb8466-353e-4086-b0ff-a953c34fdc56",
+    "whiteBoardPointGroupId": "75875291-0175-463f-9a0f-b12466470137",
+    "x": 367,
+    "y": 48,
+    "kind": "point",
+    "createdAt": "2024-04-19T12:47:18.014Z",
+    "color": "blue"
+  },
+  {
+    "id": "white_board_point_a77c294e-811d-46c4-a42f-cbf2870f8293",
+    "whiteBoardPointGroupId": "75875291-0175-463f-9a0f-b12466470137",
+    "x": 292,
+    "y": 52,
+    "kind": "point",
+    "createdAt": "2024-04-19T12:47:18.055Z",
+    "color": "blue"
+  },
+  {
+    "id": "white_board_point_3ff8dffe-c69b-4bc3-a5ca-b25aaaab6bea",
+    "whiteBoardPointGroupId": "75875291-0175-463f-9a0f-b12466470137",
+    "x": 272,
+    "y": 56,
+    "kind": "point",
+    "createdAt": "2024-04-19T12:47:18.062Z",
+    "color": "blue"
+  },
+  {
+    "id": "white_board_point_e20d6949-2c60-42c2-bac3-bd51faf0e1ae",
+    "whiteBoardPointGroupId": "75875291-0175-463f-9a0f-b12466470137",
+    "x": 312,
+    "y": 49,
+    "kind": "point",
+    "createdAt": "2024-04-19T12:47:18.046Z",
+    "color": "blue"
+  },
+  {
+    "id": "white_board_point_cd46ad2b-f5f0-4cae-ad80-c6b94dec52f8",
+    "whiteBoardPointGroupId": "75875291-0175-463f-9a0f-b12466470137",
+    "x": 253,
+    "y": 62,
+    "kind": "point",
+    "createdAt": "2024-04-19T12:47:18.070Z",
+    "color": "blue"
+  },
+  {
+    "id": "white_board_point_1fc4e8d2-3d0d-490a-b6cb-dda182e51570",
+    "whiteBoardPointGroupId": "75875291-0175-463f-9a0f-b12466470137",
+    "x": 241,
+    "y": 67,
+    "kind": "point",
+    "createdAt": "2024-04-19T12:47:18.080Z",
+    "color": "blue"
+  },
+  {
+    "id": "white_board_point_68a031ca-6fea-4597-8b0b-0dccf04ab2cd",
+    "whiteBoardPointGroupId": "75875291-0175-463f-9a0f-b12466470137",
+    "x": 357,
+    "y": 48,
+    "kind": "point",
+    "createdAt": "2024-04-19T12:47:18.022Z",
+    "color": "blue"
+  },
+  {
+    "id": "white_board_point_9c9b23dc-1234-40b2-9c27-c979a1632cb4",
+    "whiteBoardPointGroupId": "75875291-0175-463f-9a0f-b12466470137",
+    "x": 231,
+    "y": 73,
+    "kind": "point",
+    "createdAt": "2024-04-19T12:47:18.089Z",
+    "color": "blue"
+  },
+  {
+    "id": "white_board_point_daa4b2c6-dab9-47c3-8dcd-4102efbc74b9",
+    "whiteBoardPointGroupId": "75875291-0175-463f-9a0f-b12466470137",
+    "x": 220,
+    "y": 80,
+    "kind": "point",
+    "createdAt": "2024-04-19T12:47:18.090Z",
+    "color": "blue"
+  },
+  {
+    "id": "white_board_point_bd837220-eb59-4a29-85d5-bd851d202bb0",
+    "whiteBoardPointGroupId": "75875291-0175-463f-9a0f-b12466470137",
+    "x": 210,
+    "y": 88,
+    "kind": "point",
+    "createdAt": "2024-04-19T12:47:18.099Z",
+    "color": "blue"
+  },
+  {
+    "id": "white_board_point_93f9e7ac-6a1e-4f30-b5b2-572481f9ff0c",
+    "whiteBoardPointGroupId": "75875291-0175-463f-9a0f-b12466470137",
+    "x": 197,
+    "y": 99,
+    "kind": "point",
+    "createdAt": "2024-04-19T12:47:18.113Z",
+    "color": "blue"
+  },
+  {
+    "id": "white_board_point_64b36b77-54e4-4e3d-977a-0064a0004af0",
+    "whiteBoardPointGroupId": "75875291-0175-463f-9a0f-b12466470137",
+    "x": 345,
+    "y": 48,
+    "kind": "point",
+    "createdAt": "2024-04-19T12:47:18.030Z",
+    "color": "blue"
+  },
+  {
+    "id": "white_board_point_0fa2732b-e322-4e28-9b69-abca5825915f",
+    "whiteBoardPointGroupId": "75875291-0175-463f-9a0f-b12466470137",
+    "x": 330,
+    "y": 48,
+    "kind": "point",
+    "createdAt": "2024-04-19T12:47:18.038Z",
+    "color": "blue"
+  },
+  {
+    "id": "white_board_point_64e56920-d13d-4154-88d6-4368132e0893",
+    "whiteBoardPointGroupId": "75875291-0175-463f-9a0f-b12466470137",
+    "x": 188,
+    "y": 109,
+    "kind": "point",
+    "createdAt": "2024-04-19T12:47:18.114Z",
+    "color": "blue"
+  },
+  {
+    "id": "white_board_point_a6fa654d-eef5-491f-aeec-64a7e5a5d730",
+    "whiteBoardPointGroupId": "75875291-0175-463f-9a0f-b12466470137",
+    "x": 181,
+    "y": 119,
+    "kind": "point",
+    "createdAt": "2024-04-19T12:47:18.124Z",
+    "color": "blue"
+  },
+  {
+    "id": "white_board_point_ca09b283-67af-436e-8cb5-82a55db91b0f",
+    "whiteBoardPointGroupId": "75875291-0175-463f-9a0f-b12466470137",
+    "x": 170,
+    "y": 142,
+    "kind": "point",
+    "createdAt": "2024-04-19T12:47:18.140Z",
+    "color": "blue"
+  },
+  {
+    "id": "white_board_point_6d30590c-58bc-4e9d-97ca-a16298434ffd",
+    "whiteBoardPointGroupId": "75875291-0175-463f-9a0f-b12466470137",
+    "x": 165,
+    "y": 180,
+    "kind": "point",
+    "createdAt": "2024-04-19T12:47:18.165Z",
+    "color": "blue"
+  },
+  {
+    "id": "white_board_point_d805e148-3056-4c2d-9353-597d3a80234b",
+    "whiteBoardPointGroupId": "75875291-0175-463f-9a0f-b12466470137",
+    "x": 180,
+    "y": 246,
+    "kind": "point",
+    "createdAt": "2024-04-19T12:47:18.205Z",
+    "color": "blue"
+  },
+  {
+    "id": "white_board_point_03a71809-aaa9-492d-82c9-36a97660e205",
+    "whiteBoardPointGroupId": "75875291-0175-463f-9a0f-b12466470137",
+    "x": 415,
+    "y": 322,
+    "kind": "point",
+    "createdAt": "2024-04-19T12:47:18.281Z",
+    "color": "blue"
+  },
+  {
+    "id": "white_board_point_88eceee4-eb06-4db6-839a-0fa0a9a57fb5",
+    "whiteBoardPointGroupId": "75875291-0175-463f-9a0f-b12466470137",
+    "x": 587,
+    "y": 170,
+    "kind": "point",
+    "createdAt": "2024-04-19T12:47:18.364Z",
+    "color": "blue"
+  },
+  {
+    "id": "white_board_point_e742d10b-a114-48bd-9809-b285a1ffcb2e",
+    "whiteBoardPointGroupId": "75875291-0175-463f-9a0f-b12466470137",
+    "x": 175,
+    "y": 130,
+    "kind": "point",
+    "createdAt": "2024-04-19T12:47:18.131Z",
+    "color": "blue"
+  },
+  {
+    "id": "white_board_point_3dbb40c6-4e2a-4ece-83ba-0502dc365efc",
+    "whiteBoardPointGroupId": "75875291-0175-463f-9a0f-b12466470137",
+    "x": 171,
+    "y": 229,
+    "kind": "point",
+    "createdAt": "2024-04-19T12:47:18.196Z",
+    "color": "blue"
+  },
+  {
+    "id": "white_board_point_e8f8379f-c7ff-4905-acbe-8c64c1c85b52",
+    "whiteBoardPointGroupId": "75875291-0175-463f-9a0f-b12466470137",
+    "x": 253,
+    "y": 302,
+    "kind": "point",
+    "createdAt": "2024-04-19T12:47:18.236Z",
+    "color": "blue"
+  },
+  {
+    "id": "white_board_point_e0db8614-72d4-4497-af30-7d19371db998",
+    "whiteBoardPointGroupId": "75875291-0175-463f-9a0f-b12466470137",
+    "x": 505,
+    "y": 283,
+    "kind": "point",
+    "createdAt": "2024-04-19T12:47:18.314Z",
+    "color": "blue"
+  },
+  {
+    "id": "white_board_point_24f19837-b916-4bb8-974e-e17012a4fe37",
+    "whiteBoardPointGroupId": "75875291-0175-463f-9a0f-b12466470137",
+    "x": 582,
+    "y": 185,
+    "kind": "point",
+    "createdAt": "2024-04-19T12:47:18.356Z",
+    "color": "blue"
+  },
+  {
+    "id": "white_board_point_64a60ae4-f6f1-4115-b295-993d237742e8",
+    "whiteBoardPointGroupId": "75875291-0175-463f-9a0f-b12466470137",
+    "x": 167,
+    "y": 155,
+    "kind": "point",
+    "createdAt": "2024-04-19T12:47:18.149Z",
+    "color": "blue"
+  },
+  {
+    "id": "white_board_point_fb21c71f-0da2-4db6-8b4b-796142a1809a",
+    "whiteBoardPointGroupId": "75875291-0175-463f-9a0f-b12466470137",
+    "x": 165,
+    "y": 193,
+    "kind": "point",
+    "createdAt": "2024-04-19T12:47:18.173Z",
+    "color": "blue"
+  },
+  {
+    "id": "white_board_point_c0677c7b-7e09-43aa-a80f-3a389d15026b",
+    "whiteBoardPointGroupId": "75875291-0175-463f-9a0f-b12466470137",
+    "x": 312,
+    "y": 319,
+    "kind": "point",
+    "createdAt": "2024-04-19T12:47:18.255Z",
+    "color": "blue"
+  },
+  {
+    "id": "white_board_point_09e8049e-626e-42de-ae74-5692dae626e9",
+    "whiteBoardPointGroupId": "75875291-0175-463f-9a0f-b12466470137",
+    "x": 484,
+    "y": 297,
+    "kind": "point",
+    "createdAt": "2024-04-19T12:47:18.306Z",
+    "color": "blue"
+  },
+  {
+    "id": "white_board_point_65b3442b-c9cf-4cf5-ab07-2cc07ab7c0e6",
+    "whiteBoardPointGroupId": "75875291-0175-463f-9a0f-b12466470137",
+    "x": 166,
+    "y": 167,
+    "kind": "point",
+    "createdAt": "2024-04-19T12:47:18.157Z",
+    "color": "blue"
+  },
+  {
+    "id": "white_board_point_259ef3df-3ec1-45ac-8477-b586f2d92ed3",
+    "whiteBoardPointGroupId": "75875291-0175-463f-9a0f-b12466470137",
+    "x": 395,
+    "y": 324,
+    "kind": "point",
+    "createdAt": "2024-04-19T12:47:18.273Z",
+    "color": "blue"
+  },
+  {
+    "id": "white_board_point_aba2e1d5-4b3d-43ab-a5a1-7855c11504fc",
+    "whiteBoardPointGroupId": "75875291-0175-463f-9a0f-b12466470137",
+    "x": 597,
+    "y": 113,
+    "kind": "point",
+    "createdAt": "2024-04-19T12:47:18.396Z",
+    "color": "blue"
+  },
+  {
+    "id": "white_board_point_78a2c17f-10e6-49a5-bfe3-68eb0bc307a7",
+    "whiteBoardPointGroupId": "75875291-0175-463f-9a0f-b12466470137",
+    "x": 540,
+    "y": 28,
+    "kind": "point",
+    "createdAt": "2024-04-19T12:47:18.438Z",
+    "color": "blue"
+  },
+  {
+    "id": "white_board_point_ee675a0f-f339-446f-800a-952da6050073",
+    "whiteBoardPointGroupId": "75875291-0175-463f-9a0f-b12466470137",
+    "x": 165,
+    "y": 203,
+    "kind": "point",
+    "createdAt": "2024-04-19T12:47:18.179Z",
+    "color": "blue"
+  },
+  {
+    "id": "white_board_point_bcb65ae4-a5ab-449b-9dbe-4a9c6aa3a123",
+    "whiteBoardPointGroupId": "75875291-0175-463f-9a0f-b12466470137",
+    "x": 559,
+    "y": 225,
+    "kind": "point",
+    "createdAt": "2024-04-19T12:47:18.340Z",
+    "color": "blue"
+  },
+  {
+    "id": "white_board_point_3148638f-d6f5-437c-8921-3b58e21ad277",
+    "whiteBoardPointGroupId": "75875291-0175-463f-9a0f-b12466470137",
+    "x": 166,
+    "y": 213,
+    "kind": "point",
+    "createdAt": "2024-04-19T12:47:18.187Z",
+    "color": "blue"
+  },
+  {
+    "id": "white_board_point_593d4e1a-06ed-4e8f-a415-f6253cb37532",
+    "whiteBoardPointGroupId": "75875291-0175-463f-9a0f-b12466470137",
+    "x": 191,
+    "y": 262,
+    "kind": "point",
+    "createdAt": "2024-04-19T12:47:18.212Z",
+    "color": "blue"
+  },
+  {
+    "id": "white_board_point_d1a58110-8d59-48c4-9504-266d25e89e17",
+    "whiteBoardPointGroupId": "75875291-0175-463f-9a0f-b12466470137",
+    "x": 228,
+    "y": 290,
+    "kind": "point",
+    "createdAt": "2024-04-19T12:47:18.229Z",
+    "color": "blue"
+  },
+  {
+    "id": "white_board_point_965d9d37-2a88-438b-bf62-c077c33bafc8",
+    "whiteBoardPointGroupId": "75875291-0175-463f-9a0f-b12466470137",
+    "x": 372,
+    "y": 324,
+    "kind": "point",
+    "createdAt": "2024-04-19T12:47:18.270Z",
+    "color": "blue"
+  },
+  {
+    "id": "white_board_point_68bf0dec-1d10-4a00-a074-2bc1af8794e1",
+    "whiteBoardPointGroupId": "75875291-0175-463f-9a0f-b12466470137",
+    "x": 439,
+    "y": 317,
+    "kind": "point",
+    "createdAt": "2024-04-19T12:47:18.290Z",
+    "color": "blue"
+  },
+  {
+    "id": "white_board_point_472f6348-22d4-4423-a08b-44f14153fc2f",
+    "whiteBoardPointGroupId": "75875291-0175-463f-9a0f-b12466470137",
+    "x": 543,
+    "y": 246,
+    "kind": "point",
+    "createdAt": "2024-04-19T12:47:18.332Z",
+    "color": "blue"
+  },
+  {
+    "id": "white_board_point_2450af93-8a67-4cda-bfc1-43da56bc5d97",
+    "whiteBoardPointGroupId": "75875291-0175-463f-9a0f-b12466470137",
+    "x": 573,
+    "y": 202,
+    "kind": "point",
+    "createdAt": "2024-04-19T12:47:18.348Z",
+    "color": "blue"
+  },
+  {
+    "id": "white_board_point_a87c6e41-a603-414c-8298-ecea755b32e4",
+    "whiteBoardPointGroupId": "75875291-0175-463f-9a0f-b12466470137",
+    "x": 593,
+    "y": 152,
+    "kind": "point",
+    "createdAt": "2024-04-19T12:47:18.373Z",
+    "color": "blue"
+  },
+  {
+    "id": "white_board_point_0cdf0671-76d0-4c80-86e2-07f7c425eda3",
+    "whiteBoardPointGroupId": "75875291-0175-463f-9a0f-b12466470137",
+    "x": 597,
+    "y": 127,
+    "kind": "point",
+    "createdAt": "2024-04-19T12:47:18.386Z",
+    "color": "blue"
+  },
+  {
+    "id": "white_board_point_5432444f-cbcb-4a37-9092-ae787b0bccef",
+    "whiteBoardPointGroupId": "75875291-0175-463f-9a0f-b12466470137",
+    "x": 559,
+    "y": 43,
+    "kind": "point",
+    "createdAt": "2024-04-19T12:47:18.429Z",
+    "color": "blue"
+  },
+  {
+    "id": "white_board_point_b4954015-2746-4486-ad8b-2a3886e2fdaf",
+    "whiteBoardPointGroupId": "75875291-0175-463f-9a0f-b12466470137",
+    "x": 207,
+    "y": 276,
+    "kind": "point",
+    "createdAt": "2024-04-19T12:47:18.222Z",
+    "color": "blue"
+  },
+  {
+    "id": "white_board_point_78d43ced-b0a5-4c4a-8398-44329958a3fd",
+    "whiteBoardPointGroupId": "75875291-0175-463f-9a0f-b12466470137",
+    "x": 343,
+    "y": 323,
+    "kind": "point",
+    "createdAt": "2024-04-19T12:47:18.263Z",
+    "color": "blue"
+  },
+  {
+    "id": "white_board_point_05b30480-ffbd-4af7-9b9c-74d30bb50220",
+    "whiteBoardPointGroupId": "75875291-0175-463f-9a0f-b12466470137",
+    "x": 462,
+    "y": 308,
+    "kind": "point",
+    "createdAt": "2024-04-19T12:47:18.298Z",
+    "color": "blue"
+  },
+  {
+    "id": "white_board_point_9f78b361-4fbe-4c81-9503-d73202a3fa3a",
+    "whiteBoardPointGroupId": "75875291-0175-463f-9a0f-b12466470137",
+    "x": 596,
+    "y": 139,
+    "kind": "point",
+    "createdAt": "2024-04-19T12:47:18.379Z",
+    "color": "blue"
+  },
+  {
+    "id": "white_board_point_b7d5c8a6-d47a-4775-b079-4486102053af",
+    "whiteBoardPointGroupId": "75875291-0175-463f-9a0f-b12466470137",
+    "x": 576,
+    "y": 60,
+    "kind": "point",
+    "createdAt": "2024-04-19T12:47:18.422Z",
+    "color": "blue"
+  },
+  {
+    "id": "white_board_point_de56da60-267b-431f-893a-56c30db8add7",
+    "whiteBoardPointGroupId": "75875291-0175-463f-9a0f-b12466470137",
+    "x": 488,
+    "y": 2,
+    "kind": "point",
+    "createdAt": "2024-04-19T12:47:18.461Z",
+    "color": "blue"
+  },
+  {
+    "id": "white_board_point_3930f78c-52eb-44ab-b318-c219daf6bb1d",
+    "whiteBoardPointGroupId": "75875291-0175-463f-9a0f-b12466470137",
+    "x": 281,
+    "y": 312,
+    "kind": "point",
+    "createdAt": "2024-04-19T12:47:18.246Z",
+    "color": "blue"
+  },
+  {
+    "id": "white_board_point_391c74bd-9a8d-49e4-b1c3-d119698671b3",
+    "whiteBoardPointGroupId": "75875291-0175-463f-9a0f-b12466470137",
+    "x": 525,
+    "y": 266,
+    "kind": "point",
+    "createdAt": "2024-04-19T12:47:18.323Z",
+    "color": "blue"
+  },
+  {
+    "id": "white_board_point_9de36958-9209-45dd-98e4-b5ae7061f87d",
+    "whiteBoardPointGroupId": "75875291-0175-463f-9a0f-b12466470137",
+    "x": 595,
+    "y": 95,
+    "kind": "point",
+    "createdAt": "2024-04-19T12:47:18.403Z",
+    "color": "blue"
+  },
+  {
+    "id": "white_board_point_73b87c52-00ed-4863-828b-c94c6c1a906b",
+    "whiteBoardPointGroupId": "75875291-0175-463f-9a0f-b12466470137",
+    "x": 524,
+    "y": 18,
+    "kind": "point",
+    "createdAt": "2024-04-19T12:47:18.445Z",
+    "color": "blue"
+  },
+  {
+    "id": "white_board_point_929771b8-c002-41a0-8563-e9550f7a0fdf",
+    "whiteBoardPointGroupId": "75875291-0175-463f-9a0f-b12466470137",
+    "x": 588,
+    "y": 76,
+    "kind": "point",
+    "createdAt": "2024-04-19T12:47:18.412Z",
+    "color": "blue"
+  },
+  {
+    "id": "white_board_point_af8e2937-0515-49fe-b1ad-bd0073ad6b30",
+    "whiteBoardPointGroupId": "75875291-0175-463f-9a0f-b12466470137",
+    "x": 508,
+    "y": 10,
+    "kind": "point",
+    "createdAt": "2024-04-19T12:47:18.455Z",
+    "color": "blue"
+  }
+]

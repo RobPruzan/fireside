@@ -13,6 +13,7 @@ import {
   text,
   doublePrecision,
   PgColumn,
+  real,
 } from "drizzle-orm/pg-core";
 import { createInsertSchema, createSelectSchema } from "drizzle-typebox";
 import { DatesToString } from "@fireside/utils";
@@ -352,12 +353,14 @@ export const genWhiteBoardPointId = () =>
 export const genWhiteBoardPointGroupId = () =>
   "white_board_point_group_" + crypto.randomUUID();
 
+export const genWhiteBoardId = () => "white_board_point_" + crypto.randomUUID();
+
 export const whiteBoard = pgTable("whiteBoard", {
   id: uuid("id").defaultRandom().primaryKey(),
 });
 export const whiteBoardInsertSchema = createInsertSchema(whiteBoard);
 export const whiteBoardPointGroup = pgTable("whiteBoardPointGroup", {
-  id: text("id").$defaultFn(genWhiteBoardPointId).primaryKey(),
+  id: text("id").$defaultFn(genWhiteBoardPointGroupId).primaryKey(),
   color: text("color").$type<(typeof whiteBoardColors)[number]>().notNull(),
   whiteBoardId: uuid("whiteBoardId").references(() => whiteBoard.id, {
     onDelete: "cascade",
@@ -365,7 +368,7 @@ export const whiteBoardPointGroup = pgTable("whiteBoardPointGroup", {
 });
 
 export const whiteBoardPoint = pgTable("whiteBoardPoint", {
-  id: text("id").$defaultFn(genWhiteBoardPointId).primaryKey(),
+  id: text("id").$defaultFn(genWhiteBoardPointGroupId).primaryKey(),
   whiteBoardPointGroupId: text("whiteBoardPointGroupId")
     // .notNull()
     .references(() => whiteBoardPointGroup.id, {
@@ -377,6 +380,7 @@ export const whiteBoardPoint = pgTable("whiteBoardPoint", {
     .$type<"point">()
     .$defaultFn(() => "point")
     .notNull(),
+  createdAt: doublePrecision("createdAt"),
 });
 
 export const whiteBoardPointInsertSchema = createInsertSchema(whiteBoardPoint);
@@ -409,6 +413,7 @@ export const whiteBoardMouse = pgTable("whiteBoardMouseSchema", {
   userId: uuid("userId")
     .notNull()
     .references(() => user.id),
+  createdAt: text("createdAt"),
 });
 
 export const whiteBoardMouseInsertSchema = createInsertSchema(
@@ -423,6 +428,7 @@ export const whiteBoardMouseSelectSchema = createSelectSchema(
 
   {
     kind: t.Literal("mouse"),
+    createdAt: t.String(),
   }
 );
 export const requiredWhiteBoardMouseInsertSchema = t.Required(
@@ -445,6 +451,11 @@ export const whiteBoardEraser = pgTable("whiteBoardErased", {
   userId: uuid("userId")
     .notNull()
     .references(() => user.id),
+  createdAt: timestamp("createdAt", {
+    mode: "string",
+    withTimezone: true,
+  }),
+  // .notNull(),
 });
 
 export const whiteBoardEraserInsertSchema = createInsertSchema(
@@ -459,6 +470,7 @@ export const whiteBoardEraserSelectSchema = createSelectSchema(
 
   {
     kind: t.Literal("eraser"),
+    createdAt: t.String(),
   }
 );
 export const requiredWhiteBoardEraserInsertSchema = t.Required(
@@ -472,7 +484,7 @@ export const connectedToCamp = pgTable("connectToCamp", {
 });
 
 export const messageWhiteBoard = pgTable("messageWhiteBoard", {
-  id: text("id").$defaultFn(genWhiteBoardPointId).primaryKey(),
+  id: text("id").$defaultFn(genWhiteBoardId).primaryKey(),
   messageId: uuid("messageId")
     .references(() => campMessage.id)
     .notNull(),
@@ -488,7 +500,9 @@ export type MessageWhiteBoardInsertSchema = Static<
 >;
 
 export const whiteBoardImg = pgTable("whiteBoardImg", {
-  id: text("id").$defaultFn(genWhiteBoardPointId).primaryKey(),
+  id: text("id")
+    .$defaultFn(() => crypto.randomUUID())
+    .primaryKey(),
   whiteBoardId: uuid("whiteBoardId").references(() => whiteBoard.id, {
     onDelete: "cascade",
   }),

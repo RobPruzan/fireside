@@ -8,7 +8,6 @@ import {
   type WhiteBoardColor,
   whiteBoardPointInsertSchema,
   whiteBoardMouseInsertSchema,
-  whiteBoardMouse,
   whiteBoardMouseSelectSchema,
   and,
   not,
@@ -22,6 +21,8 @@ import {
   db,
   whiteBoardEraserSelectSchema,
   whiteBoardEraser,
+  whiteBoardMouse,
+  desc,
 } from "@fireside/db";
 import { ProtectedElysia } from "./lib";
 
@@ -50,6 +51,7 @@ const whiteBoardBodySchema = t.Object({
   y: t.Number(),
   color: t.String(),
   kind: t.Literal("point"),
+  createdAt: t.Number(),
 });
 
 const messageBodySchema = t.Union([
@@ -68,13 +70,14 @@ const messageBodySchema = t.Union([
   whiteBoardEraserSelectSchema,
 ]);
 
-export type WhiteBoardPublish =
+export type WhiteBoardPublish = (
   | (Static<typeof whiteBoardMouseSelectSchema> & {
       user: Omit<User, "password" | "token">;
     })
   | (Omit<Static<typeof whiteBoardBodySchema>, "color"> & {
       color: WhiteBoardColor;
-    });
+    })
+) & { createdAt: null | string };
 // export type PublishedWhiteBoardPoint = Omit<
 //   Static<typeof whiteBoardBodySchema>,
 //   "color"
@@ -100,14 +103,20 @@ export const whiteboardRoute = ProtectedElysia({ prefix: "/whiteboard" })
   .get(
     "/retrieve/:whiteBoardId",
     async ({ params }) => {
-      const res = await db
-        .select()
-        .from(whiteBoardPointGroup)
-        .innerJoin(
-          whiteBoardPoint,
-          eq(whiteBoardPointGroup.id, whiteBoardPoint.whiteBoardPointGroupId)
-        )
-        .where(eq(whiteBoardPointGroup.whiteBoardId, params.whiteBoardId));
+      const res = (
+        await db
+          .select()
+          .from(whiteBoardPointGroup)
+          .innerJoin(
+            whiteBoardPoint,
+            eq(whiteBoardPointGroup.id, whiteBoardPoint.whiteBoardPointGroupId)
+          )
+          .where(eq(whiteBoardPointGroup.whiteBoardId, params.whiteBoardId))
+      ).toSorted((a, b) =>
+        a.whiteBoardPoint.createdAt && b.whiteBoardPoint.createdAt
+          ? a.whiteBoardPoint.createdAt - b.whiteBoardPoint.createdAt
+          : -1
+      );
 
       const pointGroupToPoints: Record<
         string,
@@ -163,6 +172,7 @@ export const whiteboardRoute = ProtectedElysia({ prefix: "/whiteboard" })
           )
         )
         .innerJoin(user, eq(user.id, whiteBoardMouse.userId));
+      // .orderBy(desc(whiteBoardMouse.createdAt));
 
       const dedupedIds = new Set<string>();
 
@@ -225,6 +235,7 @@ export const whiteboardRoute = ProtectedElysia({ prefix: "/whiteboard" })
               y: data.y,
               id: data.id,
               whiteBoardPointGroupId: data.whiteBoardPointGroupId,
+              createdAt: data.createdAt,
             })
             .onConflictDoNothing();
 

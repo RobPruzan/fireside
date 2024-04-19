@@ -167,9 +167,9 @@ export const WhiteBoardLoader = ({
     case "success": {
       return (
         <WhiteBoard
-          whiteBoardEraserPoints={whiteBoardEraserQuery.data}
-          whiteBoardImages={whiteBoardImagesQuery.data}
-          whiteBoardMousePoints={whiteBoardMousePointsQuery.data}
+          whiteBoardEraserPoints={whiteBoardEraserQuery.data ?? []}
+          whiteBoardImages={whiteBoardImagesQuery.data ?? []}
+          whiteBoardMousePoints={whiteBoardMousePointsQuery.data ?? []}
           whiteBoardId={whiteBoardId}
           whiteBoard={whiteBoardQuery.data}
           options={options}
@@ -243,6 +243,8 @@ const WhiteBoard = ({
   }).queryKey;
 
   const drawnPoints = whiteBoard ?? [];
+
+  console.log({ drawnPoints });
   // const [erased, setErased] = useState<Array<{ x: number; y: number }>>([]); // todo
 
   // const mouseCords = currentMousePositionRef.current;
@@ -542,6 +544,7 @@ const WhiteBoard = ({
           whiteBoardId,
           userId: user.id,
           user,
+          createdAt: new Date().toISOString(),
         });
       }
     };
@@ -617,6 +620,10 @@ const WhiteBoard = ({
           // currentMousePositionRef.current = null;
           setCurrentMousePosition(null);
 
+          if (drawingPoints.length === 0) {
+            return;
+          }
+
           queryClient.setQueryData(whiteBoardQueryKey, (prev) => [
             ...(prev ?? []),
             drawingPoints,
@@ -654,6 +661,7 @@ const WhiteBoard = ({
             whiteBoardId,
             userId: user.id,
             user,
+            createdAt: new Date().toISOString(),
           });
           // if (!mouseCords) {
           //   return;
@@ -678,8 +686,11 @@ const WhiteBoard = ({
                 id: genWhiteBoardPointId(),
                 whiteBoardPointGroupId: newGroupIdRef.current,
                 kind: "point" as const,
+                createdAt: new Date().getTime(),
               };
               setDrawingPoints((prev) => [...prev, newPoint]);
+
+              console.log("new point", new Date().getTime());
 
               subscriptionRef.current?.send({ ...newPoint, kind: "point" });
 
@@ -696,7 +707,9 @@ const WhiteBoard = ({
                 kind: "eraser" as const,
                 userId: user.id,
                 whiteBoardId,
+                createdAt: new Date().toISOString(),
               };
+
               // setErased((prev) => [...prev, newMouse]);
               queryClient.setQueryData(whiteBoardEraserQueryKey, (prev) => [
                 ...(prev ?? []),
@@ -706,6 +719,7 @@ const WhiteBoard = ({
                   kind: "eraser" as const,
                   userId: user.id,
                   whiteBoardId,
+                  createdAt: new Date().toISOString(),
                 },
               ]);
 
@@ -723,6 +737,7 @@ const WhiteBoard = ({
           }
         }}
         onMouseDown={(e) => {
+          console.log("new group id", newGroupIdRef.current);
           newGroupIdRef.current = crypto.randomUUID();
           setIsMouseDown(true);
         }}

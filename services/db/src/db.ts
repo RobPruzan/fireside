@@ -25,7 +25,7 @@ const connectDB = ({ connString }: { connString: string }) => {
     },
     onclose: () => {
       console.log("Connection closed, attempting to reconnect...");
-      setTimeout(() => connectDB({ connString }), 3000);
+      // setTimeout(() => connectDB({ connString }), 3000);
     },
     onparameter: (key, value) => {
       console.log("PARAM CHANGE", key, value);
