@@ -431,6 +431,42 @@ export const requiredWhiteBoardMouseInsertSchema = t.Required(
 
 export type WhiteBoardMouse = Static<typeof whiteBoardMouseInsertSchema>;
 
+export const whiteBoardEraser = pgTable("whiteBoardErased", {
+  id: text("id").$defaultFn(getWhiteBoardMouseId).primaryKey(),
+  x: doublePrecision("x").notNull(),
+  y: doublePrecision("y").notNull(),
+  whiteBoardId: uuid("whiteBoardId").references(() => whiteBoard.id, {
+    onDelete: "cascade",
+  }),
+  kind: text("kind")
+    .$type<"eraser">()
+    .$defaultFn(() => "eraser")
+    .notNull(),
+  userId: uuid("userId")
+    .notNull()
+    .references(() => user.id),
+});
+
+export const whiteBoardEraserInsertSchema = createInsertSchema(
+  whiteBoardEraser,
+
+  {
+    kind: t.Literal("eraser"),
+  }
+);
+export const whiteBoardEraserSelectSchema = createSelectSchema(
+  whiteBoardEraser,
+
+  {
+    kind: t.Literal("eraser"),
+  }
+);
+export const requiredWhiteBoardEraserInsertSchema = t.Required(
+  whiteBoardEraserInsertSchema
+);
+
+export type WhiteBoardErased = Static<typeof whiteBoardEraserInsertSchema>;
+
 export const connectedToCamp = pgTable("connectToCamp", {
   id: uuid("id").defaultRandom().primaryKey(),
 });

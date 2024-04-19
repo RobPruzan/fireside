@@ -84,6 +84,19 @@ const getWhiteBoardMousePointsOptions = ({
       ),
   });
 
+const getWhiteBoardMouseEraserOptions = ({
+  whiteBoardId,
+}: {
+  whiteBoardId: string;
+}) =>
+  queryOptions({
+    queryKey: ["white-board-eraser-points", whiteBoardId],
+    queryFn: () =>
+      promiseDataOrThrow(
+        client.api.protected.whiteboard.eraser.retrieve({ whiteBoardId }).get()
+      ),
+  });
+
 const getWhiteBoardImagesOptions = ({
   whiteBoardId,
 }: {
@@ -124,22 +137,24 @@ export const WhiteBoardLoader = ({
     getWhiteBoardImagesOptions({ whiteBoardId })
   );
 
-  switch (whiteBoardImagesQuery.status) {
-    case "error": {
-      return <div> something went wrong</div>;
-    }
-    case "pending": {
-      return <LoadingSection />;
-    }
+  const whiteBoardEraserQuery = useQuery(
+    getWhiteBoardMouseEraserOptions({ whiteBoardId })
+  );
+
+  if (
+    whiteBoardMousePointsQuery.isLoading ||
+    whiteBoardImagesQuery.isLoading ||
+    whiteBoardEraserQuery.isLoading
+  ) {
+    return <LoadingSection />;
   }
 
-  switch (whiteBoardMousePointsQuery.status) {
-    case "error": {
-      return <div> something went wrong</div>;
-    }
-    case "pending": {
-      return <LoadingSection />;
-    }
+  if (
+    whiteBoardMousePointsQuery.isError ||
+    whiteBoardImagesQuery.isError ||
+    whiteBoardEraserQuery.isError
+  ) {
+    return <div> something went wrong</div>;
   }
 
   switch (whiteBoardQuery.status) {
@@ -152,6 +167,7 @@ export const WhiteBoardLoader = ({
     case "success": {
       return (
         <WhiteBoard
+          whiteBoardEraserPoints={whiteBoardEraserQuery.data}
           whiteBoardImages={whiteBoardImagesQuery.data}
           whiteBoardMousePoints={whiteBoardMousePointsQuery.data}
           whiteBoardId={whiteBoardId}
@@ -169,6 +185,10 @@ const onlyForTheType = client.api.protected.whiteboard.retrieve({
 const onlyForTheTypeAgain = client.api.protected.whiteboard.mouse.retrieve({
   whiteBoardId: "whatever",
 }).get;
+const onlyForTheTypeAgainAgain =
+  client.api.protected.whiteboard.eraser.retrieve({
+    whiteBoardId: "whatever",
+  }).get;
 
 const WhiteBoard = ({
   whiteBoard,
@@ -176,6 +196,7 @@ const WhiteBoard = ({
   whiteBoardMousePoints,
   options,
   whiteBoardImages,
+  whiteBoardEraserPoints,
 }: {
   whiteBoard: (ReturnType<typeof onlyForTheType> extends Promise<infer R>
     ? R
@@ -183,6 +204,12 @@ const WhiteBoard = ({
 
   whiteBoardMousePoints: (ReturnType<
     typeof onlyForTheTypeAgain
+  > extends Promise<infer R>
+    ? R
+    : never)["data"];
+
+  whiteBoardEraserPoints: {} & (ReturnType<
+    typeof onlyForTheTypeAgainAgain
   > extends Promise<infer R>
     ? R
     : never)["data"];
@@ -211,8 +238,12 @@ const WhiteBoard = ({
     whiteBoardId,
   }).queryKey;
 
+  const whiteBoardEraserQueryKey = getWhiteBoardMouseEraserOptions({
+    whiteBoardId,
+  }).queryKey;
+
   const drawnPoints = whiteBoard ?? [];
-  const [erased, setErased] = useState<Array<{ x: number; y: number }>>([]); // todo
+  // const [erased, setErased] = useState<Array<{ x: number; y: number }>>([]); // todo
 
   // const mouseCords = currentMousePositionRef.current;
 
@@ -397,7 +428,7 @@ const WhiteBoard = ({
     ctx.strokeStyle = "white";
     ctx.fillStyle = "white";
     ctx.lineWidth = 55;
-    erased.forEach((erasedPoint) => {
+    whiteBoardEraserPoints.forEach((erasedPoint) => {
       // ctx.lineTo(erasedPoint.x, erasedPoint.y);
       ctx.beginPath();
       ctx.arc(erasedPoint.x, erasedPoint.y, 0.0001, 0, 2 * Math.PI);
@@ -659,7 +690,26 @@ const WhiteBoard = ({
               if (!isMouseDown) {
                 return;
               }
-              setErased((prev) => [...prev, newMouse]);
+              const newEraserPoint = {
+                ...newMouse,
+                id: crypto.randomUUID(),
+                kind: "eraser" as const,
+                userId: user.id,
+                whiteBoardId,
+              };
+              // setErased((prev) => [...prev, newMouse]);
+              queryClient.setQueryData(whiteBoardEraserQueryKey, (prev) => [
+                ...(prev ?? []),
+                {
+                  ...newMouse,
+                  id: crypto.randomUUID(),
+                  kind: "eraser" as const,
+                  userId: user.id,
+                  whiteBoardId,
+                },
+              ]);
+
+              subscriptionRef.current?.send(newEraserPoint);
               // setDrawnPoints((drawnPoints) =>
               //   drawnPoints.map((points) =>
               //     points.filter(

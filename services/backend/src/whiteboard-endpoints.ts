@@ -20,6 +20,8 @@ import {
   messageWhiteBoard,
   whiteBoardImg,
   db,
+  whiteBoardEraserSelectSchema,
+  whiteBoardEraser,
 } from "@fireside/db";
 import { ProtectedElysia } from "./lib";
 
@@ -54,6 +56,7 @@ const messageBodySchema = t.Union([
   whiteBoardBodySchema,
   t.Intersect([
     whiteBoardMouseSelectSchema,
+
     t.Object({
       user: t.Object({
         id: t.String(),
@@ -62,6 +65,7 @@ const messageBodySchema = t.Union([
       }),
     }),
   ]),
+  whiteBoardEraserSelectSchema,
 ]);
 
 export type WhiteBoardPublish =
@@ -125,6 +129,21 @@ export const whiteboardRoute = ProtectedElysia({ prefix: "/whiteboard" })
 
       return Object.values(pointGroupToPoints);
     },
+
+    { params: t.Object({ whiteBoardId: t.String() }) }
+  )
+  .get(
+    "/eraser/retrieve/:whiteBoardId",
+    async (ctx) =>
+      db
+        .select()
+        .from(whiteBoardEraser)
+        .where(
+          and(
+            eq(whiteBoardEraser.whiteBoardId, ctx.params.whiteBoardId),
+            not(eq(whiteBoardEraser.userId, ctx.user.id))
+          )
+        ),
 
     { params: t.Object({ whiteBoardId: t.String() }) }
   )
@@ -237,6 +256,35 @@ export const whiteboardRoute = ProtectedElysia({ prefix: "/whiteboard" })
           } else {
             await db.insert(whiteBoardMouse).values(data);
           }
+          ws.publish(`white-board-${ws.data.params.whiteBoardId}`, data);
+          return;
+        }
+
+        case "eraser": {
+          const existingErasedPoint = (
+            await db
+              .select()
+              .from(whiteBoardEraser)
+              .where(
+                and(
+                  eq(whiteBoardMouse.userId, ws.data.user.id),
+                  eq(whiteBoardMouse.whiteBoardId, ws.data.params.whiteBoardId)
+                )
+              )
+          ).at(0);
+
+          if (existingErasedPoint) {
+            await db
+              .update(whiteBoardEraser)
+              .set({
+                x: data.x,
+                y: data.y,
+              })
+              .where(eq(whiteBoardMouse.id, whiteBoardEraser.id));
+          } else {
+            await db.insert(whiteBoardEraser).values(data);
+          }
+
           ws.publish(`white-board-${ws.data.params.whiteBoardId}`, data);
         }
       }
