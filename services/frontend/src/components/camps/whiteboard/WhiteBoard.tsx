@@ -142,9 +142,9 @@ export const WhiteBoardLoader = ({
   );
 
   if (
-    whiteBoardMousePointsQuery.isLoading ||
-    whiteBoardImagesQuery.isLoading ||
-    whiteBoardEraserQuery.isLoading
+    whiteBoardMousePointsQuery.isPending ||
+    whiteBoardImagesQuery.isPending ||
+    whiteBoardEraserQuery.isPending
   ) {
     return <LoadingSection />;
   }
@@ -167,9 +167,9 @@ export const WhiteBoardLoader = ({
     case "success": {
       return (
         <WhiteBoard
-          whiteBoardEraserPoints={whiteBoardEraserQuery.data ?? []}
-          whiteBoardImages={whiteBoardImagesQuery.data ?? []}
-          whiteBoardMousePoints={whiteBoardMousePointsQuery.data ?? []}
+          whiteBoardEraserPoints={whiteBoardEraserQuery.data}
+          whiteBoardImages={whiteBoardImagesQuery.data}
+          whiteBoardMousePoints={whiteBoardMousePointsQuery.data}
           whiteBoardId={whiteBoardId}
           whiteBoard={whiteBoardQuery.data}
           options={options}
@@ -243,11 +243,6 @@ const WhiteBoard = ({
   }).queryKey;
 
   const drawnPoints = whiteBoard ?? [];
-
-  // console.log({ drawnPoints });
-  // const [erased, setErased] = useState<Array<{ x: number; y: number }>>([]); // todo
-
-  // const mouseCords = currentMousePositionRef.current;
 
   const uploadImgMutation = useMutation({
     mutationFn: async ({
@@ -576,7 +571,6 @@ const WhiteBoard = ({
         mousePoint.y - 5
       );
     });
-    // }
 
     ctx.stroke();
 
@@ -621,16 +615,6 @@ const WhiteBoard = ({
       e.preventDefault();
       setCamera((prev) => ({ x: prev.x - e.deltaX, y: prev.y - e.deltaY }));
       if (currentMousePosition) {
-        // currentMousePosition = {
-        //   x: currentMousePosition.x + e.deltaX,
-        //   y: currentMousePosition.y + e.deltaY,
-        // };
-
-        // const newMouse = {
-        //   x: currentMousePosition.x + e.deltaX,
-        //   y: currentMousePosition.y + e.deltaY,
-        // };
-
         setCurrentMousePosition((prev) => {
           if (!prev) {
             return prev;
@@ -678,9 +662,6 @@ const WhiteBoard = ({
       user,
       createdAt: new Date().toISOString(),
     });
-    // if (!mouseCords) {
-    //   return;
-    // }
 
     if (!isMouseDown && !isMouseDownOverride) {
       if (selectedTool.kind === "eraser") {
@@ -741,15 +722,6 @@ const WhiteBoard = ({
         ]);
 
         subscriptionRef.current?.send(newEraserPoint);
-        // setDrawnPoints((drawnPoints) =>
-        //   drawnPoints.map((points) =>
-        //     points.filter(
-        //       (point) =>
-        //         point.x !== e.nativeEvent.offsetX &&
-        //         point.y !== e.nativeEvent.offsetY
-        //     )
-        //   )
-        // );
       }
     }
   };

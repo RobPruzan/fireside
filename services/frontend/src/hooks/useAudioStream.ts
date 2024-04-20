@@ -3,6 +3,7 @@
 import { useDefinedUser } from "@/components/camps/camps-state";
 import { useGetCamp } from "@/components/camps/message-state";
 import { client } from "@/edenClient";
+import { camp } from "@fireside/db";
 import { serverFnReturnTypeHeader } from "@tanstack/react-router";
 import { ReceiptRussianRuble } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
@@ -65,8 +66,6 @@ export const useWebRTCConnection = ({
   const [broadcastingToUsers, setBroadcastingToUsers] = useState<Array<string>>(
     []
   );
-
-  // const [stream, setStream] = useState<MediaStream | null>(null)
 
   const [isBroadcasting, setIsBroadcasting] = useState(false);
 
@@ -138,15 +137,59 @@ export const useWebRTCConnection = ({
       return;
     }
 
-    const subscription = new WebSocket(
-      (import.meta.env.PROD ? "wss://" : "ws://") +
-        (import.meta.env.PROD ? "fireside.ninja" : "localhost:8080") +
-        `/api/protected/camp/audio/${campId}`
-    );
+    const createSubscription = () =>
+      new WebSocket(
+        (import.meta.env.PROD ? "wss://" : "ws://") +
+          (import.meta.env.PROD ? "fireside.ninja" : "localhost:8080") +
+          `/api/protected/camp/audio/${campId}`
+      );
+
+    const subscription = createSubscription();
+
+    const retryConnect = (
+      callback: () => WebSocket,
+      retriesLeft = 7,
+      duration = 500
+    ) => {
+      console.log(`RETRYING (retries left: ${retriesLeft})`);
+      if (retriesLeft === 0) {
+        return;
+      }
+      setTimeout(async () => {
+        const ws = callback();
+
+        await new Promise((res) => {
+          setTimeout(() => {
+            res(null);
+          }, 1500);
+        });
+
+        if (ws.readyState === WebSocket.OPEN) {
+          console.log("Reconnected WS connection!");
+          setSignalingServerSubscription(ws);
+          return;
+        }
+
+        retryConnect(callback, retriesLeft - 1, duration * 1.5);
+      }, duration);
+    };
+
+    const handleClose = () => {
+      retryConnect(() => {
+        const newSubscription = createSubscription();
+        return newSubscription;
+      });
+    };
+
+    subscription.addEventListener("close", handleClose);
+
+    // subscription.ping()
 
     setSignalingServerSubscription(subscription);
 
     return () => {
+      console.log("sent close");
+      subscription.removeEventListener("close", handleClose);
       subscription.close();
       setSignalingServerSubscription(null);
     };
@@ -206,34 +249,6 @@ export const useWebRTCConnection = ({
           return;
         }
         case "webRTC-offer": {
-          // if (isBroadcaster) {
-          //   const userConn = webRTCConnections.find(
-          //     (existingConn) => existingConn.userId === typedData.userId
-          //   );
-          //   if (!userConn) {
-          //     return;
-          //   }
-
-          //   userConn.conn.setRemoteDescription(
-          //     new RTCSessionDescription(typedData.offer)
-          //   );
-
-          //   const answer = await userConn.conn.createAnswer();
-
-          //   userConn.conn.setLocalDescription(answer);
-
-          //   signalingServerSubscription.send(
-          //     JSON.stringify({
-          //       kind: "webRTC-answer",
-          //       answer,
-          //       broadcasterId: camp.createdBy,
-          //       receiverId: userConn.userId,
-          //     })
-          //   );
-
-          //   return;
-          // }
-
           if (!receiverWebRTCConnection) {
             return;
           }
@@ -340,13 +355,11 @@ export const useWebRTCConnection = ({
           return;
         }
         case "join-channel-response": {
-          // console.log("got join channel response");
           if (!isBroadcaster) {
             return;
           }
 
           if (!options?.broadcastingAudio) {
-            console.log("not broadcasting");
             return;
           }
 
@@ -354,19 +367,11 @@ export const useWebRTCConnection = ({
             (existingConn) => existingConn.userId === typedData.receiverId
           );
           if (!userConn) {
-            console.log("early return");
             return;
           }
 
-          // userConn.
-
           setBroadcastingToUsers((prev) => [...prev, typedData.userId]);
 
-          // webRTCConnections.forEach(async ({ conn, userId }) => {
-          //   console.log({ conn });
-          // if (conn.state) {
-          //   return;
-          // }
           console.log("creating offer for this conn", { userConn });
           const offer = await userConn.conn.createOffer({
             offerToReceiveAudio: true,
@@ -382,7 +387,6 @@ export const useWebRTCConnection = ({
               receiverId: typedData.userId,
             })
           );
-          // });
 
           return;
         }
@@ -402,16 +406,9 @@ export const useWebRTCConnection = ({
         }
 
         case "started-broadcast": {
-          // signalingServerSubscription.send(JSON.stringify({
-
-          // }))
-
           setIsBroadcasting(true);
 
-          console.log("STARTED BROADCAST", options);
-
           if (options?.listeningToAudio) {
-            console.log("attempt to listen");
             listenToBroadcaster();
           }
 
@@ -422,7 +419,6 @@ export const useWebRTCConnection = ({
           if (isBroadcaster) {
             return;
           }
-          console.log("ended broadcast");
           setIsBroadcasting(false);
           stopListeningToBroadcast();
           return;
@@ -471,9 +467,6 @@ export const useWebRTCConnection = ({
   };
 
   const stopListeningForAudio = () => {
-    // mediaStream?.getAudioTracks().forEach((track) => track.stop());
-    // const audioTracks = mediaStream?.getAudioTracks();
-    console.log("not listenign to audio");
     signalingServerSubscription?.send(
       JSON.stringify({
         kind: "ended-broadcast",
@@ -493,11 +486,6 @@ export const useWebRTCConnection = ({
       } catch (e) {
         console.log("bad remove track call");
       }
-
-      // audioTracks?.forEach((track) => {
-      //   // conn.removeTrack([mediaStream]);
-
-      // });
     });
   };
 
@@ -506,13 +494,6 @@ export const useWebRTCConnection = ({
       return;
     }
 
-    // signalingServerSubscription?.send(
-    //   JSON.stringify({
-    //     kind: "join-channel-request",
-    //     broadcasterId: camp.createdBy,
-    //     receiverId: user.id,
-    //   })
-    // );
     receiverWebRTCConnection.ontrack = ({ track }) => {
       if (track.kind !== "audio") {
         return;
@@ -529,8 +510,6 @@ export const useWebRTCConnection = ({
     signalingServerSubscription?.send(
       JSON.stringify({
         kind: "user-joined",
-        // broadcasterId: camp.createdBy,
-        // receiverId: user.id,
       })
     );
   };
@@ -559,21 +538,6 @@ export const useWebRTCConnection = ({
       console.warn("No signaling server subscription");
       return;
     }
-
-    // webRTCConnections.forEach(async ({ conn, userId }) => {
-    //   const offer = await conn.createOffer();
-
-    //   conn.setLocalDescription(offer);
-
-    //   signalingServerSubscription.send(
-    //     JSON.stringify({
-    //       kind: "webRTC-offer",
-    //       offer,
-    //       broadcasterId: camp.createdBy,
-    //       receiverId: userId,
-    //     })
-    //   );
-    // });
   };
 
   return {
@@ -590,30 +554,3 @@ export const useWebRTCConnection = ({
     isBroadcasting,
   };
 };
-
-// export const useAudioStream = ({
-//   campId,
-//   options,
-// }: {
-//   campId: string;
-//   options?: Partial<{ playAudioStream: boolean }>;
-// }) => {
-//   const {
-//     listenForAudio,
-//     signalingServerSubscription,
-//     receiverWebRTCConnection,
-//     webRTCConnections,
-//     stopListeningForAudio,
-//     setReceiverWebRTCConnection,
-//   } = useWebRTCConnection({ campId });
-//   const user = useDefinedUser();
-//   const { camp } = useGetCamp({ campId });
-
-//   return {
-//     createWebRTCOffer,
-//     listenForAudio,
-//     listenToBroadcaster,
-//     stopListeningToBroadcast,
-//     stopListeningForAudio,
-//   };
-// };

@@ -393,6 +393,8 @@ const MessageSection = memo(({ campId }: { campId: string }) => {
       whiteBoardMessagesQuery.refetch();
     });
 
+    // subscriptionRef.on('close')
+
     subscriptionRef.current = newSubscription;
     return () => {
       newSubscription.close();
