@@ -157,12 +157,14 @@ export const Camp = () => {
       <div className="w-full flex  justify-center  absolute top-0">
         <div
           className={cn([
-            "flex  border border-t-0 rounded-b-md justify-center gap-x-4 items-center w-2/5  backdrop-blur z-10 text-muted-foreground bg-opacity-90 min-w-fit",
+            "flex  border border-t-0 rounded-b-md justify-center gap-x-4 items-center w-fit px-10  backdrop-blur bg-background  z-10 text-muted-foreground ",
             camp.createdBy === user.id && broadcastingToUsers.length !== 0
               ? "h-32"
               : "h-20",
           ])}
         >
+          <div className="text-xl font-bold">{camp.name}</div>
+
           {camp.createdBy === user.id ? (
             <div className="flex flex-col w-full">
               <div className="flex gap-x-4 items-center justify-center">
@@ -175,7 +177,9 @@ export const Camp = () => {
                     navigate({
                       to: "/camp/$campId",
                       search: (prev) => ({
-                        ...prev,
+                        ...("campId" in prev && prev.campId === campId
+                          ? prev
+                          : {}),
                         whiteBoardId: campId,
                       }),
                     });
