@@ -128,7 +128,6 @@ export const userRoute = new Elysia({
             username: ctx.body.username,
             password: passwordHash,
             token: hashedToken,
-            role: "student",
           })
           .returning()
       ).at(0);
