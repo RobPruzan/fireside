@@ -8,8 +8,7 @@ import {
   db,
   // alias,
 } from "@fireside/db";
-
-import { Elysia, t, type CookieOptions } from "elysia";
+import { Elysia, t, type CookieOptions, type WebSocketRoute } from "elysia";
 import { ProtectedElysia, getDeleteAuthCookie } from "./lib";
 
 import { cleanedUserCols } from "./camp-endpoints";
@@ -229,23 +228,6 @@ export const userRoute = new Elysia({
     set.status = 200;
     return isAuthResult;
   })
-  .ws("connected-users",{
-    open: (ws) => {
-      ws.subscribe(`connected-users-${ws.data.params.campId}`);
-      users.current.push(ws.data.user.id);
-      ws.publish(`connected-users-${ws.data.params.campId}`, users.current);
-    },
-    close: (ws) => {
-      users.current = users.current.filter(userId => userId !== ws.data.user.id)
-      ws.publish(`connected-users-${ws.data.params.campId}`, users.current)
-    },
-    params: t.Object({
-      campId: t.String(), 
-    }),
-    body: t.Unknown(),
-  })
-
-  .get('/connectedUsers', () => users.current);
 
 export const userProtectedRoute = ProtectedElysia({
   prefix: "/user",
@@ -260,3 +242,21 @@ export const userProtectedRoute = ProtectedElysia({
     ctx.cookie.auth.set(getDeleteAuthCookie());
   })
   .get("/get-all", () => db.select(cleanedUserCols).from(user))
+
+  .ws("/connectedusers", {
+    open: (ws) => {
+      ws.subscribe(`connected-users-${ws.data.params.campId}`);
+      users.current.push(ws.data.user.id);
+      ws.publish(`connected-users-${ws.data.params.campId}`, users.current);
+    },
+    close: (ws) => {
+      users.current = users.current.filter(
+        (userId) => userId !== ws.data.user.id
+      );
+      ws.publish(`connected-users-${ws.data.params.campId}`, users.current);
+    },
+    params: t.Object({ campId: t.String() }),
+    body: t.Unknown(),
+  })
+
+  .get("/connectedusers", () => users.current);

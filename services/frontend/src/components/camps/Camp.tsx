@@ -105,6 +105,8 @@ const subscribeFn = client.api.protected.message.ws({
   campId: "anything",
 }).subscribe;
 
+const subscribeUserFn = client.api.protected.user.connectedusers.subscribe;
+
 type Subscription = null | ReturnType<typeof subscribeFn>;
 const SocketMessageContext = createContext<{
   subscriptionRef: MutableRefObject<Subscription> | null;
@@ -121,7 +123,6 @@ export const Camp = () => {
   const [listeningToAudio, setListeningToAudio] = useState(false);
   const [broadcastingAudio, setBroadcastingAudio] = useState(false);
   const [showUsers, setShowUsers] = useState(false);
-  
   const {
     createWebRTCOffer,
     listenForAudio,
@@ -152,10 +153,36 @@ export const Camp = () => {
       });
     }
   }, [messages.length]);
+  const subscriptionRef = useRef<null | ReturnType<typeof subscribeUserFn>>(null);
+  useEffect(() => {
+    const newSubscription = client.api.protected.user.connectedusers( campId ).subscribe();
+    console.log("New Subscription",newSubscription);
 
-  const res = client.api.user.connectedUsers.get();
+    // protected.user
+    //   .ws({ campId })
+    //   .subscribe();
+    const handleMessage = (event: { data: { type: string; payload: any; }; }) => {
+      const data = event.data as { type: string; payload: any };
   
+      if (data.type === "connected-users") {
+        setActiveUsers(data.payload);
+      }
+    };
+ 
+    subscriptionRef.current = newSubscription;
   
+    return () => {
+      newSubscription.close();
+    };
+  }, [campId]);
+  
+  const [activeUsers, setActiveUsers] = useState<string[]>([]);
+  console.log("Active Users", activeUsers);
+  const res = client.api.protected.user.connectedusers.get();
+  console.log("Res",res);
+  const toggleUsers = () => {
+    setShowUsers((prev) => !prev);
+  };
   const search = useSearch({ from: "/root-auth/camp-layout/camp/$campId" });
   const searchEntries = Object.entries(search);
   return (
