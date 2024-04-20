@@ -3,6 +3,7 @@
 import { useDefinedUser } from "@/components/camps/camps-state";
 import { useGetCamp } from "@/components/camps/message-state";
 import { client } from "@/edenClient";
+import { retryConnect } from "@/lib/utils";
 import { camp } from "@fireside/db";
 import { serverFnReturnTypeHeader } from "@tanstack/react-router";
 import { ReceiptRussianRuble } from "lucide-react";
@@ -146,44 +147,14 @@ export const useWebRTCConnection = ({
 
     const subscription = createSubscription();
 
-    const retryConnect = (
-      callback: () => WebSocket,
-      retriesLeft = 7,
-      duration = 500
-    ) => {
-      console.log(`RETRYING (retries left: ${retriesLeft})`);
-      if (retriesLeft === 0) {
-        return;
-      }
-      setTimeout(async () => {
-        const ws = callback();
-
-        await new Promise((res) => {
-          setTimeout(() => {
-            res(null);
-          }, 1500);
-        });
-
-        if (ws.readyState === WebSocket.OPEN) {
-          console.log("Reconnected WS connection!");
-          setSignalingServerSubscription(ws);
-          return;
-        }
-
-        retryConnect(callback, retriesLeft - 1, duration * 1.5);
-      }, duration);
-    };
-
     const handleClose = () => {
       retryConnect(() => {
         const newSubscription = createSubscription();
         return newSubscription;
-      });
+      }, setSignalingServerSubscription);
     };
 
     subscription.addEventListener("close", handleClose);
-
-    // subscription.ping()
 
     setSignalingServerSubscription(subscription);
 

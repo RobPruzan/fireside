@@ -47,7 +47,7 @@ import {
   ContextMenuSubTrigger,
   ContextMenuTrigger,
 } from "@/components/ui/context-menu";
-import { cn } from "@/lib/utils";
+import { cn, retryConnect } from "@/lib/utils";
 import {
   AudioLines,
   BookCheck,
@@ -106,9 +106,9 @@ const subscribeFn = client.api.protected.message.ws({
 
 type Subscription = null | ReturnType<typeof subscribeFn>;
 const SocketMessageContext = createContext<{
-  subscriptionRef: MutableRefObject<Subscription> | null;
+  subscription: Subscription | null;
 }>({
-  subscriptionRef: null,
+  subscription: null,
 });
 export const Camp = () => {
   const { campId } = useParams({ from: "/root-auth/camp-layout/camp/$campId" });
@@ -381,22 +381,51 @@ const MessageSection = memo(({ campId }: { campId: string }) => {
       },
     ]);
   };
-  const subscriptionRef = useRef<null | ReturnType<typeof subscribeFn>>(null);
+  // const subscriptionRef = useRef<null | ReturnType<typeof subscribeFn>>(null);
+  const [subscription, setSubscription] = useState<null | ReturnType<
+    typeof subscribeFn
+  >>(null);
+
+  useEffect(() => {
+    if (!subscription) {
+      return;
+    }
+    const handleMessage = (event: { data: string }) => {
+      updateMessageCache(JSON.parse(event.data) as PublishedMessage);
+      whiteBoardMessagesQuery.refetch();
+    };
+    subscription.ws.addEventListener("message", handleMessage);
+
+    return () => {
+      if (!subscription) {
+        return;
+      }
+      subscription.ws.removeEventListener("message", handleMessage);
+    };
+  }, [subscription]);
 
   useEffect(() => {
     const newSubscription = client.api.protected.message
       .ws({ campId })
       .subscribe();
 
-    newSubscription.on("message", (event) => {
-      updateMessageCache(event.data as PublishedMessage);
-      whiteBoardMessagesQuery.refetch();
-    });
+    const handleClose = () => {
+      console.log("retwying");
+      retryConnect(() => {
+        const res = client.api.protected.message.ws({ campId }).subscribe();
+
+        console.log("NEW READY STATE", res.ws.readyState);
+        return res;
+      }, setSubscription);
+    };
+    newSubscription.ws.addEventListener("close", handleClose);
 
     // subscriptionRef.on('close')
 
-    subscriptionRef.current = newSubscription;
+    // subscription = newSubscription;
+    setSubscription(newSubscription);
     return () => {
+      newSubscription.ws.removeEventListener("close", handleClose);
       newSubscription.close();
     };
   }, []);
@@ -408,7 +437,7 @@ const MessageSection = memo(({ campId }: { campId: string }) => {
   return (
     <SocketMessageContext.Provider
       value={{
-        subscriptionRef,
+        subscription,
       }}
     >
       <div className="p-1  flex flex-col h-full  w-full px-2">
@@ -472,7 +501,11 @@ const MessageSection = memo(({ campId }: { campId: string }) => {
                   parentMessageId: parentMessageId,
                 };
 
-                subscriptionRef.current?.send({
+                if (!subscription) {
+                  console.log("attempt to send through null sub");
+                }
+
+                subscription?.send({
                   message: newMessage,
                   thread: newThread,
                   user,
