@@ -1,7 +1,7 @@
 import { Button, buttonVariants } from "@/components/ui/button";
 import { LoadingSection, LoadingSpinner } from "@/components/ui/loading";
 import { client, promiseDataOrThrow } from "@/edenClient";
-import { cn } from "@/lib/utils";
+import { cn, retryConnect } from "@/lib/utils";
 import { queryClient } from "@/query";
 import {
   TransformedWhiteBoardPointGroup,
@@ -18,7 +18,7 @@ export const whiteBoardColors = [
   "black",
   "white",
 ] as const;
-
+import { ErrorBoundary, FallbackProps } from "react-error-boundary";
 import { queryOptions, useMutation, useQuery } from "@tanstack/react-query";
 import { Link, useMatchRoute } from "@tanstack/react-router";
 import { Eraser, XIcon, ZoomIn, ZoomOut } from "lucide-react";
@@ -27,6 +27,7 @@ import { render } from "react-dom";
 import { useDefinedUser } from "../camps-state";
 import { Input } from "@/components/ui/input";
 import { run } from "@fireside/utils";
+import { getWhiteBoardImagesOptions } from "./white-board-state";
 
 const pencilImage = new Image(15, 15);
 pencilImage.src = "/pencil-mouse.png";
@@ -97,29 +98,6 @@ const getWhiteBoardMouseEraserOptions = ({
       ),
   });
 
-const getWhiteBoardImagesOptions = ({
-  whiteBoardId,
-}: {
-  whiteBoardId: string;
-}) =>
-  queryOptions({
-    queryKey: ["white-board-images", whiteBoardId],
-    queryFn: () =>
-      promiseDataOrThrow(
-        client.api.protected.whiteboard["whiteboard-image"]
-          .retrieve({ whiteBoardId })
-          .get()
-      ),
-    select: (data) =>
-      data.map((data) => ({
-        ...data,
-        image: run(() => {
-          const image = new Image(200, 200);
-          image.src = data.imgUrl;
-          return image;
-        }),
-      })),
-  });
 export const WhiteBoardLoader = ({
   whiteBoardId,
   options,
@@ -165,15 +143,31 @@ export const WhiteBoardLoader = ({
       return <LoadingSection />;
     }
     case "success": {
+      const fallbackRender = (props: FallbackProps) => {
+        return (
+          <div className="w-full h-full flex items-center justify-center text-xl text-red-500">
+            A recoverable error occurred{" "}
+            <Button
+              onClick={() => {
+                props.resetErrorBoundary();
+              }}
+            >
+              Reload
+            </Button>
+          </div>
+        );
+      };
       return (
-        <WhiteBoard
-          whiteBoardEraserPoints={whiteBoardEraserQuery.data}
-          whiteBoardImages={whiteBoardImagesQuery.data}
-          whiteBoardMousePoints={whiteBoardMousePointsQuery.data}
-          whiteBoardId={whiteBoardId}
-          whiteBoard={whiteBoardQuery.data}
-          options={options}
-        />
+        <ErrorBoundary fallbackRender={fallbackRender}>
+          <WhiteBoard
+            whiteBoardEraserPoints={whiteBoardEraserQuery.data}
+            whiteBoardImages={whiteBoardImagesQuery.data}
+            whiteBoardMousePoints={whiteBoardMousePointsQuery.data}
+            whiteBoardId={whiteBoardId}
+            whiteBoard={whiteBoardQuery.data}
+            options={options}
+          />
+        </ErrorBoundary>
       );
     }
   }
@@ -287,23 +281,41 @@ const WhiteBoard = ({
     | { kind: "eraser" }
   >({ kind: "marker", color: "blue" });
 
-  const subscriptionRef = useRef<null | ReturnType<typeof subscribeFn>>(null);
+  const [subscription, setSubscription] = useState<null | ReturnType<
+    typeof subscribeFn
+  >>(null);
 
   useEffect(() => {
     const newSubscription = client.api.protected.whiteboard
       .ws({ whiteBoardId })
       .subscribe();
 
-    subscriptionRef.current = newSubscription;
+    // subscription = newSubscription;
+    setSubscription(newSubscription);
+
+    const handleClose = () =>
+      retryConnect(() => {
+        const newSub = client.api.protected.whiteboard
+          .ws({ whiteBoardId })
+          .subscribe();
+        console.log("white board retry!", newSub.ws.readyState);
+        return newSub;
+      }, setSubscription);
+    newSubscription.ws.addEventListener("close", handleClose);
     return () => {
+      newSubscription.ws.removeEventListener("close", handleClose);
       newSubscription.close();
-      subscriptionRef.current = null;
+      // subscriptionRef.current = null;
+      setSubscription(null);
     };
   }, []);
 
   useEffect(() => {
-    const handleMessage = (e: { data: unknown }) => {
-      const publishedData = e.data as WhiteBoardPublish;
+    if (!subscription) {
+      return;
+    }
+    const handleMessage = (e: { data: string }) => {
+      const publishedData = JSON.parse(e.data) as WhiteBoardPublish;
 
       switch (publishedData.kind) {
         case "point": {
@@ -351,9 +363,11 @@ const WhiteBoard = ({
       }
     };
 
-    subscriptionRef.current?.on("message", handleMessage);
-    return () => {};
-  }, []);
+    subscription.ws.addEventListener("message", handleMessage);
+    return () => {
+      return subscription.ws.removeEventListener("message", handleMessage);
+    };
+  }, [subscription]);
 
   const render = (recursive = false) => {
     const canvasEl = canvasRef.current;
@@ -563,7 +577,7 @@ const WhiteBoard = ({
       if (pencilImage.complete) {
         ctx.drawImage(pencilImage, mousePoint.x, mousePoint.y, 20, 20);
       }
-
+      ctx.fillStyle = "black";
       ctx.font = "10px";
       ctx.fillText(
         mousePoint.user.username,
@@ -623,7 +637,7 @@ const WhiteBoard = ({
             x: prev.x + e.deltaX,
             y: prev.y + e.deltaY,
           };
-          subscriptionRef.current?.send({
+          subscription?.send({
             ...newMouse,
             id: crypto.randomUUID(),
             kind: "mouse",
@@ -639,7 +653,7 @@ const WhiteBoard = ({
     canvasRef.current?.addEventListener("wheel", handleWheel);
 
     return () => canvasRef.current?.removeEventListener("wheel", handleWheel);
-  }, [options?.canPan, currentMousePosition !== null]);
+  }, [options?.canPan, currentMousePosition !== null, subscription]);
 
   const handleMouseInteraction = (
     e: React.MouseEvent<HTMLCanvasElement, MouseEvent>,
@@ -653,7 +667,7 @@ const WhiteBoard = ({
 
     setCurrentMousePosition(newMouse);
 
-    subscriptionRef.current?.send({
+    subscription?.send({
       ...newMouse,
       id: crypto.randomUUID(),
       kind: "mouse",
@@ -693,7 +707,7 @@ const WhiteBoard = ({
         };
         setDrawingPoints((prev) => [...prev, newPoint]);
 
-        subscriptionRef.current?.send({ ...newPoint, kind: "point" });
+        subscription?.send({ ...newPoint, kind: "point" });
 
         return;
       }
@@ -721,7 +735,7 @@ const WhiteBoard = ({
           },
         ]);
 
-        subscriptionRef.current?.send(newEraserPoint);
+        subscription?.send(newEraserPoint);
       }
     }
   };

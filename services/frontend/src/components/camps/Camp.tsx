@@ -93,6 +93,7 @@ import { PublishedMessage } from "@fireside/backend/src/message-endpoints";
 import { threadId } from "worker_threads";
 import { WhiteBoardLoader } from "./whiteboard/WhiteBoard";
 import {
+  getWhiteBoardImagesOptions,
   useCreateWhiteBoardMessageMutation,
   useCreateWhiteBoardMutation,
   useGetWhiteBoardMessages,
@@ -386,13 +387,33 @@ const MessageSection = memo(({ campId }: { campId: string }) => {
     typeof subscribeFn
   >>(null);
 
+  // useEffect(() => {
+  //   whiteBoardMessagesQuery.data.forEach((message) => {
+  //     queryClient.refetchQueries({
+  //       queryKey: getWhiteBoardImagesOptions({
+  //         whiteBoardId: message.whiteBoardId,
+  //       }).queryKey,
+  //     });
+  //   });
+  // }, whiteBoardMessagesQuery.data);
+
   useEffect(() => {
     if (!subscription) {
       return;
     }
-    const handleMessage = (event: { data: string }) => {
+    const handleMessage = async (event: { data: string }) => {
       updateMessageCache(JSON.parse(event.data) as PublishedMessage);
+
+      await new Promise((res) => {
+        setTimeout(() => {
+          res(null), 1000;
+        });
+      });
       whiteBoardMessagesQuery.refetch();
+
+      // queryClient.refetchQueries({
+      //   queryKey:  getWhiteBoardImagesOptions({ whiteBoardId: whiteBoardMessagesQuery.data. }).
+      // })
     };
     subscription.ws.addEventListener("message", handleMessage);
 
