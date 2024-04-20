@@ -34,12 +34,12 @@ export interface TranscriberData {
 }
 
 export interface Transcriber {
-  onInputChange: () => void;
+  // onInputChange: () => void;
   isBusy: boolean;
   isModelLoading: boolean;
   progressItems: ProgressItem[];
   start: (audioData: AudioBuffer | undefined) => void;
-  output?: TranscriberData;
+  // output?: TranscriberData;
   model: string;
   setModel: (model: string) => void;
   multilingual: boolean;
@@ -52,10 +52,14 @@ export interface Transcriber {
   setLanguage: (language: string) => void;
 }
 
-export function useTranscriber(): Transcriber {
-  const [transcript, setTranscript] = useState<TranscriberData | undefined>(
-    undefined
-  );
+export function useTranscriber({
+  onTranscribe,
+}: {
+  onTranscribe: (arg: TranscriberData) => void;
+}): Transcriber {
+  // const [transcript, setTranscript] = useState<TranscriberData | undefined>(
+  //   undefined
+  // );
   const [isBusy, setIsBusy] = useState(false);
   const [isModelLoading, setIsModelLoading] = useState(false);
 
@@ -84,11 +88,11 @@ export function useTranscriber(): Transcriber {
         // eslint-disable-next-line no-case-declarations
         const updateMessage = message as TranscriberUpdateData;
         console.log("updated message", updateMessage);
-        setTranscript({
-          isBusy: true,
-          text: updateMessage.data[0],
-          chunks: updateMessage.data[1].chunks,
-        });
+        // onTranscribe({
+        //   isBusy: true,
+        //   text: updateMessage.data[0],
+        //   chunks: updateMessage.data[1].chunks,
+        // });
         break;
       case "complete":
         // Received complete transcript
@@ -96,7 +100,7 @@ export function useTranscriber(): Transcriber {
         // eslint-disable-next-line no-case-declarations
         const completeMessage = message as TranscriberCompleteData;
         console.log("complete message", completeMessage);
-        setTranscript({
+        onTranscribe({
           isBusy: false,
           text: completeMessage.data.text,
           chunks: completeMessage.data.chunks,
@@ -145,14 +149,14 @@ export function useTranscriber(): Transcriber {
   );
   const [language, setLanguage] = useState<string>(Constants.DEFAULT_LANGUAGE);
 
-  const onInputChange = useCallback(() => {
-    setTranscript(undefined);
-  }, []);
+  // const onInputChange = useCallback(() => {
+  //   setTranscript(undefined);
+  // }, []);
 
   const postRequest = useCallback(
     async (audioData: AudioBuffer | undefined) => {
       if (audioData) {
-        setTranscript(undefined);
+        // setTranscript(undefined);
         setIsBusy(true);
 
         let audio;
@@ -186,12 +190,12 @@ export function useTranscriber(): Transcriber {
 
   const transcriber = useMemo(() => {
     return {
-      onInputChange,
+      // onInputChange,
       isBusy,
       isModelLoading,
       progressItems,
       start: postRequest,
-      output: transcript,
+      // output: transcript,
       model,
       setModel,
       multilingual,
@@ -208,7 +212,7 @@ export function useTranscriber(): Transcriber {
     isModelLoading,
     progressItems,
     postRequest,
-    transcript,
+    // transcript,
     model,
     multilingual,
     quantized,

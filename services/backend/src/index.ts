@@ -74,6 +74,10 @@ const app = new Elysia()
     set.headers["Cache-Control"] =
       "public, max-age=31536000, s-maxage=31536000, immutable";
 
+    // if ("/api" in path) {
+    //   return;
+    // }
+
     console.log(
       "attempting to read",
       path,
@@ -91,7 +95,7 @@ const app = new Elysia()
       // console.log('at')
       set.headers["Content-Type"] = assetFile.type;
 
-      console.log("served", path);
+      // console.log("served", path);
 
       return assetFile;
     }
@@ -102,7 +106,7 @@ const app = new Elysia()
       return publicFile;
     }
     set.headers["Content-Type"] = fallBackFile.type;
-    console.log("served", path);
+    // console.log("served", path);
     return fallBackFile;
   })
 

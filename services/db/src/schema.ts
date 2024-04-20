@@ -512,3 +512,30 @@ export const whiteBoardImg = pgTable("whiteBoardImg", {
 });
 
 export type WhiteBoardImgSelect = InferSelectModel<typeof whiteBoardImg>;
+
+export const transcribeGroup = pgTable("transcribeGroup", {
+  id: uuid("id")
+    .$defaultFn(() => crypto.randomUUID())
+    .primaryKey(),
+  createdAt: doublePrecision("createdAt")
+    .$defaultFn(() => Date.now())
+    .notNull(),
+  campId: uuid("campID").references(() => camp.id),
+});
+
+export const transcribeJob = pgTable("job", {
+  id: uuid("id")
+    .$defaultFn(() => crypto.randomUUID())
+    .primaryKey(),
+  transcribeGroupId: uuid("transcribeGroupId").references(
+    () => transcribeGroup.id
+  ),
+});
+
+export const transcription = pgTable("transcription", {
+  id: uuid("id")
+    .$defaultFn(() => crypto.randomUUID())
+    .primaryKey(),
+  jobId: uuid("transcribeJobId").references(() => transcribeJob.id),
+  text: text("text").notNull(),
+});

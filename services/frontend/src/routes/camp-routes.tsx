@@ -5,6 +5,7 @@ import { RootCampLayout } from "@/components/camps/RootCampLayout";
 import {
   getUserCampQueryOptions,
   getAllCampsQueryOptions,
+  useGetTranscriptionGroup,
 } from "@/components/camps/camps-state";
 import {
   getFriendRequestsQueryOptions,
@@ -12,7 +13,7 @@ import {
 } from "@/components/camps/friends-state";
 import { LoadingScreen, LoadingSection } from "@/components/ui/loading";
 
-import { createRoute } from "@tanstack/react-router";
+import { createRoute, useParams } from "@tanstack/react-router";
 
 import { authRootLayout } from "./layouts";
 import { Inbox } from "@/components/camps/Inbox";
@@ -33,8 +34,12 @@ import {
   TranscriberContext,
   useTranscriber,
 } from "@/lib/transcription/hooks/useTranscriber";
+import { client } from "@/edenClient";
+import { useState, useEffect, useRef } from "react";
 // import { WhiteBoard } from "@/components/camps/whiteboard/WhiteBoard";
+const foo = client.api.protected.camp.transcribe({ groupId: "..." }).subscribe;
 
+type TranscriptionSubscription = ReturnType<typeof foo>;
 export const campLayoutRoute = createRoute({
   getParentRoute: () => authRootLayout,
   validateSearch: (search) =>
@@ -53,18 +58,7 @@ export const campLayoutRoute = createRoute({
     ]),
   pendingComponent: LoadingScreen,
   // component: RootCampLayout,
-  component: () => {
-    const transcriber = useTranscriber();
-    return (
-      <TranscriberContext.Provider
-        value={{
-          transcriber,
-        }}
-      >
-        <RootCampLayout />
-      </TranscriberContext.Provider>
-    );
-  },
+  component: RootCampLayout,
 });
 
 export const exploreRoute = createRoute({
@@ -87,29 +81,30 @@ export const friendsRoute = createRoute({
   component: Friends,
 });
 
-export const audioRoute = createRoute({
-  getParentRoute: () => campLayoutRoute,
-  path: "/camp/audio",
-  pendingComponent: LoadingSection,
-  // loader: async ({ context: { queryClient, user } }) =>
-  //   Promise.all([
-  //     queryClient.ensureQueryData(
-  //       getFriendRequestsQueryOptions({ userId: user.id })
-  //     ),
-  //     queryClient.ensureQueryData(usersQueryOptions),
-  //   ]),
-  component: () => {
-    const transcriber = useTranscriber();
-    return (
-      <div className="flex justify-center items-center min-h-screen">
-        <div className="container flex flex-col justify-center items-center">
-          <AudioManager transcriber={transcriber} />
-          <Transcript transcribedData={transcriber.output} />
-        </div>
-      </div>
-    );
-  },
-});
+// export const audioRoute = createRoute({
+//   getParentRoute: () => campLayoutRoute,
+//   path: "/camp/audio",
+//   pendingComponent: LoadingSection,
+//   // loader: async ({ context: { queryClient, user } }) =>
+//   //   Promise.all([
+//   //     queryClient.ensureQueryData(
+//   //       getFriendRequestsQueryOptions({ userId: user.id })
+//   //     ),
+//   //     queryClient.ensureQueryData(usersQueryOptions),
+//   //   ]),
+//   component: () => {
+
+//     const transcriber = useTranscriber();
+//     return (
+//       <div className="flex justify-center items-center min-h-screen">
+//         <div className="container flex flex-col justify-center items-center">
+//           <AudioManager transcriber={transcriber} />
+//           <Transcript transcribedData={transcriber.output} />
+//         </div>
+//       </div>
+//     );
+//   },
+// });
 
 export const inboxRoute = createRoute({
   getParentRoute: () => campLayoutRoute,
@@ -132,7 +127,49 @@ export const campRoute = createRoute({
       queryClient.ensureQueryData(getMessageWhiteBoardsOptions({ campId })),
       queryClient.ensureQueryData(getCampOptions({ campId })),
     ]),
-  component: Camp,
+  // component: Camp,
+  component: () => {
+    const transcriptionSubscriptionRef =
+      useRef<TranscriptionSubscription | null>(null);
+    const { campId } = useParams({
+      from: "/root-auth/camp-layout/camp/$campId",
+    });
+    const { transcriptionGroup } = useGetTranscriptionGroup({ campId });
+
+    useEffect(() => {
+      if (!transcriptionGroup) {
+        console.log("debug here");
+        return;
+      }
+      transcriptionSubscriptionRef.current = client.api.protected.camp
+        .transcribe({ groupId: transcriptionGroup.id })
+        .subscribe();
+    }, [transcriptionGroup]);
+    const transcriber = useTranscriber({
+      onTranscribe: ({ text }) => {
+        console.log(
+          "sending",
+          text,
+          "with:",
+          transcriptionSubscriptionRef.current
+        );
+
+        transcriptionSubscriptionRef.current?.send({
+          jobId: crypto.randomUUID(), // todo
+          text,
+        });
+      },
+    });
+    return (
+      <TranscriberContext.Provider
+        value={{
+          transcriber,
+        }}
+      >
+        <Camp />
+      </TranscriberContext.Provider>
+    );
+  },
   pendingComponent: LoadingSection,
 });
 
@@ -141,5 +178,5 @@ export const campRouteTree = campLayoutRoute.addChildren([
   campRoute,
   friendsRoute,
   inboxRoute,
-  audioRoute,
+  // audioRoute,
 ]);

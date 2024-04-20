@@ -12,8 +12,8 @@ if (process.env.NODE_ENV === "production") {
   config({ path: join(__dirname, "..", ".env.production") });
   config({ path: join(__dirname, ".env.production") });
 } else {
-  // config({ path: join(__dirname, "..", ".env") });
-  // config({ path: join(__dirname, ".env") });
+  config({ path: join(__dirname, "..", ".env") });
+  config({ path: join(__dirname, ".env") });
   config({ path: join(__dirname, "..", ".env.development") });
   config({ path: join(__dirname, ".env.development") });
 }
@@ -31,13 +31,13 @@ const connectDB = ({ connString }: { connString: string }) => {
       setTimeout(() => connectDB({ connString }), 3000);
     },
     onparameter: (key, value) => {
-      console.log("PARAM CHANGE", key, value);
+      // console.log("PARAM CHANGE", key, value);
     },
   });
   console.log("connecting...");
   db = drizzle(drizzleSql);
 };
 
-console.log("calling connectDb");
+console.log("calling connectDb", process.env.CONNECTION_STRING!);
 
 connectDB({ connString: process.env.CONNECTION_STRING! });

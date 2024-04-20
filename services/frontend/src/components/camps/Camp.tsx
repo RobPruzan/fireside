@@ -80,7 +80,11 @@ import {
   useRemoveReactionMutation,
   useGetCamp,
 } from "./message-state";
-import { useDefinedUser } from "./camps-state";
+import {
+  useCreateTranscriptionGroup,
+  useDefinedUser,
+  useGetTranscriptionGroup,
+} from "./camps-state";
 import { Setter } from "@/types/utils";
 import { FiresideUser } from "@/lib/useUserQuery";
 import { ThreadIcon } from "../ui/icons/thread";
@@ -99,9 +103,10 @@ import {
   useCreateWhiteBoardMutation,
   useGetWhiteBoardMessages,
 } from "./whiteboard/white-board-state";
-import { LoadingSection } from "../ui/loading";
+import { LoadingSection, LoadingSpinner } from "../ui/loading";
 import { useWebRTCConnection } from "@/hooks/useAudioStream";
 import { TranscriberContext } from "@/lib/transcription/hooks/useTranscriber";
+import { Transcribe } from "./Transcribe";
 
 // import { useAudioStream } from "@/hooks/useAudioStream";
 const subscribeFn = client.api.protected.message.ws({
@@ -122,6 +127,7 @@ export const Camp = () => {
   const user = useDefinedUser();
   const [listeningToAudio, setListeningToAudio] = useState(false);
   const [broadcastingAudio, setBroadcastingAudio] = useState(false);
+
   // const { transcriber } = useContext(TranscriberContext);
   const {
     createWebRTCOffer,
@@ -155,8 +161,11 @@ export const Camp = () => {
   }, [messages.length]);
   const createWhiteBoardMutation = useCreateWhiteBoardMutation();
   const search = useSearch({ from: "/root-auth/camp-layout/camp/$campId" });
+  const createTranscriptionGroupMutation = useCreateTranscriptionGroup();
+  const { transcriptionGroupQuery } = useGetTranscriptionGroup({ campId });
   const navigate = useNavigate({ from: "/root-auth/camp-layout/camp/$campId" });
   const searchEntries = Object.entries(search);
+  // console.log({ transcriptionGroupQuery });
   return (
     <div className="flex  w-full h-full  pb-5 relative">
       <div className="w-full flex  justify-center  absolute top-0">
@@ -174,7 +183,7 @@ export const Camp = () => {
             <div className="flex flex-col w-full">
               <div className="flex gap-x-4 items-center justify-center">
                 <Button
-                  onClick={() => {
+                  onClick={async () => {
                     createWhiteBoardMutation.mutate({
                       whiteBoardId: campId,
                     });
@@ -194,12 +203,18 @@ export const Camp = () => {
                   <Presentation />
                 </Button>
                 <Button
-                  onClick={() => {
+                  onClick={async () => {
                     if (!broadcastingAudio) {
                       listenForAudio();
                     } else {
                       stopListeningForAudio();
                     }
+
+                    await createTranscriptionGroupMutation.mutateAsync({
+                      campId,
+                    });
+
+                    transcriptionGroupQuery.refetch();
 
                     setBroadcastingAudio((prev) => {
                       return !prev;
@@ -207,9 +222,13 @@ export const Camp = () => {
                   }}
                   variant={"ghost"}
                 >
-                  <Megaphone
-                    className={cn([broadcastingAudio && "text-green-500"])}
-                  />
+                  {createTranscriptionGroupMutation.isPending ? (
+                    <LoadingSpinner />
+                  ) : (
+                    <Megaphone
+                      className={cn([broadcastingAudio && "text-green-500"])}
+                    />
+                  )}
                 </Button>
 
                 <Button variant={"ghost"}>
@@ -275,6 +294,10 @@ export const Camp = () => {
             </div>
           )}
         </div>
+      </div>
+
+      <div className="h-full border-l  w-20 text-xs overflow-y-auto">
+        <Transcribe campId={campId} />
       </div>
 
       <ResizablePanelGroup direction="horizontal">

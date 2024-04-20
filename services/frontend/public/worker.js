@@ -1,3 +1,7 @@
+/**
+ * Source: https://github.com/xenova/whisper-web
+ */
+
 /* eslint-disable camelcase */
 import { pipeline, env } from "@xenova/transformers";
 

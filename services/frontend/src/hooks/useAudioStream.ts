@@ -1,6 +1,9 @@
 // start the audio listen
 
-import { useDefinedUser } from "@/components/camps/camps-state";
+import {
+  useDefinedUser,
+  useGetTranscriptionGroup,
+} from "@/components/camps/camps-state";
 import { useGetCamp } from "@/components/camps/message-state";
 import { client } from "@/edenClient";
 import { AudioSource } from "@/lib/transcription/components/AudioManager";
@@ -517,7 +520,7 @@ export const useWebRTCConnection = ({
       //   }, 10 * 1000);
       // });
 
-      // setMediaRecorder(new MediaRecorder(mediaStream));
+      setMediaRecorder(new MediaRecorder(mediaStream));
     };
 
     mediaRecorder.start();
@@ -527,7 +530,7 @@ export const useWebRTCConnection = ({
 
     setTimeout(() => {
       mediaRecorder.stop();
-    }, 3000);
+    }, 5000);
   }, [mediaRecorder, mediaStream]);
   //     let recorder = new MediaRecorder(stream);
   // let audioChunks = [];

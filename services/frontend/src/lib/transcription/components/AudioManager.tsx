@@ -179,7 +179,7 @@ export function AudioManager(props: { transcriber: Transcriber }) {
                 icon={<MicrophoneIcon />}
                 text={"Record"}
                 setAudioData={(e) => {
-                  props.transcriber.onInputChange();
+                  // props.transcriber.onInputChange();
                   setAudioFromRecording(e);
                 }}
               />
