@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import {
   MutableRefObject,
+  Suspense,
   createContext,
   memo,
   useContext,
@@ -295,7 +296,9 @@ export const Camp = () => {
                           minSize={30}
                           className={cn([" w-full"])}
                         >
-                          <Thread threadId={v} />
+                          <Suspense fallback={<LoadingSection />}>
+                            <Thread threadId={v} />
+                          </Suspense>
                         </ResizablePanel>
 
                         {index !== searchEntries.length - 1 && (
