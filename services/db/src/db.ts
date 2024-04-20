@@ -4,6 +4,9 @@ import { config } from "dotenv";
 import { join } from "path";
 
 if (process.env.NODE_ENV === "production") {
+  // load dev env as base envs just incase
+  config({ path: join(__dirname, "..", ".env.development") });
+  config({ path: join(__dirname, ".env.development") });
   config({ path: join(__dirname, "..", ".env") });
   config({ path: join(__dirname, ".env") });
   config({ path: join(__dirname, "..", ".env.production") });
