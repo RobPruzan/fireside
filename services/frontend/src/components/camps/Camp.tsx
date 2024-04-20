@@ -134,9 +134,6 @@ export const Camp = () => {
       listeningToAudio,
       broadcastingAudio,
     },
-    // options: {
-    //   playAudioStream: broadcastingAudio,
-    // },
   });
 
   useEffect(() => {
@@ -150,15 +147,16 @@ export const Camp = () => {
       });
     }
   }, [messages.length]);
-
+  const createWhiteBoardMutation = useCreateWhiteBoardMutation();
   const search = useSearch({ from: "/root-auth/camp-layout/camp/$campId" });
+  const navigate = useNavigate({ from: "/root-auth/camp-layout/camp/$campId" });
   const searchEntries = Object.entries(search);
   return (
     <div className="flex  w-full h-full  pb-5 relative">
       <div className="w-full flex  justify-center  absolute top-0">
         <div
           className={cn([
-            "flex  border border-t-0 rounded-b-md justify-center gap-x-4 items-center w-2/5  backdrop-blur z-10 text-muted-foreground bg-opacity-90",
+            "flex  border border-t-0 rounded-b-md justify-center gap-x-4 items-center w-2/5  backdrop-blur z-10 text-muted-foreground bg-opacity-90 min-w-fit",
             camp.createdBy === user.id && broadcastingToUsers.length !== 0
               ? "h-32"
               : "h-20",
@@ -167,7 +165,22 @@ export const Camp = () => {
           {camp.createdBy === user.id ? (
             <div className="flex flex-col w-full">
               <div className="flex gap-x-4 items-center justify-center">
-                <Button variant={"ghost"}>
+                <Button
+                  onClick={() => {
+                    createWhiteBoardMutation.mutate({
+                      whiteBoardId: campId,
+                    });
+
+                    navigate({
+                      to: "/camp/$campId",
+                      search: (prev) => ({
+                        ...prev,
+                        whiteBoardId: campId,
+                      }),
+                    });
+                  }}
+                  variant={"ghost"}
+                >
                   <Presentation />
                 </Button>
                 <Button
@@ -207,28 +220,49 @@ export const Camp = () => {
               )}
             </div>
           ) : (
-            <Button
-              onClick={() => {
-                if (!listeningToAudio) {
-                  console.log("listening");
-                  listenToBroadcaster();
-                } else {
-                  stopListeningToBroadcast();
-                }
-                setListeningToAudio((prev) => {
-                  return !prev;
-                });
-              }}
-              className="relative"
-              variant={"ghost"}
-            >
-              {isBroadcasting && (
-                <Info className="text-green-500 absolute -top-3 -right-3" />
-              )}
-              <AudioLines
-                className={cn([listeningToAudio && "text-green-500"])}
-              />
-            </Button>
+            <div className="flex items-center gap-x-4">
+              <Button
+                onClick={() => {
+                  createWhiteBoardMutation.mutate({
+                    whiteBoardId: campId,
+                  });
+
+                  navigate({
+                    to: "/camp/$campId",
+                    search: (prev) => ({
+                      ...prev,
+                      whiteBoardId: campId,
+                    }),
+                  });
+                }}
+                variant={"ghost"}
+              >
+                <Presentation />
+              </Button>
+
+              <Button
+                onClick={() => {
+                  if (!listeningToAudio) {
+                    console.log("listening");
+                    listenToBroadcaster();
+                  } else {
+                    stopListeningToBroadcast();
+                  }
+                  setListeningToAudio((prev) => {
+                    return !prev;
+                  });
+                }}
+                className="relative"
+                variant={"ghost"}
+              >
+                {isBroadcasting && (
+                  <Info className="text-green-500 absolute -top-3 -right-3" />
+                )}
+                <AudioLines
+                  className={cn([listeningToAudio && "text-green-500"])}
+                />
+              </Button>
+            </div>
           )}
         </div>
       </div>
@@ -288,6 +322,7 @@ export const Camp = () => {
                           <WhiteBoardLoader
                             whiteBoardId={v}
                             options={{
+                              readOnly: camp.createdBy !== user.id,
                               slot: (
                                 <Link
                                   from="/camp/$campId"
@@ -382,20 +417,10 @@ const MessageSection = memo(({ campId }: { campId: string }) => {
       },
     ]);
   };
-  // const subscriptionRef = useRef<null | ReturnType<typeof subscribeFn>>(null);
+
   const [subscription, setSubscription] = useState<null | ReturnType<
     typeof subscribeFn
   >>(null);
-
-  // useEffect(() => {
-  //   whiteBoardMessagesQuery.data.forEach((message) => {
-  //     queryClient.refetchQueries({
-  //       queryKey: getWhiteBoardImagesOptions({
-  //         whiteBoardId: message.whiteBoardId,
-  //       }).queryKey,
-  //     });
-  //   });
-  // }, whiteBoardMessagesQuery.data);
 
   useEffect(() => {
     if (!subscription) {
@@ -406,14 +431,10 @@ const MessageSection = memo(({ campId }: { campId: string }) => {
 
       await new Promise((res) => {
         setTimeout(() => {
-          res(null), 1000;
+          res(null), 1000; // the white board creation is not part of the message, give some time for it to create. This is a race but not a big deal if it fails (we still have a refetch interval)
         });
       });
       whiteBoardMessagesQuery.refetch();
-
-      // queryClient.refetchQueries({
-      //   queryKey:  getWhiteBoardImagesOptions({ whiteBoardId: whiteBoardMessagesQuery.data. }).
-      // })
     };
     subscription.ws.addEventListener("message", handleMessage);
 

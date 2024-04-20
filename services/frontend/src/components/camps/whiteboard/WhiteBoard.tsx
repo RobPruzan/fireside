@@ -743,31 +743,9 @@ const WhiteBoard = ({
   return (
     <div ref={parentCanvasRef} className="w-full h-full relative">
       {options?.slot}
-      {!options?.readOnly && (
-        <Input
-          id="img-upload"
-          onChange={() => {
-            const files = (
-              document.getElementById("img-upload") as HTMLInputElement
-            ).files!;
-            uploadImgMutation.mutate({
-              file: files,
-              x: -camera.x + parentCanvasRef.current!.clientWidth / 2,
-              y: -camera.y + parentCanvasRef.current!.clientHeight / 2,
-            });
-          }}
-          className="absolute top-3 left-3 bg-white border-muted w-[100px] p-1 h-fit text-xs transition hover:bg-gray-100  hover:text-white"
-          type="file"
-        />
-      )}
-      {uploadImgMutation.isPending && (
-        <span className="absolute top-3 left-28 text-black">
-          <LoadingSpinner />
-        </span>
-      )}
 
       {!options?.readOnly && (
-        <div className="absolute bottom-2 border border-gray-200 bg-opacity-50 backdrop-blur-md right-[7px] rounded-lg p-3  flex justify-evenly items-center w-[95%]">
+        <div className="absolute bottom-2 border border-gray-200 bg-opacity-50 backdrop-blur-md right-[7px] rounded-lg p-3  flex justify-evenly items-center w-[95%] overflow-x-auto gap-x-2">
           {whiteBoardColors.map((color) => (
             <Button
               key={color}
@@ -796,7 +774,28 @@ const WhiteBoard = ({
             <Eraser className="text-black" />
           </Button>
           <div className="text-black w-[50px]">
-            ({camera.x.toFixed(1)},{camera.y.toFixed(1)})
+            {!options?.readOnly && (
+              <Input
+                id="img-upload"
+                onChange={() => {
+                  const files = (
+                    document.getElementById("img-upload") as HTMLInputElement
+                  ).files!;
+                  uploadImgMutation.mutate({
+                    file: files,
+                    x: -camera.x + parentCanvasRef.current!.clientWidth / 2,
+                    y: -camera.y + parentCanvasRef.current!.clientHeight / 2,
+                  });
+                }}
+                className=" bg-white border-muted w-[100px] p-1 h-fit text-xs transition hover:bg-gray-100  hover:text-white"
+                type="file"
+              />
+            )}
+            {uploadImgMutation.isPending && (
+              <span className="absolute top-3 left-28 text-black">
+                <LoadingSpinner />
+              </span>
+            )}
           </div>
         </div>
       )}
