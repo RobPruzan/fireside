@@ -101,6 +101,8 @@ import {
 } from "./whiteboard/white-board-state";
 import { LoadingSection } from "../ui/loading";
 import { useWebRTCConnection } from "@/hooks/useAudioStream";
+import { TranscriberContext } from "@/lib/transcription/hooks/useTranscriber";
+
 // import { useAudioStream } from "@/hooks/useAudioStream";
 const subscribeFn = client.api.protected.message.ws({
   campId: "anything",
@@ -120,7 +122,7 @@ export const Camp = () => {
   const user = useDefinedUser();
   const [listeningToAudio, setListeningToAudio] = useState(false);
   const [broadcastingAudio, setBroadcastingAudio] = useState(false);
-
+  // const { transcriber } = useContext(TranscriberContext);
   const {
     createWebRTCOffer,
     listenForAudio,
@@ -134,6 +136,9 @@ export const Camp = () => {
     options: {
       listeningToAudio,
       broadcastingAudio,
+      // onRecordingComplete: (blob) => {
+      //   transcriber.onInputChange();
+      // },
     },
   });
 

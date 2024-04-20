@@ -3,11 +3,31 @@
 import { useDefinedUser } from "@/components/camps/camps-state";
 import { useGetCamp } from "@/components/camps/message-state";
 import { client } from "@/edenClient";
+import { AudioSource } from "@/lib/transcription/components/AudioManager";
+import { TranscriberContext } from "@/lib/transcription/hooks/useTranscriber";
 import { retryConnect } from "@/lib/utils";
+import { webmFixDuration } from "@/lib/utils/BlobFix";
+import Constants from "@/lib/utils/Constants";
 import { camp } from "@fireside/db";
 import { serverFnReturnTypeHeader } from "@tanstack/react-router";
 import { ReceiptRussianRuble } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
+
+function getMimeType() {
+  const types = [
+    "audio/webm",
+    "audio/mp4",
+    "audio/ogg",
+    "audio/wav",
+    "audio/aac",
+  ];
+  for (let i = 0; i < types.length; i++) {
+    if (MediaRecorder.isTypeSupported(types[i])) {
+      return types[i];
+    }
+  }
+  return undefined;
+}
 
 const throwAwaySubscribeFn = client.api.protected.camp.audio({
   campId: "does not matter",
@@ -43,6 +63,7 @@ export const useWebRTCConnection = ({
   options?: Partial<{
     listeningToAudio: boolean;
     broadcastingAudio: boolean;
+    onRecordingComplete: (blob: Blob) => void;
   }>;
 }) => {
   const [webRTCConnections, setWebRTCConnections] = useState<
@@ -59,6 +80,21 @@ export const useWebRTCConnection = ({
     useState<WebSocket | null>(null);
 
   const [mediaStream, setMediaStream] = useState<MediaStream | null>(null);
+  const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(
+    null
+  );
+
+  const { transcriber } = useContext(TranscriberContext);
+
+  // const [transcribeAudioData, setTranscribeAudioData] = useState<
+  //   | {
+  //       buffer: AudioBuffer;
+  //       url: string;
+  //       source: AudioSource;
+  //       mimeType: string;
+  //     }
+  //   | undefined
+  // >();
 
   const [senders, setSenders] = useState<
     Array<{ userId: string; sender: RTCRtpSender }>
@@ -69,6 +105,33 @@ export const useWebRTCConnection = ({
   );
 
   const [isBroadcasting, setIsBroadcasting] = useState(false);
+
+  const transcribe = async (data: Blob) => {
+    // setTranscribeAudioData(undefined);
+
+    // const blobUrl = URL.createObjectURL(data);
+    const fileReader = new FileReader();
+
+    fileReader.onloadend = async () => {
+      const audioCTX = new AudioContext({
+        sampleRate: Constants.SAMPLING_RATE,
+      });
+      const arrayBuffer = fileReader.result as ArrayBuffer;
+      const decoded = await audioCTX.decodeAudioData(arrayBuffer);
+
+      console.log("set audio data");
+      // setTranscribeAudioData({
+      //   buffer: decoded,
+      //   url: blobUrl,
+      //   source: AudioSource.RECORDING,
+      //   mimeType: data.type,
+      // });
+      transcriber.start(decoded);
+    };
+    fileReader.readAsArrayBuffer(data);
+  };
+
+  // useEffect(() => {}, [transcriber])
 
   const { camp } = useGetCamp({ campId });
   const user = useDefinedUser();
@@ -419,8 +482,78 @@ export const useWebRTCConnection = ({
     mediaStream,
   ]);
 
+  useEffect(() => {
+    if (!mediaStream) {
+      return;
+    }
+    if (!mediaRecorder) {
+      return;
+    }
+
+    const startTime = Date.now();
+
+    const audioChunks: Array<BlobPart> = [];
+
+    mediaRecorder.ondataavailable = (event) => {
+      audioChunks.push(event.data);
+    };
+
+    mediaRecorder.onstop = async () => {
+      const endTime = Date.now();
+      let blob = new Blob(audioChunks);
+      const mimeType = getMimeType();
+
+      // const audioUrl = URL.createObjectURL(audioBlob);
+      if (mimeType === "audio/webm") {
+        blob = await webmFixDuration(blob, endTime - startTime, blob.type);
+      }
+
+      // options?.onRecordingComplete?.(blob);
+      transcribe(blob);
+
+      // await new Promise((res) => {
+      //   setTimeout(() => {
+      //     res(null);
+      //   }, 10 * 1000);
+      // });
+
+      // setMediaRecorder(new MediaRecorder(mediaStream));
+    };
+
+    mediaRecorder.start();
+    // mediaRecorder.onstop = () => {
+
+    // }
+
+    setTimeout(() => {
+      mediaRecorder.stop();
+    }, 3000);
+  }, [mediaRecorder, mediaStream]);
+  //     let recorder = new MediaRecorder(stream);
+  // let audioChunks = [];
+
+  // recorder.ondataavailable = event => {
+  //   audioChunks.push(event.data);
+  // };
+
+  // recorder.onstop = () => {
+  //   let audioBlob = new Blob(audioChunks);
+  //   let audioUrl = URL.createObjectURL(audioBlob);
+  //   let audio = new Audio(audioUrl);
+  //   audio.play();
+  // };
+
+  // recorder.start();
+
+  // // Stop recording after 5 seconds
+  // setTimeout(() => {
+  //   recorder.stop();
+  // }, 5000);
+
   const listenForAudio = async () => {
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    setMediaRecorder(new MediaRecorder(stream));
+    // const mediaRecorder = new MediaRecorder(stream)
     setMediaStream(stream);
     const audioTracks = stream.getAudioTracks();
     webRTCConnections.forEach(async ({ conn, userId }) => {
@@ -472,6 +605,7 @@ export const useWebRTCConnection = ({
       const audioElement = new Audio();
       audioElement.autoplay = true;
       const audioStream = new MediaStream();
+      // const mediaRecorder = new MediaRecorder(audioStream)
 
       audioStream.addTrack(track);
 

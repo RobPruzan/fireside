@@ -26,6 +26,13 @@ import { Thread } from "@/components/camps/Thread";
 import { promise, z } from "zod";
 import { getThreadsOptions } from "@/components/camps/thread-state";
 import { getMessageWhiteBoardsOptions } from "@/components/camps/whiteboard/white-board-state";
+import { AudioManager } from "@/lib/transcription/components/AudioManager";
+
+import Transcript from "@/lib/transcription/components/Transcript";
+import {
+  TranscriberContext,
+  useTranscriber,
+} from "@/lib/transcription/hooks/useTranscriber";
 // import { WhiteBoard } from "@/components/camps/whiteboard/WhiteBoard";
 
 export const campLayoutRoute = createRoute({
@@ -45,7 +52,19 @@ export const campLayoutRoute = createRoute({
       queryClient.ensureQueryData(reactionAssetsOptions),
     ]),
   pendingComponent: LoadingScreen,
-  component: RootCampLayout,
+  // component: RootCampLayout,
+  component: () => {
+    const transcriber = useTranscriber();
+    return (
+      <TranscriberContext.Provider
+        value={{
+          transcriber,
+        }}
+      >
+        <RootCampLayout />
+      </TranscriberContext.Provider>
+    );
+  },
 });
 
 export const exploreRoute = createRoute({
@@ -66,6 +85,30 @@ export const friendsRoute = createRoute({
       queryClient.ensureQueryData(usersQueryOptions),
     ]),
   component: Friends,
+});
+
+export const audioRoute = createRoute({
+  getParentRoute: () => campLayoutRoute,
+  path: "/camp/audio",
+  pendingComponent: LoadingSection,
+  // loader: async ({ context: { queryClient, user } }) =>
+  //   Promise.all([
+  //     queryClient.ensureQueryData(
+  //       getFriendRequestsQueryOptions({ userId: user.id })
+  //     ),
+  //     queryClient.ensureQueryData(usersQueryOptions),
+  //   ]),
+  component: () => {
+    const transcriber = useTranscriber();
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <div className="container flex flex-col justify-center items-center">
+          <AudioManager transcriber={transcriber} />
+          <Transcript transcribedData={transcriber.output} />
+        </div>
+      </div>
+    );
+  },
 });
 
 export const inboxRoute = createRoute({
@@ -93,21 +136,10 @@ export const campRoute = createRoute({
   pendingComponent: LoadingSection,
 });
 
-// export const threadRoute = createRoute({
-//   getParentRoute: () => campRoute,
-//   component: Thread,
-//   path: "/$threadId",
-//   loader: ({ context: { queryClient }, params: { threadId, campId } }) =>
-//     Promise.all([queryClient.ensureQueryData(getThreadsOptions({ campId }))]),
-//   pendingComponent: LoadingSection,
-// });
-
-// export const whiteboardRoute = createRoute({
-//   getParentRoute: () => campRoute,
-//   component: WhiteBoard,
-//   path: "/$whiteboardId",
-
-//   // loader: ({ context: { queryClient }, params: { threadId, campId } }) =>
-//   //   Promise.all([queryClient.ensureQueryData(getThreadsOptions({ campId }))]),
-//   pendingComponent: LoadingSection,
-// });
+export const campRouteTree = campLayoutRoute.addChildren([
+  exploreRoute,
+  campRoute,
+  friendsRoute,
+  inboxRoute,
+  audioRoute,
+]);

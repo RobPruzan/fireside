@@ -24,6 +24,6 @@
       ]
     }
   },
-  "include": ["src"],
+  "include": ["src", "public/worker.js"],
   "references": [{ "path": "./tsconfig.node.json" }]
 }
