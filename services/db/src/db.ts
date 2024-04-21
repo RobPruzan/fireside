@@ -23,9 +23,7 @@ export let db: ReturnType<typeof drizzle>;
 
 const connectDB = ({ connString }: { connString: string }) => {
   drizzleSql = postgres(connString, {
-    onnotice: (notice) => {
-      console.log("PG NOTICE", notice);
-    },
+    onnotice: (notice) => {},
     onclose: () => {
       console.log("Connection closed, attempting to reconnect...");
       setTimeout(() => connectDB({ connString }), 3000);

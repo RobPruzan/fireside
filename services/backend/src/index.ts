@@ -92,10 +92,7 @@ const app = new Elysia()
     }
 
     if (await assetFile.exists()) {
-      // console.log('at')
       set.headers["Content-Type"] = assetFile.type;
-
-      // console.log("served", path);
 
       return assetFile;
     }

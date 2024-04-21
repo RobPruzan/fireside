@@ -24,8 +24,6 @@ export const Transcribe = ({
     enabled: !!transcriptionGroup?.id,
   });
 
-  console.log({ transcription });
-
   const queryClient = useQueryClient();
 
   const [subscription, setSubscription] = useState<Subscription | null>(null);
@@ -36,7 +34,6 @@ export const Transcribe = ({
       return;
     }
 
-    console.log("creating sub");
     const newSubscription = client.api.protected.camp
       .transcribe({ groupId: transcriptionGroup.id })
       .subscribe();
@@ -48,7 +45,6 @@ export const Transcribe = ({
       setSubscription(null);
     };
   }, [transcriptionGroup]);
-  console.log("curr transcriptipn", transcription);
 
   useEffect(() => {
     if (!subscription) {
@@ -59,8 +55,6 @@ export const Transcribe = ({
       const typedData = JSON.parse(event.data) as TranscribeMessageSchema & {
         id: string;
       };
-
-      console.log("recieved message", typedData);
 
       queryClient.setQueryData(transcriptionQueryKey, (prev) => [
         ...(prev ?? []),

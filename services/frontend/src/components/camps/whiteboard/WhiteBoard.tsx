@@ -298,7 +298,7 @@ const WhiteBoard = ({
         const newSub = client.api.protected.whiteboard
           .ws({ whiteBoardId })
           .subscribe();
-        console.log("white board retry!", newSub.ws.readyState);
+
         return newSub;
       }, setSubscription);
     newSubscription.ws.addEventListener("close", handleClose);
@@ -461,7 +461,6 @@ const WhiteBoard = ({
         [];
       distributedErasedPoints.current.forEach((erasedPoint) => {
         if (!erasedPoint.createdAt) {
-          console.log("bitch");
           return;
         }
 
@@ -679,7 +678,6 @@ const WhiteBoard = ({
 
     if (!isMouseDown && !isMouseDownOverride) {
       if (selectedTool.kind === "eraser") {
-        console.log("kill");
       }
 
       return;
@@ -687,7 +685,6 @@ const WhiteBoard = ({
 
     if (!newGroupIdRef.current) {
       if (selectedTool.kind === "eraser") {
-        console.log("kill2");
       }
       return;
     }

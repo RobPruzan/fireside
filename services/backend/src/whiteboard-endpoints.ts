@@ -207,7 +207,6 @@ export const whiteboardRoute = ProtectedElysia({ prefix: "/whiteboard" })
       ws.subscribe(`white-board-${ws.data.params.whiteBoardId}`);
     },
     message: async (ws, data) => {
-      // console.log(data.kind);
       switch (data.kind) {
         case "point": {
           const existingGroup = await db

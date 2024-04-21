@@ -249,6 +249,7 @@ export const Camp = () => {
                             toast({
                               title: "Broadcasting audio",
                               description:
+                                // duration: Infinity,
                                 "Your audio will be transcribed live and broadcasted for all users in the camp",
                             });
                           } else {
@@ -342,7 +343,6 @@ export const Camp = () => {
                     <Button
                       onClick={() => {
                         if (!listeningToAudio) {
-                          console.log("listening");
                           listenToBroadcaster();
                         } else {
                           stopListeningToBroadcast();
@@ -370,17 +370,23 @@ export const Camp = () => {
               >
                 {toolbarOpen ? <ChevronLeft /> : <ChevronRight />}
               </Button>
+
+              {/* <div>
+
+              </div> */}
             </div>
 
             {transcriber.progressItems.length > 0 && (
-              <div className=" p-4 w-full flex rounded-t-none border-t-0 flex-col border rounded-md bg-background">
-                <label>Loading model files... (only run once)</label>
-                {transcriber.progressItems.map((data) => (
-                  <div key={data.file}>
-                    <Progress text={data.file} percentage={data.progress} />
-                  </div>
-                ))}
-              </div>
+              <>
+                <div className=" p-4 w-full flex rounded-t-none border-t-0 flex-col border rounded-md bg-background z-40 bg-yellow-600">
+                  <label>Loading model files... (only run once)</label>
+                  {transcriber.progressItems.map((data) => (
+                    <div key={data.file}>
+                      <Progress text={data.file} percentage={data.progress} />
+                    </div>
+                  ))}
+                </div>
+              </>
             )}
           </div>
           <MessageSection campId={campId} />
@@ -608,11 +614,9 @@ const MessageSection = memo(({ campId }: { campId: string }) => {
       .subscribe();
 
     const handleClose = () => {
-      console.log("retwying");
       retryConnect(() => {
         const res = client.api.protected.message.ws({ campId }).subscribe();
 
-        console.log("NEW READY STATE", res.ws.readyState);
         return res;
       }, setSubscription);
     };
@@ -700,7 +704,7 @@ const MessageSection = memo(({ campId }: { campId: string }) => {
                 };
 
                 if (!subscription) {
-                  console.log("attempt to send through null sub");
+                  console.warn("attempt to send through null sub");
                 }
 
                 subscription?.send({

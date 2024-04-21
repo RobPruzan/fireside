@@ -17,7 +17,7 @@ import {
 import { useSetAtom } from "jotai";
 import { Nullish } from "@fireside/utils";
 import { redirect } from "@tanstack/react-router";
-console.log(visualViewport, visualViewport && visualViewport.width < 1500);
+
 export const dynamicSideBarOpen = atom(
   visualViewport && visualViewport.width > 900
 );

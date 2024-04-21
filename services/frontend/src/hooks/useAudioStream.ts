@@ -122,7 +122,6 @@ export const useWebRTCConnection = ({
       const arrayBuffer = fileReader.result as ArrayBuffer;
       const decoded = await audioCTX.decodeAudioData(arrayBuffer);
 
-      console.log("set audio data");
       // setTranscribeAudioData({
       //   buffer: decoded,
       //   url: blobUrl,
@@ -146,7 +145,6 @@ export const useWebRTCConnection = ({
     if (camp.createdBy === user.id) {
       webRTCConnections.forEach(({ conn, userId }) => {
         conn.onicecandidate = ({ candidate }: RTCPeerConnectionIceEvent) => {
-          console.log("candidate");
           if (!candidate) {
             return;
           }
@@ -225,7 +223,6 @@ export const useWebRTCConnection = ({
     setSignalingServerSubscription(subscription);
 
     return () => {
-      console.log("sent close");
       subscription.removeEventListener("close", handleClose);
       subscription.close();
       setSignalingServerSubscription(null);
@@ -239,7 +236,7 @@ export const useWebRTCConnection = ({
 
     const handleMessage = async (ws: any) => {
       const typedData: WebRTCSignal = JSON.parse(ws.data);
-      console.log("kind:", typedData.kind);
+
       const isBroadcaster = camp.createdBy === user.id;
 
       switch (typedData.kind) {
@@ -409,7 +406,6 @@ export const useWebRTCConnection = ({
 
           setBroadcastingToUsers((prev) => [...prev, typedData.userId]);
 
-          console.log("creating offer for this conn", { userConn });
           const offer = await userConn.conn.createOffer({
             offerToReceiveAudio: true,
           });
@@ -535,7 +531,7 @@ export const useWebRTCConnection = ({
 
     setTimeout(() => {
       mediaRecorder.stop();
-    }, 3000);
+    }, 6000);
   }, [mediaRecorder, mediaStream]);
   //     let recorder = new MediaRecorder(stream);
   // let audioChunks = [];
@@ -630,7 +626,6 @@ export const useWebRTCConnection = ({
   };
 
   const stopListeningToBroadcast = () => {
-    console.log("no longer listening");
     signalingServerSubscription?.send(
       JSON.stringify({
         kind: "leave-channel-request",

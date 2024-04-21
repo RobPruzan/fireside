@@ -237,7 +237,6 @@ export const campRouter = ProtectedElysia({ prefix: "/camp" })
       );
     },
     open: (ws) => {
-      console.log("joined", ws.data.user.username);
       ws.subscribe(`audio-${ws.data.params.campId}`);
 
       // ws.publish(`audio-${ws.data.params.campId}`, {
@@ -304,12 +303,10 @@ export const campRouter = ProtectedElysia({ prefix: "/camp" })
     ]),
 
     open: async (ws) => {
-      console.log("opening and subsribing");
       ws.subscribe(`transcription-${ws.data.params.groupId}`);
     },
 
     message: async (ws, data) => {
-      console.log("message??", data);
       // if (ws.data.user.id !== ws.data.camp.createdBy) {
       //   ws.close();
       //   return;
@@ -361,8 +358,6 @@ export const campRouter = ProtectedElysia({ prefix: "/camp" })
           eq(transcribeGroup.id, transcribeJob.transcribeGroupId)
         )
         .innerJoin(transcription, eq(transcribeJob.id, transcription.jobId));
-
-      console.log({ res });
 
       return res;
     },

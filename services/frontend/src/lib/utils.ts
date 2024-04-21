@@ -33,7 +33,6 @@ export const retryConnect = <
   retriesLeft = 7,
   duration = 500
 ) => {
-  console.log(`RETRYING (retries left: ${retriesLeft})`);
   if (retriesLeft === 0) {
     return;
   }
@@ -48,13 +47,11 @@ export const retryConnect = <
 
     if ("readyState" in subscription) {
       if (subscription.readyState === WebSocket.OPEN) {
-        console.log("Reconnected WS connection!");
         setSubscription(subscription);
         return;
       }
     } else {
       if (subscription.ws.readyState === WebSocket.OPEN) {
-        console.log("Reconnected WS connection!");
         setSubscription(subscription);
         return;
       }

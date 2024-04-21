@@ -53,7 +53,7 @@ export const useGetWhiteBoardMessages = ({ campId }: { campId: string }) => {
     campId,
   });
   const whiteBoardMessagesQuery = useSuspenseQuery(options);
-  // console.log({ whiteBoardMessagesQuery });
+
   return {
     whiteBoardMessagesQuery,
     whiteBoardMessages: whiteBoardMessagesQuery.data,
