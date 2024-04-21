@@ -105,7 +105,6 @@ const subscribeFn = client.api.protected.message.ws({
   campId: "anything",
 }).subscribe;
 
-const subscribeUserFn = client.api.protected.user.connectedusers.subscribe;
 
 type Subscription = null | ReturnType<typeof subscribeFn>;
 const SocketMessageContext = createContext<{
@@ -116,6 +115,7 @@ const SocketMessageContext = createContext<{
 
 export const Camp = () => {
   const { campId } = useParams({ from: "/root-auth/camp-layout/camp/$campId" });
+  const subscribeUserFn = client.api.protected.user.connectedusers({campId}).subscribe();
   const { messages } = useGetMessages({ campId });
   const { camp } = useGetCamp({ campId });
   const scrollRef = useRef<HTMLInputElement | null>(null);
@@ -155,9 +155,9 @@ export const Camp = () => {
   }, [messages.length]);
   const subscriptionRef = useRef<null | ReturnType<typeof subscribeUserFn>>(null);
   useEffect(() => {
-    const newSubscription = client.api.protected.user.connectedusers( campId ).subscribe();
-    console.log("New Subscription",newSubscription);
+    const newSubscription = client.api.protected.user.connectedusers({campId}).subscribe();
 
+    console.log("New Subscription",newSubscription);
     // protected.user
     //   .ws({ campId })
     //   .subscribe();
