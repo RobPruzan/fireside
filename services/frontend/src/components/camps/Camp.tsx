@@ -176,10 +176,20 @@ export const Camp = () => {
     };
   }, [campId]);
   
-  const [activeUsers, setActiveUsers] = useState<string[]>([]);
-  console.log("Active Users", activeUsers);
-  const res = client.api.protected.user.connectedusers.get();
-  console.log("Res",res);
+  const [activeUsers, setActiveUsers] = useState<string[] | undefined | null>([]);
+  useEffect(() => {
+    client.api.protected.user.connectedusers({campId}).get()
+      .then(res => {
+        if(res.data){
+          const activeUsers = res.data[campId].sort() ;
+          setActiveUsers(activeUsers);
+        }
+      })
+      .catch(error => {
+        console.error('Error fetching active users:', error);
+      });
+  }, [campId]);
+  console.log("Res",activeUsers);
   const toggleUsers = () => {
     setShowUsers((prev) => !prev);
   };
@@ -241,6 +251,7 @@ export const Camp = () => {
               )}
             </div>
           ) : (
+            <>
             <Button
               onClick={() => {
                 if (!listeningToAudio) {
@@ -263,8 +274,46 @@ export const Camp = () => {
                 className={cn([listeningToAudio && "text-green-500"])}
               />
             </Button>
+            <Button variant="ghost" onClick={toggleUsers}>
+            <Users />
+          </Button>
+          </>
           )}
         </div>
+
+        {showUsers && (
+          <div style={{
+            display: 'flex',
+            justifyContent: 'center', // Centers the inner container horizontally within the div
+            overflowX: 'auto',
+            whiteSpace: 'nowrap',
+            padding: '10px',
+          }}>
+            {activeUsers && activeUsers.length > 0 ? (
+              <div style={{
+                display: 'flex',
+                flexDirection: 'row',
+                gap: '10px',
+                justifyContent: 'center', // Horizontally center the content
+                alignItems: 'center', // Vertically center the content
+              }}>
+                Active Users   |
+                {activeUsers.map((userId, index) => (
+                  <p key={index} style={{
+                    display: 'flex',
+                    padding: '5px 10px', // Adjust padding as needed
+                    borderRadius: '5px',
+                    minWidth: '50px', // Ensures each item has a minimum width
+                  }}>
+                    {userId}
+                  </p>
+                ))}
+              </div>
+            ) : (
+              <></>    
+            )}
+          </div>
+        )}
       </div>
 
       <ResizablePanelGroup direction="horizontal">

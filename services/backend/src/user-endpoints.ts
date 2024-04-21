@@ -72,7 +72,7 @@ export const getSession = async ({ authToken }: { authToken: string }) => {
     user: cleanUser(authUser),
   };
 };
-const activeUsers: {current: Array<string>} ={current: []};
+const activeUsers: Map<string, Array<string>> = new Map();
 export const userRoute = new Elysia({
   prefix: "/user",
 })
@@ -245,18 +245,41 @@ export const userProtectedRoute = ProtectedElysia({
 
   .ws("/connectedusers/:campId", {
     open: (ws) => {
-      ws.subscribe(`connected-users-${ws.data.params.campId}`);
-      activeUsers.current.push(ws.data.user.id);
-      ws.publish(`connected-users-${ws.data.params.campId}`, activeUsers.current);
+      console.log("Opening Socket");
+      const { campId } = ws.data.params;
+      ws.subscribe(`connected-users-${campId}`);
+  
+      const users = activeUsers.get(campId) || [];
+      const userId = ws.data.user.email; // Assuming the user ID is stored in `ws.data.user.id`
+  
+      if (!users.includes(userId)) {
+        users.push(userId);
+        activeUsers.set(campId, users);
+      }
+  
+      console.log("Updated Active Users: ", activeUsers.get(campId));
+      ws.publish(`connected-users-${campId}`, activeUsers.get(campId));
     },
     close: (ws) => {
-      activeUsers.current = activeUsers.current.filter(
-        (userId) => userId !== ws.data.user.id
-      );
-      ws.publish(`connected-users-${ws.data.params.campId}`, activeUsers.current);
+      console.log("Closing Socket");
+      const { campId } = ws.data.params;
+      const userId = ws.data.user.email;
+  
+      if (activeUsers.has(campId)) {
+        const currentUsers = activeUsers.get(campId) || [];
+        const updatedUsers = currentUsers.filter((id) => id !== userId);
+        activeUsers.set(campId, updatedUsers);
+      }
+  
+      ws.publish(`connected-users-${campId}`, activeUsers.get(campId));
     },
     params: t.Object({ campId: t.String() }),
     body: t.Unknown(),
   })
 
-  .get("/connectedusers", () => activeUsers.current);
+  .get("/connectedusers/:campId", (ctx) => {
+    const campId = ctx.params.campId; // Access the campId directly from ctx.data.params
+    console.log("Camp ID from backend: ",campId);
+    const activeUsersForCamp = activeUsers.get(campId) || [];
+    return { [campId]: activeUsersForCamp };
+  })
