@@ -167,7 +167,7 @@ export const useReactToMessageMutation = ({ campId }: { campId: string }) => {
         messageReactionsQueryOptions.queryKey
       );
 
-      const newReactionId = nanoid;
+      const newReactionId = nanoid();
 
       queryClient.setQueryData(
         messageReactionsQueryOptions.queryKey,
