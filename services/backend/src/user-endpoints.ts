@@ -259,7 +259,10 @@ export const userProtectedRoute = ProtectedElysia({
       }
   
       console.log("Updated Active Users: ", activeUsers.get(campId));
-      ws.publish(`connected-users-${campId}`, activeUsers.get(campId));
+      ws.publish(`connected-users-${campId}`, {
+        type: 'connected-users',
+        payload: activeUsers.get(campId),
+      });
     },
     close: (ws) => {
       console.log("Closing Socket");
@@ -272,7 +275,10 @@ export const userProtectedRoute = ProtectedElysia({
         activeUsers.set(campId, updatedUsers);
       }
   
-      ws.publish(`connected-users-${campId}`, activeUsers.get(campId));
+      ws.publish(`connected-users-${campId}`, {
+        type: 'connected-users',
+        payload: activeUsers.get(campId),
+      });
     },
     params: t.Object({ campId: t.String() }),
     body: t.Unknown(),

@@ -175,7 +175,7 @@ export const Camp = () => {
 
     const handleMessage = (event: { data: { type: string; payload: any; }; }) => {
       const data = event.data as { type: string; payload: any };
-  
+      
       if (data.type === "connected-users") {
         setActiveUsers(data.payload);
       }
@@ -187,7 +187,23 @@ export const Camp = () => {
       newSubscription.close();
     };
   }, [campId]);
-  
+
+  /*
+  const handleMessage = (event: { data: { type: string; payload: any; }; }) => {
+      const data = event.data as { type: string; payload: any };
+      console.log("Event happened: ", data);
+      // const data2 = JSON.parse(event.data);
+      if (data2['type'] === "connected-users") {
+        console.log("Users were set");
+        setActiveUsers(data2['payload']);
+        console.log("New Actvie User List",activeUsers);
+      }
+    };
+    
+    // newSubscription.ws.addEventListener('message',handleMessage);
+  */
+
+
   const [activeUsers, setActiveUsers] = useState<string[] | undefined | null>([]);
   useEffect(() => {
     client.api.protected.user.connectedusers({campId}).get()
