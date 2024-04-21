@@ -41,7 +41,6 @@ class PipelineFactory {
 
 self.addEventListener("message", async (event) => {
   const message = event.data;
-  console.log("GOT MESSAGE", message);
 
   // Do some work...
   // TODO use message data
@@ -118,7 +117,7 @@ const transcribe = async (
   // let decoded_chunks = [];
 
   function chunk_callback(chunk) {
-    console.log("GOT CHUNK", chunk);
+    // console.log("GOT CHUNK", chunk.tokens);
     let last = chunks_to_process[chunks_to_process.length - 1];
 
     // Overwrite last chunk with new info
@@ -148,7 +147,7 @@ const transcribe = async (
       return_timestamps: true,
       force_full_sequences: false,
     });
-
+    console.log("UPDATE CHUNK", data);
     self.postMessage({
       status: "update",
       task: "automatic-speech-recognition",

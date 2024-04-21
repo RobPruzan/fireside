@@ -1,3 +1,4 @@
+import { nanoid } from "nanoid";
 import {
   Link,
   Outlet,
@@ -289,6 +290,7 @@ export const Camp = () => {
                             toast({
                               title: "Broadcasting audio",
                               description:
+                                // duration: Infinity,
                                 "Your audio will be transcribed live and broadcasted for all users in the camp",
                             });
                           } else {
@@ -384,7 +386,6 @@ export const Camp = () => {
                     <Button
                       onClick={() => {
                         if (!listeningToAudio) {
-                          console.log("listening");
                           listenToBroadcaster();
                         } else {
                           stopListeningToBroadcast();
@@ -416,6 +417,10 @@ export const Camp = () => {
                 {toolbarOpen ? <ChevronLeft /> : <ChevronRight />}
               </Button>
 
+              {/* <div>
+
+              </div> */}
+
                 
 
             </div>
@@ -435,14 +440,16 @@ export const Camp = () => {
               )}
             
             {transcriber.progressItems.length > 0 && (
-              <div className=" p-4 w-full flex rounded-t-none border-t-0 flex-col border rounded-md bg-background">
-                <label>Loading model files... (only run once)</label>
-                {transcriber.progressItems.map((data) => (
-                  <div key={data.file}>
-                    <Progress text={data.file} percentage={data.progress} />
-                  </div>
-                ))}
-              </div>
+              <>
+                <div className=" p-4 w-full flex rounded-t-none border-t-0 flex-col border rounded-md bg-background z-40 bg-yellow-600">
+                  <label>Loading model files... (only run once)</label>
+                  {transcriber.progressItems.map((data) => (
+                    <div key={data.file}>
+                      <Progress text={data.file} percentage={data.progress} />
+                    </div>
+                  ))}
+                </div>
+              </>
             )}
           </div>
           <MessageSection campId={campId} />
@@ -669,11 +676,9 @@ const MessageSection = memo(({ campId }: { campId: string }) => {
       .subscribe();
     
     const handleClose = () => {
-      console.log("retwying");
       retryConnect(() => {
         const res = client.api.protected.message.ws({ campId }).subscribe();
 
-        console.log("NEW READY STATE", res.ws.readyState);
         return res;
       }, setSubscription);
     };
@@ -745,7 +750,7 @@ const MessageSection = memo(({ campId }: { campId: string }) => {
               }
 
               if (e.key === "Enter" && !e.shiftKey) {
-                const parentMessageId = crypto.randomUUID();
+                const parentMessageId = nanoid();
 
                 const newMessage = {
                   campId,
@@ -756,12 +761,12 @@ const MessageSection = memo(({ campId }: { campId: string }) => {
                 };
                 const newThread = {
                   createdAt: new Date().toISOString(),
-                  id: crypto.randomUUID(),
+                  id: nanoid(),
                   parentMessageId: parentMessageId,
                 };
 
                 if (!subscription) {
-                  console.log("attempt to send through null sub");
+                  console.warn("attempt to send through null sub");
                 }
 
                 subscription?.send({
@@ -780,7 +785,7 @@ const MessageSection = memo(({ campId }: { campId: string }) => {
                   createWhiteBoardMessageMutation.mutate({
                     messageId: parentMessageId,
                     whiteBoardId: nonCreatedMessageWhiteBoardInfo.whiteBoardId,
-                    id: crypto.randomUUID(),
+                    id: nanoid(),
                   });
                 }
 
@@ -812,7 +817,7 @@ const MessageSection = memo(({ campId }: { campId: string }) => {
                   if (nonCreatedMessageWhiteBoardInfo) {
                     return;
                   }
-                  const whiteBoardId = crypto.randomUUID();
+                  const whiteBoardId = nanoid();
                   createWhiteBoardMutation.mutate({
                     whiteBoardId,
                   });
@@ -930,7 +935,7 @@ const ReactionMenuContent = memo(
             reactMutation.mutate({
               messageId,
               reactionAssetId: asset.id,
-              id: crypto.randomUUID(),
+              id: nanoid(),
             });
           }}
           variant={"ghost"}
@@ -1189,7 +1194,7 @@ const ReactionBox = memo(
               reactMutation.mutate({
                 messageId: messageId,
                 reactionAssetId: asset.id,
-                id: crypto.randomUUID(),
+                id: nanoid(),
               });
             }}
             className={cn(["h-9 w-9 p-1 ", existingReaction && "bg-muted/50"])}

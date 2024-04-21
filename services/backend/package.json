@@ -25,6 +25,7 @@
     "@fireside/utils": "*",
     "@sinclair/typebox": "^0.32.14",
     "drizzle-typebox": "^0.1.1",
-    "elysia": "^1.0.0"
+    "elysia": "^1.0.0",
+    "nanoid": "^5.0.7"
   }
 }

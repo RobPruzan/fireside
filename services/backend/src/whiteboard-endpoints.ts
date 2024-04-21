@@ -1,3 +1,4 @@
+import { nanoid } from "nanoid";
 import {
   eq,
   whiteBoard,
@@ -207,7 +208,6 @@ export const whiteboardRoute = ProtectedElysia({ prefix: "/whiteboard" })
       ws.subscribe(`white-board-${ws.data.params.whiteBoardId}`);
     },
     message: async (ws, data) => {
-      // console.log(data.kind);
       switch (data.kind) {
         case "point": {
           const existingGroup = await db
@@ -333,7 +333,7 @@ export const uploadFile = async (
   file: File,
   options?: Partial<{ onlyImage: boolean }>
 ) => {
-  const fileId = crypto.randomUUID();
+  const fileId = nanoid();
   const extension = extensionMapping[file.type];
   const targetFile = Bun.file(`./upload/${fileId}${extension}`);
 

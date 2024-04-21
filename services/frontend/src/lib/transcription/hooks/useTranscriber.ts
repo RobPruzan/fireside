@@ -71,12 +71,10 @@ export function useTranscriber({
     // Update the state with the result
     switch (message.status) {
       case "progress":
-        console.log("progress called");
         // Model file progress: update one of the progress items.
         setProgressItems((prev) =>
           prev.map((item) => {
             if (item.file === message.file) {
-              console.log("new progress", message.progress);
               return { ...item, progress: message.progress };
             }
             return item;
@@ -114,23 +112,20 @@ export function useTranscriber({
 
       case "initiate":
         // Model file start load: add a new progress item to the list.
-        console.log("initiate");
+
         setIsModelLoading(true);
         setProgressItems((prev) => [...prev, message]);
         break;
       case "ready":
-        console.log("read");
         setIsModelLoading(false);
         break;
       case "error":
-        console.log("error");
         setIsBusy(false);
         alert(
           `${message.data.message} This is most likely because you are using Safari on an M1/M2 Mac. Please try again from Chrome, Firefox, or Edge.\n\nIf this is not the case, please file a bug report.`
         );
         break;
       case "done":
-        console.log("done");
         // Model file loaded: remove the progress item from the list.
         setProgressItems((prev) =>
           prev.filter((item) => item.file !== message.file)

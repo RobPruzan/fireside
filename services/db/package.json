@@ -6,8 +6,8 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "migrate:generate": "drizzle-kit generate:pg --schema=./src/schema.ts",
-    "migrate:run": "ts-node src/migrate.ts",
-    "seed:emoji": "ts-node src/seed-emoji.ts",
+    "migrate:run": "bun run src/migrate.ts",
+    "seed:emoji": "bun run src/seed-emoji.ts",
     "build": "tsc",
     "studio": "drizzle-kit studio"
   },
@@ -20,6 +20,7 @@
     "dotenv": "^16.4.5",
     "drizzle-orm": "^0.29.3",
     "drizzle-typebox": "^0.1.1",
+    "nanoid": "^5.0.7",
     "pg": "^8.11.3",
     "postgres": "^3.4.3",
     "ts-node": "^10.9.2"

@@ -1,3 +1,4 @@
+import { nanoid } from "nanoid";
 import { client, promiseDataOrThrow } from "@/edenClient";
 import {
   useSuspenseQuery,
@@ -166,7 +167,7 @@ export const useReactToMessageMutation = ({ campId }: { campId: string }) => {
         messageReactionsQueryOptions.queryKey
       );
 
-      const newReactionId = crypto.randomUUID();
+      const newReactionId = nanoid();
 
       queryClient.setQueryData(
         messageReactionsQueryOptions.queryKey,

@@ -1,3 +1,4 @@
+import { nanoid } from "nanoid";
 import { Camp } from "@/components/camps/Camp";
 import { Explore } from "@/components/camps/Explore";
 import { Friends } from "@/components/camps/Friends";
@@ -115,7 +116,6 @@ export const campRoute = createRoute({
 
     useEffect(() => {
       if (!transcriptionGroup) {
-        console.log("debug here");
         return;
       }
       transcriptionSubscriptionRef.current = client.api.protected.camp
@@ -124,10 +124,8 @@ export const campRoute = createRoute({
     }, [transcriptionGroup]);
     const transcriber = useTranscriber({
       onTranscribe: ({ text, lastTimeStamp }) => {
-        console.log("TRANSCRIPTION", lastTimeStamp, text);
-
         transcriptionSubscriptionRef.current?.send({
-          jobId: crypto.randomUUID(), // useful if we take the chunks that come in
+          jobId: nanoid(), // useful if we take the chunks that come in
           text,
         });
       },
