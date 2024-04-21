@@ -538,4 +538,7 @@ export const transcription = pgTable("transcription", {
     .primaryKey(),
   jobId: uuid("transcribeJobId").references(() => transcribeJob.id),
   text: text("text").notNull(),
+  createdAt: doublePrecision("createdAt")
+    .$defaultFn(() => Date.now())
+    .notNull(),
 });

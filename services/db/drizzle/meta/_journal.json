@@ -281,6 +281,13 @@
       "when": 1713651869267,
       "tag": "0039_yellow_the_twelve",
       "breakpoints": true
+    },
+    {
+      "idx": 40,
+      "version": "5",
+      "when": 1713713671003,
+      "tag": "0040_sturdy_giant_girl",
+      "breakpoints": true
     }
   ]
 }

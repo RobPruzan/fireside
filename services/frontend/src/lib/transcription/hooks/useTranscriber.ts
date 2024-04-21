@@ -31,6 +31,7 @@ export interface TranscriberData {
   isBusy: boolean;
   text: string;
   chunks: { text: string; timestamp: [number, number | null] }[];
+  lastTimeStamp: [number, number | null];
 }
 
 export interface Transcriber {
@@ -87,7 +88,7 @@ export function useTranscriber({
         // console.log("update", message);
         // eslint-disable-next-line no-case-declarations
         const updateMessage = message as TranscriberUpdateData;
-        console.log("updated message", updateMessage);
+        // console.log("updated message", updateMessage);
         // onTranscribe({
         //   isBusy: true,
         //   text: updateMessage.data[0],
@@ -99,11 +100,14 @@ export function useTranscriber({
         // console.log("complete", message);
         // eslint-disable-next-line no-case-declarations
         const completeMessage = message as TranscriberCompleteData;
-        console.log("complete message", completeMessage);
+        // console.log("complete message", JSON.stringify(completeMessage));
         onTranscribe({
           isBusy: false,
           text: completeMessage.data.text,
           chunks: completeMessage.data.chunks,
+          lastTimeStamp: completeMessage.data.chunks.at(-1)?.timestamp ?? [
+            0, 0,
+          ],
         });
         setIsBusy(false);
         break;
@@ -141,9 +145,7 @@ export function useTranscriber({
 
   const [model, setModel] = useState<string>(Constants.DEFAULT_MODEL);
   const [subtask, setSubtask] = useState<string>(Constants.DEFAULT_SUBTASK);
-  const [quantized, setQuantized] = useState<boolean>(
-    Constants.DEFAULT_QUANTIZED
-  );
+  const [quantized, setQuantized] = useState<boolean>(true);
   const [multilingual, setMultilingual] = useState<boolean>(
     Constants.DEFAULT_MULTILINGUAL
   );

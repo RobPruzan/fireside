@@ -37,6 +37,7 @@ const transcribeMessageSchema = t.Object({
   kind: t.Literal("update"),
   jobId: t.String(),
   text: t.String(),
+  createdAt: t.Number(),
 });
 
 export type TranscribeMessageSchema = Static<typeof transcribeMessageSchema>;
@@ -323,6 +324,7 @@ export const campRouter = ProtectedElysia({ prefix: "/camp" })
           .insert(transcribeJob)
           .values({
             id: data.jobId,
+            transcribeGroupId: ws.data.params.groupId,
           })
           .returning();
       }
@@ -331,7 +333,7 @@ export const campRouter = ProtectedElysia({ prefix: "/camp" })
         .insert(transcription)
         .values({
           // campId: ws.data.params.campId,
-          jobId: existingJob[0].id,
+          jobId: data.jobId,
           text: data.text,
         })
         .returning()
@@ -340,6 +342,7 @@ export const campRouter = ProtectedElysia({ prefix: "/camp" })
       ws.publish(`transcription-${ws.data.params.groupId}`, {
         ...data,
         id: insertedTranscription.id,
+        createdAt: insertedTranscription.createdAt,
       });
 
       return;

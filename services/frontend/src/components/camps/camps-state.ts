@@ -237,3 +237,5 @@ export const useGetTranscription = ({
     transcription: transcriptionQuery.data,
   };
 };
+
+export const transcribeAudio = atom(true);

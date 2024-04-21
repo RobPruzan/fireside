@@ -489,6 +489,9 @@ export const useWebRTCConnection = ({
     if (!mediaStream) {
       return;
     }
+    if (!mediaStream.active) {
+      return;
+    }
     if (!mediaRecorder) {
       return;
     }
@@ -523,6 +526,8 @@ export const useWebRTCConnection = ({
       setMediaRecorder(new MediaRecorder(mediaStream));
     };
 
+    // if (mediaRecorder.state === '')
+
     mediaRecorder.start();
     // mediaRecorder.onstop = () => {
 
@@ -530,7 +535,7 @@ export const useWebRTCConnection = ({
 
     setTimeout(() => {
       mediaRecorder.stop();
-    }, 5000);
+    }, 3000);
   }, [mediaRecorder, mediaStream]);
   //     let recorder = new MediaRecorder(stream);
   // let audioChunks = [];
@@ -581,19 +586,21 @@ export const useWebRTCConnection = ({
         receiverId: user.id,
       })
     );
-    webRTCConnections.forEach(({ conn, userId }) => {
-      const senderObj = senders.find(
-        (findSender) => userId === findSender.userId
-      );
-      if (!senderObj) {
-        return;
-      }
-      try {
-        conn.removeTrack(senderObj.sender);
-      } catch (e) {
-        console.log("bad remove track call");
-      }
-    });
+    mediaStream?.getTracks().forEach((track) => track.stop());
+    // webRTCConnections.forEach(({ conn, userId }) => {
+    //   const senderObj = senders.find(
+    //     (findSender) => userId === findSender.userId
+    //   );
+    //   if (!senderObj) {
+    //     return;
+    //   }
+    //   try {
+    //     senderObj.sender.track?.stop();
+    //     conn.removeTrack(senderObj.sender);
+    //   } catch (e) {
+    //     console.log("bad remove track call");
+    //   }
+    // });
   };
 
   const listenToBroadcaster = () => {
