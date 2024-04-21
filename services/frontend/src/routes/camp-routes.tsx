@@ -27,9 +27,7 @@ import { Thread } from "@/components/camps/Thread";
 import { promise, z } from "zod";
 import { getThreadsOptions } from "@/components/camps/thread-state";
 import { getMessageWhiteBoardsOptions } from "@/components/camps/whiteboard/white-board-state";
-import { AudioManager } from "@/lib/transcription/components/AudioManager";
 
-import Transcript from "@/lib/transcription/components/Transcript";
 import {
   TranscriberContext,
   useTranscriber,

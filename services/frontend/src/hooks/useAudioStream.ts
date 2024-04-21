@@ -6,7 +6,7 @@ import {
 } from "@/components/camps/camps-state";
 import { useGetCamp } from "@/components/camps/message-state";
 import { client } from "@/edenClient";
-import { AudioSource } from "@/lib/transcription/components/AudioManager";
+
 import { TranscriberContext } from "@/lib/transcription/hooks/useTranscriber";
 import { retryConnect } from "@/lib/utils";
 import { webmFixDuration } from "@/lib/utils/BlobFix";
