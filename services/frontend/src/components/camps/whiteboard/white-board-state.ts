@@ -8,6 +8,7 @@ import {
 } from "@tanstack/react-query";
 import { promise } from "zod";
 import { useDefinedUser } from "../camps-state";
+import { run } from "@fireside/utils";
 
 export const useCreateWhiteBoardMutation = () =>
   useMutation({
@@ -39,6 +40,7 @@ export const useCreateWhiteBoardMessageMutation = ({
 
 export const getMessageWhiteBoardsOptions = ({ campId }: { campId: string }) =>
   queryOptions({
+    refetchInterval: 10000,
     queryKey: ["message-whiteboards", campId],
     queryFn: () =>
       promiseDataOrThrow(
@@ -58,3 +60,28 @@ export const useGetWhiteBoardMessages = ({ campId }: { campId: string }) => {
     whiteBoardMessagesQueryKey: options.queryKey,
   };
 };
+
+export const getWhiteBoardImagesOptions = ({
+  whiteBoardId,
+}: {
+  whiteBoardId: string;
+}) =>
+  queryOptions({
+    queryKey: ["white-board-images", whiteBoardId],
+    refetchInterval: () => 3000,
+    queryFn: () =>
+      promiseDataOrThrow(
+        client.api.protected.whiteboard["whiteboard-image"]
+          .retrieve({ whiteBoardId })
+          .get()
+      ),
+    select: (data) =>
+      data.map((data) => ({
+        ...data,
+        image: run(() => {
+          const image = new Image(200, 200);
+          image.src = data.imgUrl;
+          return image;
+        }),
+      })),
+  });

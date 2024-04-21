@@ -13,6 +13,7 @@ import { useEffect, useRef, useState } from "react";
 import { useDefinedUser } from "./camps-state";
 import { flushSync } from "react-dom";
 import { cn } from "@/lib/utils";
+import { LoadingSection } from "../ui/loading";
 
 export const Thread = ({ threadId }: { threadId: string }) => {
   const { campId } = useParams({
@@ -49,6 +50,14 @@ export const Thread = ({ threadId }: { threadId: string }) => {
     }
   }, [threadMessages.length]);
 
+  if (!parentMessage) {
+    return (
+      <div className="w-full h-full flex justify-center items-center text-xl font-bold">
+        No thread to be found!
+      </div>
+    );
+  }
+
   return (
     <div className="h-full  flex flex-col  relative px-2">
       <div className=" break-words border-b-2 p-2">{parentMessage.message}</div>
@@ -83,7 +92,7 @@ export const Thread = ({ threadId }: { threadId: string }) => {
                 index === 0 && "pt-4",
               ])}
             >
-              {threadMessage.user.email}
+              {threadMessage.user.username}
               <div className="flex">
                 <div
                   className={cn([

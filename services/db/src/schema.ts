@@ -13,6 +13,7 @@ import {
   text,
   doublePrecision,
   PgColumn,
+  real,
 } from "drizzle-orm/pg-core";
 import { createInsertSchema, createSelectSchema } from "drizzle-typebox";
 import { DatesToString } from "@fireside/utils";
@@ -29,19 +30,28 @@ export const user = pgTable("user", {
   id: uuid("id").defaultRandom().primaryKey(),
   displayName: text("name").notNull(),
   token: text("token").references(() => token.value),
-  email: text("email").notNull(),
+  username: text("username").notNull(),
   password: text("password").notNull(),
-  role: text("role").$type<"instructor" | "student">().notNull(),
   createdAt: timestamp("createdAt", { mode: "string", withTimezone: true })
     .$defaultFn(() => new Date().toISOString())
     .notNull(),
   updatedAt: timestamp("updated_at", { mode: "string" }),
 });
 
-export const safeUserSelectSchema = createSelectSchema(user, {
-  token: t.Optional(t.Never()),
-  password: t.Optional(t.Never()),
-});
+export const userSelectSchema = createSelectSchema(user);
+
+export const safeUserSelectSchema = t.Intersect([
+  t.Omit(userSelectSchema, ["token", "password"]),
+  t.Object({
+    id: t.String(),
+    createdAt: t.String(),
+  }),
+]);
+
+// export const safeUserInsertSchema = createInsertSchema(user, {
+//   token: t.Optional(t.Never()),
+//   password: t.Optional(t.Never()),
+// });
 
 export type User = InferSelectModel<typeof user>;
 
@@ -343,12 +353,14 @@ export const genWhiteBoardPointId = () =>
 export const genWhiteBoardPointGroupId = () =>
   "white_board_point_group_" + crypto.randomUUID();
 
+export const genWhiteBoardId = () => "white_board_point_" + crypto.randomUUID();
+
 export const whiteBoard = pgTable("whiteBoard", {
   id: uuid("id").defaultRandom().primaryKey(),
 });
 export const whiteBoardInsertSchema = createInsertSchema(whiteBoard);
 export const whiteBoardPointGroup = pgTable("whiteBoardPointGroup", {
-  id: text("id").$defaultFn(genWhiteBoardPointId).primaryKey(),
+  id: text("id").$defaultFn(genWhiteBoardPointGroupId).primaryKey(),
   color: text("color").$type<(typeof whiteBoardColors)[number]>().notNull(),
   whiteBoardId: uuid("whiteBoardId").references(() => whiteBoard.id, {
     onDelete: "cascade",
@@ -356,7 +368,7 @@ export const whiteBoardPointGroup = pgTable("whiteBoardPointGroup", {
 });
 
 export const whiteBoardPoint = pgTable("whiteBoardPoint", {
-  id: text("id").$defaultFn(genWhiteBoardPointId).primaryKey(),
+  id: text("id").$defaultFn(genWhiteBoardPointGroupId).primaryKey(),
   whiteBoardPointGroupId: text("whiteBoardPointGroupId")
     // .notNull()
     .references(() => whiteBoardPointGroup.id, {
@@ -368,6 +380,7 @@ export const whiteBoardPoint = pgTable("whiteBoardPoint", {
     .$type<"point">()
     .$defaultFn(() => "point")
     .notNull(),
+  createdAt: doublePrecision("createdAt"),
 });
 
 export const whiteBoardPointInsertSchema = createInsertSchema(whiteBoardPoint);
@@ -400,6 +413,7 @@ export const whiteBoardMouse = pgTable("whiteBoardMouseSchema", {
   userId: uuid("userId")
     .notNull()
     .references(() => user.id),
+  createdAt: text("createdAt"),
 });
 
 export const whiteBoardMouseInsertSchema = createInsertSchema(
@@ -414,6 +428,7 @@ export const whiteBoardMouseSelectSchema = createSelectSchema(
 
   {
     kind: t.Literal("mouse"),
+    createdAt: t.String(),
   }
 );
 export const requiredWhiteBoardMouseInsertSchema = t.Required(
@@ -422,12 +437,54 @@ export const requiredWhiteBoardMouseInsertSchema = t.Required(
 
 export type WhiteBoardMouse = Static<typeof whiteBoardMouseInsertSchema>;
 
+export const whiteBoardEraser = pgTable("whiteBoardErased", {
+  id: text("id").$defaultFn(getWhiteBoardMouseId).primaryKey(),
+  x: doublePrecision("x").notNull(),
+  y: doublePrecision("y").notNull(),
+  whiteBoardId: uuid("whiteBoardId").references(() => whiteBoard.id, {
+    onDelete: "cascade",
+  }),
+  kind: text("kind")
+    .$type<"eraser">()
+    .$defaultFn(() => "eraser")
+    .notNull(),
+  userId: uuid("userId")
+    .notNull()
+    .references(() => user.id),
+  createdAt: timestamp("createdAt", {
+    mode: "string",
+    withTimezone: true,
+  }),
+  // .notNull(),
+});
+
+export const whiteBoardEraserInsertSchema = createInsertSchema(
+  whiteBoardEraser,
+
+  {
+    kind: t.Literal("eraser"),
+  }
+);
+export const whiteBoardEraserSelectSchema = createSelectSchema(
+  whiteBoardEraser,
+
+  {
+    kind: t.Literal("eraser"),
+    createdAt: t.String(),
+  }
+);
+export const requiredWhiteBoardEraserInsertSchema = t.Required(
+  whiteBoardEraserInsertSchema
+);
+
+export type WhiteBoardErased = Static<typeof whiteBoardEraserInsertSchema>;
+
 export const connectedToCamp = pgTable("connectToCamp", {
   id: uuid("id").defaultRandom().primaryKey(),
 });
 
 export const messageWhiteBoard = pgTable("messageWhiteBoard", {
-  id: text("id").$defaultFn(genWhiteBoardPointId).primaryKey(),
+  id: text("id").$defaultFn(genWhiteBoardId).primaryKey(),
   messageId: uuid("messageId")
     .references(() => campMessage.id)
     .notNull(),
@@ -443,7 +500,9 @@ export type MessageWhiteBoardInsertSchema = Static<
 >;
 
 export const whiteBoardImg = pgTable("whiteBoardImg", {
-  id: text("id").$defaultFn(genWhiteBoardPointId).primaryKey(),
+  id: text("id")
+    .$defaultFn(() => crypto.randomUUID())
+    .primaryKey(),
   whiteBoardId: uuid("whiteBoardId").references(() => whiteBoard.id, {
     onDelete: "cascade",
   }),
@@ -453,3 +512,33 @@ export const whiteBoardImg = pgTable("whiteBoardImg", {
 });
 
 export type WhiteBoardImgSelect = InferSelectModel<typeof whiteBoardImg>;
+
+export const transcribeGroup = pgTable("transcribeGroup", {
+  id: uuid("id")
+    .$defaultFn(() => crypto.randomUUID())
+    .primaryKey(),
+  createdAt: doublePrecision("createdAt")
+    .$defaultFn(() => Date.now())
+    .notNull(),
+  campId: uuid("campID").references(() => camp.id),
+});
+
+export const transcribeJob = pgTable("job", {
+  id: uuid("id")
+    .$defaultFn(() => crypto.randomUUID())
+    .primaryKey(),
+  transcribeGroupId: uuid("transcribeGroupId").references(
+    () => transcribeGroup.id
+  ),
+});
+
+export const transcription = pgTable("transcription", {
+  id: uuid("id")
+    .$defaultFn(() => crypto.randomUUID())
+    .primaryKey(),
+  jobId: uuid("transcribeJobId").references(() => transcribeJob.id),
+  text: text("text").notNull(),
+  createdAt: doublePrecision("createdAt")
+    .$defaultFn(() => Date.now())
+    .notNull(),
+});

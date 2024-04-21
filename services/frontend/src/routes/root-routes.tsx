@@ -21,6 +21,7 @@ import {
   campRoute,
   friendsRoute,
   inboxRoute,
+  campRouteTree,
 } from "./camp-routes";
 import { authRootLayout } from "./layouts";
 
@@ -76,14 +77,7 @@ export const routeTree = rootRoute.addChildren([
     loginPageRoute,
     profileRoute,
   ]),
-  authRootLayout.addChildren([
-    campLayoutRoute.addChildren([
-      exploreRoute,
-      campRoute,
-      friendsRoute,
-      inboxRoute,
-    ]),
-  ]),
+  authRootLayout.addChildren([campRouteTree]),
 ]);
 
 export const router = createRouter({

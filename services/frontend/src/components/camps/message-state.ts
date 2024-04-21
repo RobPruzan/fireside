@@ -117,7 +117,7 @@ export const useGetCamp = ({ campId }: { campId: string }) => {
 
 export const getMessageReactionOptions = ({ campId }: { campId: string }) =>
   queryOptions({
-    refetchInterval: 5000, // ws this
+    refetchInterval: 2500,
     queryKey: ["message-reactions", campId],
     queryFn: () =>
       promiseDataOrThrow(

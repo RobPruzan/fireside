@@ -13,11 +13,20 @@ import {
   requiredCampMessageInsertSchema,
   requiredThreadInsertSchema,
   db,
+  safeUserSelectSchema,
 } from "@fireside/db";
 import { t, type Static } from "elysia";
 
 import { cleanedUserCols } from "./camp-endpoints";
 import { ProtectedElysia } from "./lib";
+import { createSelectSchema } from "drizzle-typebox";
+const publishMessageSchema = t.Object({
+  message: requiredCampMessageInsertSchema,
+  thread: requiredThreadInsertSchema,
+  user: safeUserSelectSchema,
+});
+
+export type PublishedMessage = Static<typeof publishMessageSchema>;
 
 export const messageRouter = ProtectedElysia({ prefix: "/message" })
   .get(
@@ -110,10 +119,7 @@ export const messageRouter = ProtectedElysia({ prefix: "/message" })
     }
   )
   .ws("/ws/:campId", {
-    body: t.Object({
-      message: requiredCampMessageInsertSchema,
-      thread: requiredThreadInsertSchema,
-    }),
+    body: publishMessageSchema,
     params: t.Object({
       campId: t.String(),
     }),
@@ -141,10 +147,3 @@ export type UserConnectedToCamp = {
   userId: string;
   joinedAt: string;
 };
-
-const publishMessageSchema = t.Object({
-  message: requiredCampMessageInsertSchema,
-  thread: requiredThreadInsertSchema,
-});
-
-export type PublishedMessage = Static<typeof publishMessageSchema>;

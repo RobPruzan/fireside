@@ -1,10 +1,11 @@
 import { Camp } from "@/components/camps/Camp";
-import { Explore } from "@/components/camps/Explore.1";
+import { Explore } from "@/components/camps/Explore";
 import { Friends } from "@/components/camps/Friends";
 import { RootCampLayout } from "@/components/camps/RootCampLayout";
 import {
   getUserCampQueryOptions,
   getAllCampsQueryOptions,
+  useGetTranscriptionGroup,
 } from "@/components/camps/camps-state";
 import {
   getFriendRequestsQueryOptions,
@@ -12,7 +13,7 @@ import {
 } from "@/components/camps/friends-state";
 import { LoadingScreen, LoadingSection } from "@/components/ui/loading";
 
-import { createRoute } from "@tanstack/react-router";
+import { ErrorComponent, createRoute, useParams } from "@tanstack/react-router";
 
 import { authRootLayout } from "./layouts";
 import { Inbox } from "@/components/camps/Inbox";
@@ -26,8 +27,19 @@ import { Thread } from "@/components/camps/Thread";
 import { promise, z } from "zod";
 import { getThreadsOptions } from "@/components/camps/thread-state";
 import { getMessageWhiteBoardsOptions } from "@/components/camps/whiteboard/white-board-state";
-// import { WhiteBoard } from "@/components/camps/whiteboard/WhiteBoard";
 
+import {
+  TranscriberContext,
+  useTranscriber,
+} from "@/lib/transcription/hooks/useTranscriber";
+import { client } from "@/edenClient";
+import { useState, useEffect, useRef } from "react";
+import { ErrorBoundary } from "react-error-boundary";
+import { Button } from "@/components/ui/button";
+// import { WhiteBoard } from "@/components/camps/whiteboard/WhiteBoard";
+const foo = client.api.protected.camp.transcribe({ groupId: "..." }).subscribe;
+
+type TranscriptionSubscription = ReturnType<typeof foo>;
 export const campLayoutRoute = createRoute({
   getParentRoute: () => authRootLayout,
   validateSearch: (search) =>
@@ -35,6 +47,7 @@ export const campLayoutRoute = createRoute({
       .object({
         threadId: z.string().optional(),
         whiteBoardId: z.string().optional(),
+        transcriptionGroupId: z.string().optional(),
       })
       .parse(search),
   id: "camp-layout",
@@ -45,6 +58,7 @@ export const campLayoutRoute = createRoute({
       queryClient.ensureQueryData(reactionAssetsOptions),
     ]),
   pendingComponent: LoadingScreen,
+  // component: RootCampLayout,
   component: RootCampLayout,
 });
 
@@ -81,6 +95,7 @@ export const inboxRoute = createRoute({
 export const campRoute = createRoute({
   getParentRoute: () => campLayoutRoute,
   path: "/camp/$campId",
+  // errorComponent: ({}) => {},
 
   loader: ({ context: { queryClient }, params: { campId } }) =>
     Promise.all([
@@ -89,25 +104,66 @@ export const campRoute = createRoute({
       queryClient.ensureQueryData(getMessageWhiteBoardsOptions({ campId })),
       queryClient.ensureQueryData(getCampOptions({ campId })),
     ]),
-  component: Camp,
+  // component: Camp,
+  component: () => {
+    const transcriptionSubscriptionRef =
+      useRef<TranscriptionSubscription | null>(null);
+    const { campId } = useParams({
+      from: "/root-auth/camp-layout/camp/$campId",
+    });
+    const { transcriptionGroup } = useGetTranscriptionGroup({ campId });
+
+    useEffect(() => {
+      if (!transcriptionGroup) {
+        console.log("debug here");
+        return;
+      }
+      transcriptionSubscriptionRef.current = client.api.protected.camp
+        .transcribe({ groupId: transcriptionGroup.id })
+        .subscribe();
+    }, [transcriptionGroup]);
+    const transcriber = useTranscriber({
+      onTranscribe: ({ text, lastTimeStamp }) => {
+        console.log("TRANSCRIPTION", lastTimeStamp, text);
+
+        transcriptionSubscriptionRef.current?.send({
+          jobId: crypto.randomUUID(), // useful if we take the chunks that come in
+          text,
+        });
+      },
+    });
+    return (
+      <TranscriberContext.Provider
+        value={{
+          transcriber,
+        }}
+      >
+        <ErrorBoundary
+          fallbackRender={({ resetErrorBoundary }) => (
+            <div className="w-full h-full text-2xl font-bold text-red-500 flex items-center justify-center gap-x-2">
+              Recoverable error occurred{" "}
+              <Button
+                onClick={() => {
+                  resetErrorBoundary();
+                }}
+              >
+                Reload
+              </Button>
+            </div>
+          )}
+        >
+          <Camp />
+        </ErrorBoundary>
+      </TranscriberContext.Provider>
+    );
+  },
   pendingComponent: LoadingSection,
 });
 
-// export const threadRoute = createRoute({
-//   getParentRoute: () => campRoute,
-//   component: Thread,
-//   path: "/$threadId",
-//   loader: ({ context: { queryClient }, params: { threadId, campId } }) =>
-//     Promise.all([queryClient.ensureQueryData(getThreadsOptions({ campId }))]),
-//   pendingComponent: LoadingSection,
-// });
-
-// export const whiteboardRoute = createRoute({
-//   getParentRoute: () => campRoute,
-//   component: WhiteBoard,
-//   path: "/$whiteboardId",
-
-//   // loader: ({ context: { queryClient }, params: { threadId, campId } }) =>
-//   //   Promise.all([queryClient.ensureQueryData(getThreadsOptions({ campId }))]),
-//   pendingComponent: LoadingSection,
-// });
+export const campRouteTree = campLayoutRoute.addChildren([
+  exploreRoute,
+  campRoute,
+  friendsRoute,
+  inboxRoute,
+  // audioRoute,
+]);

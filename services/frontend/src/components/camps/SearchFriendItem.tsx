@@ -19,7 +19,7 @@ export const SearchFriendItem = ({
       className="w-full border-2 border-accent/50 rounded flex flex-col"
       key={externalUser.id}
     >
-      <div>{externalUser.email}</div>
+      <div>{externalUser.username}</div>
       {run(() => {
         switch (externalUser.status) {
           case "is-friend": {

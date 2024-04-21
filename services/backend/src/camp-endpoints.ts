@@ -1,5 +1,4 @@
 import {
-  camp,
   campMember,
   campMembersWithoutUserInsertSchema,
   campSchema,
@@ -12,10 +11,15 @@ import {
   campMessageInsertSchema,
   campMessage,
   db,
+  transcribeJob,
+  transcription,
+  camp,
+  transcribeGroup,
+  desc,
 } from "@fireside/db";
 import { ProtectedElysia } from "./lib";
 
-import { t, type MergeSchema, type TSchema, type UnwrapRoute } from "elysia";
+import { t, type MergeSchema, type TSchema, type UnwrapRoute, type Static } from "elysia";
 import type { ElysiaWS } from "elysia/ws";
 import type { ServerWebSocket } from "bun";
 import type { TObject, TString, TUnknown } from "@sinclair/typebox";
@@ -30,6 +34,15 @@ export const getAudioRoom = ({
   broadcasterId: string;
   receiverId: string;
 }) => `audio/${campId}/${broadcasterId}/${receiverId}`;
+
+const transcribeMessageSchema = t.Object({
+  kind: t.Literal("update"),
+  jobId: t.String(),
+  text: t.String(),
+  createdAt: t.Number(),
+});
+
+export type TranscribeMessageSchema = Static<typeof transcribeMessageSchema>;
 export const campRouter = ProtectedElysia({ prefix: "/camp" })
   .get(
     "/retrieve/:campId",
@@ -226,7 +239,7 @@ export const campRouter = ProtectedElysia({ prefix: "/camp" })
       );
     },
     open: (ws) => {
-      console.log("joined", ws.data.user.email);
+      console.log("joined", ws.data.user.username);
       ws.subscribe(`audio-${ws.data.params.campId}`);
     },
     close: (ws) => {
@@ -239,7 +252,120 @@ export const campRouter = ProtectedElysia({ prefix: "/camp" })
       campId: t.String(),
     }),
     body: t.Unknown(),
-  });
+  })
+  // .guard((app) =>
+  //   app
+
+  // .derive(
+  //   async ({ params, set }: { params: { campId: string }; set: any }) => {
+  //     console.log("dub");
+  //     const currCamp = (
+  //       await db.select().from(camp).where(eq(camp.id, params.campId))
+  //     ).at(0);
+
+  //     if (!currCamp) {
+  //       // console.log("EL LOLLLL");
+  //       set.status = 400;
+  //       throw new Error("must have a camp");
+  //     }
+
+  //     // console.log("returning smile");
+
+  //     return { camp: currCamp };
+  //   }
+  // )
+  .post("/transcribe/group/create/:campId", ({ params }) =>
+    db.insert(transcribeGroup).values({
+      campId: params.campId,
+    })
+  )
+  .get("/transcribe/group/retrieve/:campId", async ({ params }) =>
+    (
+      await db
+        .select()
+        .from(transcribeGroup)
+        .where(eq(transcribeGroup.campId, params.campId))
+        .orderBy(desc(transcribeGroup.createdAt))
+        .limit(1)
+    ).at(0)
+  )
+  .ws("/transcribe/:groupId", {
+    params: t.Object({
+      groupId: t.String(),
+    }),
+    body: t.Union([
+      t.Object({
+        jobId: t.String(),
+        text: t.String(),
+      }),
+    ]),
+
+    open: async (ws) => {
+      console.log("opening and subsribing");
+      ws.subscribe(`transcription-${ws.data.params.groupId}`);
+    },
+
+    message: async (ws, data) => {
+      console.log("message??", data);
+      // if (ws.data.user.id !== ws.data.camp.createdBy) {
+      //   ws.close();
+      //   return;
+      // }
+      let existingJob = await db
+        .select()
+        .from(transcribeJob)
+        .where(eq(transcribeJob.id, data.jobId));
+
+      if (existingJob.length === 0) {
+        existingJob = await db
+          .insert(transcribeJob)
+          .values({
+            id: data.jobId,
+            transcribeGroupId: ws.data.params.groupId,
+          })
+          .returning();
+      }
+
+      const insertedTranscription = await db
+        .insert(transcription)
+        .values({
+          // campId: ws.data.params.campId,
+          jobId: data.jobId,
+          text: data.text,
+        })
+        .returning()
+        .then((data) => data[0]);
+
+      ws.publish(`transcription-${ws.data.params.groupId}`, {
+        ...data,
+        id: insertedTranscription.id,
+        createdAt: insertedTranscription.createdAt,
+      });
+
+      return;
+    },
+  })
+  // )
+  .get(
+    "/transcribe/retrieve/:groupId",
+    async ({ params }) => {
+      const res = await db
+        .select()
+        .from(transcribeGroup)
+        .where(eq(transcribeGroup.id, params.groupId))
+        .innerJoin(
+          transcribeJob,
+          eq(transcribeGroup.id, transcribeJob.transcribeGroupId)
+        )
+        .innerJoin(transcription, eq(transcribeJob.id, transcription.jobId));
+
+      console.log({ res });
+
+      return res;
+    },
+
+    { params: t.Object({ groupId: t.String() }) }
+  );
 
   
 
@@ -248,3 +374,11 @@ export const {
   password: pwd,
   ...cleanedUserCols
 } = getTableColumns(user);
+// .derive(async ({ params }) => {
+//   const currCamp = await db
+//     .select()
+//     .from(camp)
+//     .where(eq(camp.id, params.campId));
+
+//     return {camp: currCamp[0]}
+// })

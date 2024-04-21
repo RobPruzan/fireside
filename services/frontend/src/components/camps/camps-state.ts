@@ -164,3 +164,78 @@ export const useAllCamps = () => {
     allCampsQueryKey: options.queryKey,
   };
 };
+
+export const getTranscriptionGroupOptions = ({ campId }: { campId: string }) =>
+  queryOptions({
+    refetchInterval: 5000,
+    queryKey: ["transcription-group", campId],
+    queryFn: () =>
+      promiseDataOrThrow(
+        client.api.protected.camp.transcribe.group.retrieve({ campId }).get()
+      ),
+  });
+
+export const useGetTranscriptionGroup = ({ campId }: { campId: string }) => {
+  const options = getTranscriptionGroupOptions({ campId });
+
+  const transcriptionGroupQuery = useSuspenseQuery(options);
+
+  return {
+    transcriptionGroup: transcriptionGroupQuery.data as Nullish<
+      typeof transcriptionGroupQuery.data
+    >,
+    transcriptionGroupQuery,
+    transcriptionGroupQueryKey: options.queryKey,
+  };
+};
+
+export const useCreateTranscriptionGroup = () => {
+  return useMutation({
+    mutationFn: ({ campId }: { campId: string }) =>
+      client.api.protected.camp.transcribe.group.create({ campId }).post(),
+  });
+};
+
+export const getGroupTranscriptionOptions = ({
+  groupId,
+  enabled = true,
+}: {
+  groupId: string;
+  enabled?: boolean;
+}) => {
+  return queryOptions({
+    enabled,
+    queryKey: ["group-transcriptions", groupId],
+    queryFn: () =>
+      enabled
+        ? promiseDataOrThrow(
+            client.api.protected.camp.transcribe.retrieve({ groupId }).get()
+          ).then((data) => data.map(({ transcription }) => transcription))
+        : null,
+
+    // select: (data) => data.map(({ transcription }) => transcription.text),
+  });
+};
+
+export const useGetTranscription = ({
+  groupId,
+  enabled = true,
+}: {
+  groupId: string;
+  enabled?: boolean;
+}) => {
+  const transcriptionQueryOptions = getGroupTranscriptionOptions({
+    groupId,
+    enabled,
+  });
+
+  const transcriptionQuery = useSuspenseQuery(transcriptionQueryOptions);
+
+  return {
+    transcriptionQuery,
+    transcriptionQueryKey: transcriptionQueryOptions.queryKey,
+    transcription: transcriptionQuery.data,
+  };
+};
+
+export const transcribeAudio = atom(true);

@@ -105,7 +105,7 @@ export const CampDynamicSideBar = () => {
             .map((camp) => (
               <div className="flex w-full items-center gap-x-2" key={camp.id}>
                 <Link
-                  search={(prev) => prev}
+                  // search={(prev) => {}}
                   to="/camp/$campId"
                   params={{
                     campId: camp.id,

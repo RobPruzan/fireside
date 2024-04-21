@@ -10,7 +10,7 @@ import { LoadingSpinner } from "../ui/loading";
 import { client, dataOrThrow } from "@/edenClient";
 
 type CreateUserInfo = {
-  email: string;
+  username: string;
   password: string;
   confirmedPassword: string;
 };
@@ -41,7 +41,7 @@ function Register() {
 
   const [userInfo, setUserInfo] = useState<CreateUserInfo>({
     confirmedPassword: "",
-    email: "",
+    username: "",
     password: "",
   });
   return (
@@ -56,16 +56,19 @@ function Register() {
                   htmlFor={"email-input"}
                   className={`block text-sm font-medium`}
                 >
-                  Email
+                  Username
                 </Label>
                 <Input
                   onChange={(e) =>
-                    setUserInfo((prev) => ({ ...prev, email: e.target.value }))
+                    setUserInfo((prev) => ({
+                      ...prev,
+                      username: e.target.value,
+                    }))
                   }
-                  value={userInfo.email}
+                  value={userInfo.username}
                   id={`email-input`}
-                  type={"Email"}
-                  placeholder={"Email"}
+                  type={"Username"}
+                  placeholder={"Username"}
                   className={`mt-1 w-full rounded p-2 border-secondary/90 dark:border-2 text-sm `}
                 />
               </div>

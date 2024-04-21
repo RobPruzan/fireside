@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import {
   MutableRefObject,
+  Suspense,
   createContext,
   memo,
   useContext,
@@ -47,10 +48,14 @@ import {
   ContextMenuSubTrigger,
   ContextMenuTrigger,
 } from "@/components/ui/context-menu";
-import { cn } from "@/lib/utils";
+import { cn, retryConnect } from "@/lib/utils";
 import {
+  ArrowLeft,
   AudioLines,
   BookCheck,
+  Captions,
+  ChevronLeft,
+  ChevronRight,
   Edit,
   Image,
   Info,
@@ -80,13 +85,17 @@ import {
   useRemoveReactionMutation,
   useGetCamp,
 } from "./message-state";
-import { useDefinedUser } from "./camps-state";
+import {
+  useCreateTranscriptionGroup,
+  useDefinedUser,
+  useGetTranscriptionGroup,
+} from "./camps-state";
 import { Setter } from "@/types/utils";
 import { FiresideUser } from "@/lib/useUserQuery";
 import { ThreadIcon } from "../ui/icons/thread";
 import { Thread } from "./Thread";
 import { useGetThreads } from "./thread-state";
-import { toast } from "../ui/use-toast";
+import { toast, useToast } from "../ui/use-toast";
 import { Textarea } from "../ui/textarea";
 import { client, dataOrThrow } from "@/edenClient";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -94,12 +103,17 @@ import { PublishedMessage } from "@fireside/backend/src/message-endpoints";
 import { threadId } from "worker_threads";
 import { WhiteBoardLoader } from "./whiteboard/WhiteBoard";
 import {
+  getWhiteBoardImagesOptions,
   useCreateWhiteBoardMessageMutation,
   useCreateWhiteBoardMutation,
   useGetWhiteBoardMessages,
 } from "./whiteboard/white-board-state";
-import { LoadingSection } from "../ui/loading";
+import { LoadingSection, LoadingSpinner } from "../ui/loading";
 import { useWebRTCConnection } from "@/hooks/useAudioStream";
+import { TranscriberContext } from "@/lib/transcription/hooks/useTranscriber";
+import { Transcribe } from "./Transcribe";
+import { Progress } from "@/lib/transcription/components/Progress";
+
 // import { useAudioStream } from "@/hooks/useAudioStream";
 const subscribeFn = client.api.protected.message.ws({
   campId: "anything",
@@ -108,9 +122,9 @@ const subscribeFn = client.api.protected.message.ws({
 
 type Subscription = null | ReturnType<typeof subscribeFn>;
 const SocketMessageContext = createContext<{
-  subscriptionRef: MutableRefObject<Subscription> | null;
+  subscription: Subscription | null;
 }>({
-  subscriptionRef: null,
+  subscription: null,
 });
 
 export const Camp = () => {
@@ -123,6 +137,7 @@ export const Camp = () => {
   const [listeningToAudio, setListeningToAudio] = useState(false);
   const [broadcastingAudio, setBroadcastingAudio] = useState(false);
   const [showUsers, setShowUsers] = useState(false);
+  // const { transcriber } = useContext(TranscriberContext);
   const {
     createWebRTCOffer,
     listenForAudio,
@@ -136,10 +151,10 @@ export const Camp = () => {
     options: {
       listeningToAudio,
       broadcastingAudio,
+      // onRecordingComplete: (blob) => {
+      //   transcriber.onInputChange();
+      // },
     },
-    // options: {
-    //   playAudioStream: broadcastingAudio,
-    // },
   });
 
   useEffect(() => {
@@ -157,10 +172,6 @@ export const Camp = () => {
   useEffect(() => {
     const newSubscription = client.api.protected.user.connectedusers({campId}).subscribe();
 
-    console.log("New Subscription",newSubscription);
-    // protected.user
-    //   .ws({ campId })
-    //   .subscribe();
     const handleMessage = (event: { data: { type: string; payload: any; }; }) => {
       const data = event.data as { type: string; payload: any };
   
@@ -193,131 +204,247 @@ export const Camp = () => {
   const toggleUsers = () => {
     setShowUsers((prev) => !prev);
   };
+  const createWhiteBoardMutation = useCreateWhiteBoardMutation();
   const search = useSearch({ from: "/root-auth/camp-layout/camp/$campId" });
+  const createTranscriptionGroupMutation = useCreateTranscriptionGroup();
+  const { transcriptionGroupQuery, transcriptionGroup } =
+    useGetTranscriptionGroup({ campId });
+  const { toast } = useToast();
+  const navigate = useNavigate({ from: "/root-auth/camp-layout/camp/$campId" });
   const searchEntries = Object.entries(search);
+  const [toolbarOpen, setToolBarOpen] = useState(false);
+  const { transcriber } = useContext(TranscriberContext);
+  // console.log({ transcriptionGroupQuery });
   return (
     <div className="flex  w-full h-full  pb-5 relative">
-      <div className="w-full flex  justify-center  absolute top-0">
-        <div
-          className={cn([
-            "flex  border border-t-0 rounded-b-md justify-center gap-x-4 items-center w-2/5  backdrop-blur z-10 text-muted-foreground bg-opacity-90",
-            camp.createdBy === user.id && broadcastingToUsers.length !== 0
-              ? "h-32"
-              : "h-20",
-          ])}
-        >
-          {camp.createdBy === user.id ? (
-            <div className="flex flex-col w-full">
-              <div className="flex gap-x-4 items-center justify-center">
-                <Button variant={"ghost"}>
-                  <Presentation />
-                </Button>
-                <Button
-                  onClick={() => {
-                    if (!broadcastingAudio) {
-                      listenForAudio();
-                    } else {
-                      stopListeningForAudio();
-                    }
+      <ResizablePanelGroup direction="horizontal">
+        <ResizablePanel className="h-full w-full relative">
+          <div className="w-full flex flex-col justify-center items-center absolute top-0">
+            <div
+              className={cn([
+                "flex  border border-t-0 rounded-b-md justify-center gap-x-4 items-center  pl-10  backdrop-blur bg-background  z-10 text-muted-foreground animate-size-change",
+                camp.createdBy === user.id && broadcastingToUsers.length !== 0
+                  ? "h-32"
+                  : "h-20",
+              ])}
+            >
+              <div className="text-xl font-bold">{camp.name}</div>
 
-                    setBroadcastingAudio((prev) => {
-                      return !prev;
-                    });
-                  }}
-                  variant={"ghost"}
-                >
-                  <Megaphone
-                    className={cn([broadcastingAudio && "text-green-500"])}
-                  />
-                </Button>
-                <Button variant={"ghost"}>
-                  <BookCheck />
-                </Button>
-                <Button variant="ghost" onClick={toggleUsers}>
-                  <Users />
-                </Button>
-              </div>
-              {broadcastingToUsers.length > 0 && (
-                <div className="flex overflow-x-auto items-center p-3">
-                  {broadcastingToUsers.map((userId) => (
-                    <div
-                      key={userId}
-                      className="border  p-3 text-xs rounded-full"
-                    >
-                      {userId.slice(1, 5)}
+              {toolbarOpen &&
+                (camp.createdBy === user.id ? (
+                  <div className="flex flex-col w-full">
+                    <div className="flex gap-x-4 items-center justify-center">
+                      <Button
+                        onClick={() => {
+                          if (!transcriptionGroup) {
+                            toast({
+                              variant: "destructive",
+                              description: "No transcription to view",
+                            });
+                            return;
+                          }
+                          navigate({
+                            to: "/camp/$campId",
+                            search: (prev) => ({
+                              ...("campId" in prev && prev.campId === campId
+                                ? prev
+                                : {}),
+                              transcriptionGroupId: transcriptionGroup?.id,
+                            }),
+                          });
+                        }}
+                        variant={"ghost"}
+                      >
+                        <Captions />
+                      </Button>
+                      <Button
+                        onClick={async () => {
+                          createWhiteBoardMutation.mutate({
+                            whiteBoardId: campId,
+                          });
+
+                          navigate({
+                            to: "/camp/$campId",
+                            search: (prev) => ({
+                              ...("campId" in prev && prev.campId === campId
+                                ? prev
+                                : {}),
+                              whiteBoardId: campId,
+                            }),
+                          });
+                        }}
+                        variant={"ghost"}
+                      >
+                        <Presentation />
+                      </Button>
+
+                      <Button
+                        onClick={async () => {
+                          // console.log("TRANSCRIBE AT CLICK", {
+                          //   transcriber,
+                          // });
+
+                          if (!broadcastingAudio) {
+                            await listenForAudio();
+                            toast({
+                              title: "Broadcasting audio",
+                              description:
+                                "Your audio will be transcribed live and broadcasted for all users in the camp",
+                            });
+                          } else {
+                            stopListeningForAudio();
+                          }
+
+                          await createTranscriptionGroupMutation.mutateAsync({
+                            campId,
+                          });
+
+                          transcriptionGroupQuery.refetch();
+
+                          setBroadcastingAudio((prev) => {
+                            return !prev;
+                          });
+                        }}
+                        variant={"ghost"}
+                      >
+                        {createTranscriptionGroupMutation.isPending ? (
+                          <LoadingSpinner />
+                        ) : (
+                          <Megaphone
+                            className={cn([
+                              broadcastingAudio && "text-green-500",
+                            ])}
+                          />
+                        )}
+                      </Button>
+                      <Button variant="ghost" onClick={toggleUsers}>
+                       <Users />
+                      </Button>
+                      {/* <Button variant={"ghost"}>
+                        <BookCheck />
+                      </Button> */}
                     </div>
-                  ))}
+                    {broadcastingToUsers.length > 0 && (
+                      <div className="flex overflow-x-auto items-center p-3">
+                        {broadcastingToUsers.map((userId) => (
+                          <div
+                            key={userId}
+                            className="border  p-3 text-xs rounded-full"
+                          >
+                            {userId.slice(1, 5)}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-x-4">
+                    <Button
+                      onClick={() => {
+                        if (!transcriptionGroup) {
+                          toast({
+                            variant: "destructive",
+                            description: "No transcription to view",
+                          });
+                          return;
+                        }
+                        navigate({
+                          to: "/camp/$campId",
+                          search: (prev) => ({
+                            ...("campId" in prev && prev.campId === campId
+                              ? prev
+                              : {}),
+                            transcriptionGroupId: transcriptionGroup?.id,
+                          }),
+                        });
+                      }}
+                      variant={"ghost"}
+                    >
+                      <Captions />
+                    </Button>
+                    <Button
+                      onClick={() => {
+                        createWhiteBoardMutation.mutate({
+                          whiteBoardId: campId,
+                        });
+
+                        navigate({
+                          to: "/camp/$campId",
+                          search: (prev) => ({
+                            ...prev,
+                            whiteBoardId: campId,
+                          }),
+                        });
+                      }}
+                      variant={"ghost"}
+                    >
+                      <Presentation />
+                    </Button>
+
+                    <Button
+                      onClick={() => {
+                        if (!listeningToAudio) {
+                          console.log("listening");
+                          listenToBroadcaster();
+                        } else {
+                          stopListeningToBroadcast();
+                        }
+                        setListeningToAudio((prev) => {
+                          return !prev;
+                        });
+                      }}
+                      className="relative"
+                      variant={"ghost"}
+                    >
+                      {isBroadcasting && (
+                        <Info className="text-green-500 absolute -top-3 -right-3" />
+                      )}
+                      <AudioLines
+                        className={cn([listeningToAudio && "text-green-500"])}
+                      />
+                    </Button>
+                    <Button variant="ghost" onClick={toggleUsers}>
+                      <Users />
+                    </Button>
+                  </div>
+                ))}
+
+              <Button
+                onClick={() => setToolBarOpen((prev) => !prev)}
+                variant={"ghost"}
+              >
+                {toolbarOpen ? <ChevronLeft /> : <ChevronRight />}
+              </Button>
+
+                
+
+            </div>
+            {showUsers && activeUsers && (
+                <div className="absolute top-0 right-0 mr-4 mt-2">
+                  <div className="flex flex-col">
+                    <h4 className="font-bold text-xs">Active Users</h4>
+                    <div className="flex items-center gap-2 overflow-auto">
+                      {activeUsers.map((userId, index) => (
+                        <span key={index} className="rounded-full px-3 py-1 text-sm">
+                          {userId}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
                 </div>
               )}
-            </div>
-          ) : (
-            <>
-            <Button
-              onClick={() => {
-                if (!listeningToAudio) {
-                  console.log("listening");
-                  listenToBroadcaster();
-                } else {
-                  stopListeningToBroadcast();
-                }
-                setListeningToAudio((prev) => {
-                  return !prev;
-                });
-              }}
-              className="relative"
-              variant={"ghost"}
-            >
-              {isBroadcasting && (
-                <Info className="text-green-500 absolute -top-3 -right-3" />
-              )}
-              <AudioLines
-                className={cn([listeningToAudio && "text-green-500"])}
-              />
-            </Button>
-            <Button variant="ghost" onClick={toggleUsers}>
-            <Users />
-          </Button>
-          </>
-          )}
-        </div>
-
-        {showUsers && (
-          <div style={{
-            display: 'flex',
-            justifyContent: 'center', // Centers the inner container horizontally within the div
-            overflowX: 'auto',
-            whiteSpace: 'nowrap',
-            padding: '10px',
-          }}>
-            {activeUsers && activeUsers.length > 0 ? (
-              <div style={{
-                display: 'flex',
-                flexDirection: 'row',
-                gap: '10px',
-                justifyContent: 'center', // Horizontally center the content
-                alignItems: 'center', // Vertically center the content
-              }}>
-                Active Users   |
-                {activeUsers.map((userId, index) => (
-                  <p key={index} style={{
-                    display: 'flex',
-                    padding: '5px 10px', // Adjust padding as needed
-                    borderRadius: '5px',
-                    minWidth: '50px', // Ensures each item has a minimum width
-                  }}>
-                    {userId}
-                  </p>
+            
+            {transcriber.progressItems.length > 0 && (
+              <div className=" p-4 w-full flex rounded-t-none border-t-0 flex-col border rounded-md bg-background">
+                <label>Loading model files... (only run once)</label>
+                {transcriber.progressItems.map((data) => (
+                  <div key={data.file}>
+                    <Progress text={data.file} percentage={data.progress} />
+                  </div>
                 ))}
               </div>
-            ) : (
-              <></>    
             )}
           </div>
-        )}
-      </div>
-
-      <ResizablePanelGroup direction="horizontal">
-        <ResizablePanel className="h-full w-full">
           <MessageSection campId={campId} />
         </ResizablePanel>
         <ResizableHandle
@@ -344,7 +471,9 @@ export const Camp = () => {
                           minSize={30}
                           className={cn([" w-full"])}
                         >
-                          <Thread threadId={v} />
+                          <Suspense fallback={<LoadingSection />}>
+                            <Thread threadId={v} />
+                          </Suspense>
                         </ResizablePanel>
 
                         {index !== searchEntries.length - 1 && (
@@ -371,6 +500,7 @@ export const Camp = () => {
                           <WhiteBoardLoader
                             whiteBoardId={v}
                             options={{
+                              readOnly: camp.createdBy !== user.id,
                               slot: (
                                 <Link
                                   from="/camp/$campId"
@@ -400,6 +530,46 @@ export const Camp = () => {
                       </>
                     ) : null;
                   }
+
+                  case "transcriptionGroupId": {
+                    return (
+                      <>
+                        <ResizablePanel>
+                          <div className="h-full border-l w-full text-xs overflow-y-auto">
+                            <Transcribe
+                              slot={
+                                <Button
+                                  className="absolute top-3 right-3"
+                                  onClick={() => {
+                                    navigate({
+                                      to: "/camp/$campId",
+                                      search: (prev) => {
+                                        const search: any = { ...prev };
+
+                                        delete search["transcriptionGroupId"];
+
+                                        return search;
+                                      },
+                                    });
+                                  }}
+                                >
+                                  <XIcon />
+                                </Button>
+                              }
+                              campId={campId}
+                            />
+                          </div>
+                        </ResizablePanel>
+
+                        {index !== searchEntries.length - 1 && (
+                          <ResizableHandle
+                            className="bg-accent/50 "
+                            withHandle={searchEntries.length > 0}
+                          />
+                        )}
+                      </>
+                    );
+                  }
                 }
               })}
             </ResizablePanelGroup>
@@ -417,7 +587,8 @@ const MessageSection = memo(({ campId }: { campId: string }) => {
   const queryClient = useQueryClient();
   const { messagesQueryKey } = useGetMessages({ campId });
   const { threadsQueryKey } = useGetThreads({ campId });
-  const { whiteBoardMessages } = useGetWhiteBoardMessages({ campId });
+  const { whiteBoardMessages, whiteBoardMessagesQuery } =
+    useGetWhiteBoardMessages({ campId });
   const createWhiteBoardMessageMutation = useCreateWhiteBoardMessageMutation({
     campId,
   });
@@ -434,42 +605,86 @@ const MessageSection = memo(({ campId }: { campId: string }) => {
       lastChild.scrollIntoView({
         behavior: "instant",
         block: "end",
-        inline: "nearest",
       });
     }
-  }, [messages.length]);
+  }, [messages.length, whiteBoardMessages.length]);
 
-  const updateMessageCache = ({ message, thread }: PublishedMessage) => {
+  const updateMessageCache = (publishedMessage: PublishedMessage) => {
     queryClient.setQueryData(messagesQueryKey, (prev) => [
       ...(prev ?? []),
       {
-        user,
-        userId: user.id,
-        ...message,
+        message: publishedMessage.message.message,
+        user: publishedMessage.user,
+        campId: publishedMessage.message.campId,
+        createdAt: publishedMessage.message.createdAt,
+        id: publishedMessage.message.id,
+        userId: publishedMessage.user.id,
+        // userId: user.id,
+        // ...message,
       },
     ]);
 
     queryClient.setQueryData(threadsQueryKey, (prev) => [
       ...(prev ?? []),
       {
-        userId: user.id,
-        campId,
-        createdBy: user.id,
-        ...thread,
+        userId: publishedMessage.user.id,
+        campId: publishedMessage.message.campId,
+        createdBy: publishedMessage.thread.createdBy!,
+        ...publishedMessage.thread,
       },
     ]);
   };
-  const subscriptionRef = useRef<null | ReturnType<typeof subscribeFn>>(null);
+
+  const [subscription, setSubscription] = useState<null | ReturnType<
+    typeof subscribeFn
+  >>(null);
+
+  useEffect(() => {
+    if (!subscription) {
+      return;
+    }
+    const handleMessage = async (event: { data: string }) => {
+      updateMessageCache(JSON.parse(event.data) as PublishedMessage);
+
+      await new Promise((res) => {
+        setTimeout(() => {
+          res(null), 1000; // the white board creation is not part of the message, give some time for it to create. This is a race but not a big deal if it fails (we still have a refetch interval)
+        });
+      });
+      whiteBoardMessagesQuery.refetch();
+    };
+    subscription.ws.addEventListener("message", handleMessage);
+
+    return () => {
+      if (!subscription) {
+        return;
+      }
+      subscription.ws.removeEventListener("message", handleMessage);
+    };
+  }, [subscription]);
+
   useEffect(() => {
     const newSubscription = client.api.protected.message
       .ws({ campId })
       .subscribe();
     
-    newSubscription.on("message", (event) => {
-      updateMessageCache(event.data as PublishedMessage);
-    });
-    subscriptionRef.current = newSubscription;
+    const handleClose = () => {
+      console.log("retwying");
+      retryConnect(() => {
+        const res = client.api.protected.message.ws({ campId }).subscribe();
+
+        console.log("NEW READY STATE", res.ws.readyState);
+        return res;
+      }, setSubscription);
+    };
+    newSubscription.ws.addEventListener("close", handleClose);
+
+    // subscriptionRef.on('close')
+
+    // subscription = newSubscription;
+    setSubscription(newSubscription);
     return () => {
+      newSubscription.ws.removeEventListener("close", handleClose);
       newSubscription.close();
     };
   }, []);
@@ -481,7 +696,7 @@ const MessageSection = memo(({ campId }: { campId: string }) => {
   return (
     <SocketMessageContext.Provider
       value={{
-        subscriptionRef,
+        subscription,
       }}
     >
       <div className="p-1  flex flex-col h-full  w-full px-2">
@@ -545,14 +760,20 @@ const MessageSection = memo(({ campId }: { campId: string }) => {
                   parentMessageId: parentMessageId,
                 };
 
-                subscriptionRef.current?.send({
+                if (!subscription) {
+                  console.log("attempt to send through null sub");
+                }
+
+                subscription?.send({
                   message: newMessage,
                   thread: newThread,
+                  user,
                 });
 
                 updateMessageCache({
                   message: newMessage,
                   thread: newThread,
+                  user,
                 });
 
                 if (nonCreatedMessageWhiteBoardInfo) {
@@ -782,7 +1003,7 @@ const Message = memo(
                     <Image size={20} />
                   </Avatar>
                   <div className="text-sm font-medium leading-none">
-                    <h3 className="text-base">{messageObj.user.email}</h3>
+                    <h3 className="text-base">{messageObj.user.username}</h3>
                     <span className="text-sm text-gray-500 dark:text-gray-400">
                       <div className="flex gap-x-1">
                         <span>

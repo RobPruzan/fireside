@@ -65,3 +65,7 @@
 .h-calc {
   height: calc(100vh - 64px);
 }
+
+.animate-size-change {
+  transition: width 0.5s ease;
+}

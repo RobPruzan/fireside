@@ -1,11 +1,36 @@
 // start the audio listen
 
-import { useDefinedUser } from "@/components/camps/camps-state";
+import {
+  useDefinedUser,
+  useGetTranscriptionGroup,
+} from "@/components/camps/camps-state";
 import { useGetCamp } from "@/components/camps/message-state";
 import { client } from "@/edenClient";
+
+import { TranscriberContext } from "@/lib/transcription/hooks/useTranscriber";
+import { retryConnect } from "@/lib/utils";
+import { webmFixDuration } from "@/lib/utils/BlobFix";
+import Constants from "@/lib/utils/Constants";
+import { camp } from "@fireside/db";
 import { serverFnReturnTypeHeader } from "@tanstack/react-router";
 import { ReceiptRussianRuble } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
+
+function getMimeType() {
+  const types = [
+    "audio/webm",
+    "audio/mp4",
+    "audio/ogg",
+    "audio/wav",
+    "audio/aac",
+  ];
+  for (let i = 0; i < types.length; i++) {
+    if (MediaRecorder.isTypeSupported(types[i])) {
+      return types[i];
+    }
+  }
+  return undefined;
+}
 
 const throwAwaySubscribeFn = client.api.protected.camp.audio({
   campId: "does not matter",
@@ -42,6 +67,7 @@ export const useWebRTCConnection = ({
   options?: Partial<{
     listeningToAudio: boolean;
     broadcastingAudio: boolean;
+    onRecordingComplete: (blob: Blob) => void;
   }>;
 }) => {
   const [webRTCConnections, setWebRTCConnections] = useState<
@@ -58,6 +84,21 @@ export const useWebRTCConnection = ({
     useState<WebSocket | null>(null);
 
   const [mediaStream, setMediaStream] = useState<MediaStream | null>(null);
+  const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(
+    null
+  );
+
+  const { transcriber } = useContext(TranscriberContext);
+
+  // const [transcribeAudioData, setTranscribeAudioData] = useState<
+  //   | {
+  //       buffer: AudioBuffer;
+  //       url: string;
+  //       source: AudioSource;
+  //       mimeType: string;
+  //     }
+  //   | undefined
+  // >();
 
   const [senders, setSenders] = useState<
     Array<{ userId: string; sender: RTCRtpSender }>
@@ -67,9 +108,35 @@ export const useWebRTCConnection = ({
     []
   );
 
-  // const [stream, setStream] = useState<MediaStream | null>(null)
-
   const [isBroadcasting, setIsBroadcasting] = useState(false);
+
+  const transcribe = async (data: Blob) => {
+    // setTranscribeAudioData(undefined);
+
+    // const blobUrl = URL.createObjectURL(data);
+    const fileReader = new FileReader();
+
+    fileReader.onloadend = async () => {
+      const audioCTX = new AudioContext({
+        sampleRate: Constants.SAMPLING_RATE,
+      });
+      const arrayBuffer = fileReader.result as ArrayBuffer;
+      const decoded = await audioCTX.decodeAudioData(arrayBuffer);
+
+      console.log("set audio data");
+      // setTranscribeAudioData({
+      //   buffer: decoded,
+      //   url: blobUrl,
+      //   source: AudioSource.RECORDING,
+      //   mimeType: data.type,
+      // });
+      transcriber.start(decoded);
+    };
+    fileReader.readAsArrayBuffer(data);
+  };
+
+  // useEffect(() => {}, [transcriber])
+
   const { camp } = useGetCamp({ campId });
   const user = useDefinedUser();
   useEffect(() => {
@@ -138,15 +205,29 @@ export const useWebRTCConnection = ({
       return;
     }
 
-    const subscription = new WebSocket(
-      (import.meta.env.PROD ? "wss://" : "ws://") +
-        (import.meta.env.PROD ? "fireside.ninja" : "localhost:8080") +
-        `/api/protected/camp/audio/${campId}`
-    );
+    const createSubscription = () =>
+      new WebSocket(
+        (import.meta.env.PROD ? "wss://" : "ws://") +
+          (import.meta.env.PROD ? "fireside.ninja" : "localhost:8080") +
+          `/api/protected/camp/audio/${campId}`
+      );
+
+    const subscription = createSubscription();
+
+    const handleClose = () => {
+      retryConnect(() => {
+        const newSubscription = createSubscription();
+        return newSubscription;
+      }, setSignalingServerSubscription);
+    };
+
+    subscription.addEventListener("close", handleClose);
 
     setSignalingServerSubscription(subscription);
 
     return () => {
+      console.log("sent close");
+      subscription.removeEventListener("close", handleClose);
       subscription.close();
       setSignalingServerSubscription(null);
     };
@@ -206,34 +287,6 @@ export const useWebRTCConnection = ({
           return;
         }
         case "webRTC-offer": {
-          // if (isBroadcaster) {
-          //   const userConn = webRTCConnections.find(
-          //     (existingConn) => existingConn.userId === typedData.userId
-          //   );
-          //   if (!userConn) {
-          //     return;
-          //   }
-
-          //   userConn.conn.setRemoteDescription(
-          //     new RTCSessionDescription(typedData.offer)
-          //   );
-
-          //   const answer = await userConn.conn.createAnswer();
-
-          //   userConn.conn.setLocalDescription(answer);
-
-          //   signalingServerSubscription.send(
-          //     JSON.stringify({
-          //       kind: "webRTC-answer",
-          //       answer,
-          //       broadcasterId: camp.createdBy,
-          //       receiverId: userConn.userId,
-          //     })
-          //   );
-
-          //   return;
-          // }
-
           if (!receiverWebRTCConnection) {
             return;
           }
@@ -340,13 +393,11 @@ export const useWebRTCConnection = ({
           return;
         }
         case "join-channel-response": {
-          // console.log("got join channel response");
           if (!isBroadcaster) {
             return;
           }
 
           if (!options?.broadcastingAudio) {
-            console.log("not broadcasting");
             return;
           }
 
@@ -354,19 +405,11 @@ export const useWebRTCConnection = ({
             (existingConn) => existingConn.userId === typedData.receiverId
           );
           if (!userConn) {
-            console.log("early return");
             return;
           }
 
-          // userConn.
-
           setBroadcastingToUsers((prev) => [...prev, typedData.userId]);
 
-          // webRTCConnections.forEach(async ({ conn, userId }) => {
-          //   console.log({ conn });
-          // if (conn.state) {
-          //   return;
-          // }
           console.log("creating offer for this conn", { userConn });
           const offer = await userConn.conn.createOffer({
             offerToReceiveAudio: true,
@@ -382,7 +425,6 @@ export const useWebRTCConnection = ({
               receiverId: typedData.userId,
             })
           );
-          // });
 
           return;
         }
@@ -402,16 +444,9 @@ export const useWebRTCConnection = ({
         }
 
         case "started-broadcast": {
-          // signalingServerSubscription.send(JSON.stringify({
-
-          // }))
-
           setIsBroadcasting(true);
 
-          console.log("STARTED BROADCAST", options);
-
           if (options?.listeningToAudio) {
-            console.log("attempt to listen");
             listenToBroadcaster();
           }
 
@@ -422,7 +457,6 @@ export const useWebRTCConnection = ({
           if (isBroadcaster) {
             return;
           }
-          console.log("ended broadcast");
           setIsBroadcasting(false);
           stopListeningToBroadcast();
           return;
@@ -452,8 +486,83 @@ export const useWebRTCConnection = ({
     mediaStream,
   ]);
 
+  useEffect(() => {
+    if (!mediaStream) {
+      return;
+    }
+    if (!mediaStream.active) {
+      return;
+    }
+    if (!mediaRecorder) {
+      return;
+    }
+
+    const startTime = Date.now();
+
+    const audioChunks: Array<BlobPart> = [];
+
+    mediaRecorder.ondataavailable = (event) => {
+      audioChunks.push(event.data);
+    };
+
+    mediaRecorder.onstop = async () => {
+      const endTime = Date.now();
+      let blob = new Blob(audioChunks);
+      const mimeType = getMimeType();
+
+      // const audioUrl = URL.createObjectURL(audioBlob);
+      if (mimeType === "audio/webm") {
+        blob = await webmFixDuration(blob, endTime - startTime, blob.type);
+      }
+
+      // options?.onRecordingComplete?.(blob);
+      transcribe(blob);
+
+      // await new Promise((res) => {
+      //   setTimeout(() => {
+      //     res(null);
+      //   }, 10 * 1000);
+      // });
+
+      setMediaRecorder(new MediaRecorder(mediaStream));
+    };
+
+    // if (mediaRecorder.state === '')
+
+    mediaRecorder.start();
+    // mediaRecorder.onstop = () => {
+
+    // }
+
+    setTimeout(() => {
+      mediaRecorder.stop();
+    }, 3000);
+  }, [mediaRecorder, mediaStream]);
+  //     let recorder = new MediaRecorder(stream);
+  // let audioChunks = [];
+
+  // recorder.ondataavailable = event => {
+  //   audioChunks.push(event.data);
+  // };
+
+  // recorder.onstop = () => {
+  //   let audioBlob = new Blob(audioChunks);
+  //   let audioUrl = URL.createObjectURL(audioBlob);
+  //   let audio = new Audio(audioUrl);
+  //   audio.play();
+  // };
+
+  // recorder.start();
+
+  // // Stop recording after 5 seconds
+  // setTimeout(() => {
+  //   recorder.stop();
+  // }, 5000);
+
   const listenForAudio = async () => {
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    setMediaRecorder(new MediaRecorder(stream));
+    // const mediaRecorder = new MediaRecorder(stream)
     setMediaStream(stream);
     const audioTracks = stream.getAudioTracks();
     webRTCConnections.forEach(async ({ conn, userId }) => {
@@ -471,9 +580,6 @@ export const useWebRTCConnection = ({
   };
 
   const stopListeningForAudio = () => {
-    // mediaStream?.getAudioTracks().forEach((track) => track.stop());
-    // const audioTracks = mediaStream?.getAudioTracks();
-    console.log("not listenign to audio");
     signalingServerSubscription?.send(
       JSON.stringify({
         kind: "ended-broadcast",
@@ -481,24 +587,21 @@ export const useWebRTCConnection = ({
         receiverId: user.id,
       })
     );
-    webRTCConnections.forEach(({ conn, userId }) => {
-      const senderObj = senders.find(
-        (findSender) => userId === findSender.userId
-      );
-      if (!senderObj) {
-        return;
-      }
-      try {
-        conn.removeTrack(senderObj.sender);
-      } catch (e) {
-        console.log("bad remove track call");
-      }
-
-      // audioTracks?.forEach((track) => {
-      //   // conn.removeTrack([mediaStream]);
-
-      // });
-    });
+    mediaStream?.getTracks().forEach((track) => track.stop());
+    // webRTCConnections.forEach(({ conn, userId }) => {
+    //   const senderObj = senders.find(
+    //     (findSender) => userId === findSender.userId
+    //   );
+    //   if (!senderObj) {
+    //     return;
+    //   }
+    //   try {
+    //     senderObj.sender.track?.stop();
+    //     conn.removeTrack(senderObj.sender);
+    //   } catch (e) {
+    //     console.log("bad remove track call");
+    //   }
+    // });
   };
 
   const listenToBroadcaster = () => {
@@ -506,13 +609,6 @@ export const useWebRTCConnection = ({
       return;
     }
 
-    // signalingServerSubscription?.send(
-    //   JSON.stringify({
-    //     kind: "join-channel-request",
-    //     broadcasterId: camp.createdBy,
-    //     receiverId: user.id,
-    //   })
-    // );
     receiverWebRTCConnection.ontrack = ({ track }) => {
       if (track.kind !== "audio") {
         return;
@@ -520,6 +616,7 @@ export const useWebRTCConnection = ({
       const audioElement = new Audio();
       audioElement.autoplay = true;
       const audioStream = new MediaStream();
+      // const mediaRecorder = new MediaRecorder(audioStream)
 
       audioStream.addTrack(track);
 
@@ -529,8 +626,6 @@ export const useWebRTCConnection = ({
     signalingServerSubscription?.send(
       JSON.stringify({
         kind: "user-joined",
-        // broadcasterId: camp.createdBy,
-        // receiverId: user.id,
       })
     );
   };
@@ -559,21 +654,6 @@ export const useWebRTCConnection = ({
       console.warn("No signaling server subscription");
       return;
     }
-
-    // webRTCConnections.forEach(async ({ conn, userId }) => {
-    //   const offer = await conn.createOffer();
-
-    //   conn.setLocalDescription(offer);
-
-    //   signalingServerSubscription.send(
-    //     JSON.stringify({
-    //       kind: "webRTC-offer",
-    //       offer,
-    //       broadcasterId: camp.createdBy,
-    //       receiverId: userId,
-    //     })
-    //   );
-    // });
   };
 
   return {
@@ -590,30 +670,3 @@ export const useWebRTCConnection = ({
     isBroadcasting,
   };
 };
-
-// export const useAudioStream = ({
-//   campId,
-//   options,
-// }: {
-//   campId: string;
-//   options?: Partial<{ playAudioStream: boolean }>;
-// }) => {
-//   const {
-//     listenForAudio,
-//     signalingServerSubscription,
-//     receiverWebRTCConnection,
-//     webRTCConnections,
-//     stopListeningForAudio,
-//     setReceiverWebRTCConnection,
-//   } = useWebRTCConnection({ campId });
-//   const user = useDefinedUser();
-//   const { camp } = useGetCamp({ campId });
-
-//   return {
-//     createWebRTCOffer,
-//     listenForAudio,
-//     listenToBroadcaster,
-//     stopListeningToBroadcast,
-//     stopListeningForAudio,
-//   };
-// };

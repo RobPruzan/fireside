@@ -8,7 +8,6 @@ import {
   type WhiteBoardColor,
   whiteBoardPointInsertSchema,
   whiteBoardMouseInsertSchema,
-  whiteBoardMouse,
   whiteBoardMouseSelectSchema,
   and,
   not,
@@ -20,6 +19,10 @@ import {
   messageWhiteBoard,
   whiteBoardImg,
   db,
+  whiteBoardEraserSelectSchema,
+  whiteBoardEraser,
+  whiteBoardMouse,
+  desc,
 } from "@fireside/db";
 import { ProtectedElysia } from "./lib";
 
@@ -48,20 +51,23 @@ const whiteBoardBodySchema = t.Object({
   y: t.Number(),
   color: t.String(),
   kind: t.Literal("point"),
+  createdAt: t.Number(),
 });
 
 const messageBodySchema = t.Union([
   whiteBoardBodySchema,
   t.Intersect([
     whiteBoardMouseSelectSchema,
+
     t.Object({
       user: t.Object({
         id: t.String(),
-        email: t.String(),
+        username: t.String(),
         displayName: t.String(),
       }),
     }),
   ]),
+  whiteBoardEraserSelectSchema,
 ]);
 
 export type WhiteBoardPublish =
@@ -70,7 +76,8 @@ export type WhiteBoardPublish =
     })
   | (Omit<Static<typeof whiteBoardBodySchema>, "color"> & {
       color: WhiteBoardColor;
-    });
+    })
+  | Omit<Static<typeof whiteBoardEraserSelectSchema>, "color">;
 // export type PublishedWhiteBoardPoint = Omit<
 //   Static<typeof whiteBoardBodySchema>,
 //   "color"
@@ -96,14 +103,20 @@ export const whiteboardRoute = ProtectedElysia({ prefix: "/whiteboard" })
   .get(
     "/retrieve/:whiteBoardId",
     async ({ params }) => {
-      const res = await db
-        .select()
-        .from(whiteBoardPointGroup)
-        .innerJoin(
-          whiteBoardPoint,
-          eq(whiteBoardPointGroup.id, whiteBoardPoint.whiteBoardPointGroupId)
-        )
-        .where(eq(whiteBoardPointGroup.whiteBoardId, params.whiteBoardId));
+      const res = (
+        await db
+          .select()
+          .from(whiteBoardPointGroup)
+          .innerJoin(
+            whiteBoardPoint,
+            eq(whiteBoardPointGroup.id, whiteBoardPoint.whiteBoardPointGroupId)
+          )
+          .where(eq(whiteBoardPointGroup.whiteBoardId, params.whiteBoardId))
+      ).toSorted((a, b) =>
+        a.whiteBoardPoint.createdAt && b.whiteBoardPoint.createdAt
+          ? a.whiteBoardPoint.createdAt - b.whiteBoardPoint.createdAt
+          : -1
+      );
 
       const pointGroupToPoints: Record<
         string,
@@ -129,6 +142,16 @@ export const whiteboardRoute = ProtectedElysia({ prefix: "/whiteboard" })
     { params: t.Object({ whiteBoardId: t.String() }) }
   )
   .get(
+    "/eraser/retrieve/:whiteBoardId",
+    async (ctx) =>
+      db
+        .select()
+        .from(whiteBoardEraser)
+        .where(and(eq(whiteBoardEraser.whiteBoardId, ctx.params.whiteBoardId))),
+
+    { params: t.Object({ whiteBoardId: t.String() }) }
+  )
+  .get(
     "/mouse/retrieve/:whiteBoardId",
     async (ctx) => {
       const mousePoints = await db
@@ -144,6 +167,7 @@ export const whiteboardRoute = ProtectedElysia({ prefix: "/whiteboard" })
           )
         )
         .innerJoin(user, eq(user.id, whiteBoardMouse.userId));
+      // .orderBy(desc(whiteBoardMouse.createdAt));
 
       const dedupedIds = new Set<string>();
 
@@ -183,6 +207,7 @@ export const whiteboardRoute = ProtectedElysia({ prefix: "/whiteboard" })
       ws.subscribe(`white-board-${ws.data.params.whiteBoardId}`);
     },
     message: async (ws, data) => {
+      // console.log(data.kind);
       switch (data.kind) {
         case "point": {
           const existingGroup = await db
@@ -206,6 +231,7 @@ export const whiteboardRoute = ProtectedElysia({ prefix: "/whiteboard" })
               y: data.y,
               id: data.id,
               whiteBoardPointGroupId: data.whiteBoardPointGroupId,
+              createdAt: data.createdAt,
             })
             .onConflictDoNothing();
 
@@ -237,6 +263,13 @@ export const whiteboardRoute = ProtectedElysia({ prefix: "/whiteboard" })
           } else {
             await db.insert(whiteBoardMouse).values(data);
           }
+          ws.publish(`white-board-${ws.data.params.whiteBoardId}`, data);
+          return;
+        }
+
+        case "eraser": {
+          await db.insert(whiteBoardEraser).values(data).onConflictDoNothing();
+
           ws.publish(`white-board-${ws.data.params.whiteBoardId}`, data);
         }
       }
