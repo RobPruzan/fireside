@@ -1,3 +1,4 @@
+import { nanoid } from "nanoid";
 import { Link, useParams } from "@tanstack/react-router";
 import {
   useCreateThreadMessageMutation,
@@ -122,7 +123,7 @@ export const Thread = ({ threadId }: { threadId: string }) => {
 
           if (e.key === "Enter" && !e.shiftKey) {
             createThreadMessageMutation.mutate({
-              id: crypto.randomUUID(),
+              id: nanoid(),
               message: currentMessage ?? "",
               createdAt: new Date().toISOString(),
             });

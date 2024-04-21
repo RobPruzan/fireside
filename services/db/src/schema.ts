@@ -17,7 +17,7 @@ import {
 } from "drizzle-orm/pg-core";
 import { createInsertSchema, createSelectSchema } from "drizzle-typebox";
 import { DatesToString } from "@fireside/utils";
-
+import { nanoid } from "nanoid";
 export const getOneYearAheadDate = () => {
   const currentDate = new Date();
   return new Date(
@@ -27,7 +27,9 @@ export const getOneYearAheadDate = () => {
   );
 };
 export const user = pgTable("user", {
-  id: uuid("id").defaultRandom().primaryKey(),
+  id: text("id")
+    .$defaultFn(() => nanoid())
+    .primaryKey(),
   displayName: text("name").notNull(),
   token: text("token").references(() => token.value),
   username: text("username").notNull(),
@@ -63,19 +65,23 @@ export const token = pgTable("token", {
 });
 
 export const user_to_user = pgTable("friend", {
-  id: uuid("id").defaultRandom().primaryKey(),
-  userOneId: uuid("userOneId").references(() => user.id),
-  userTwoId: uuid("userTwoId").references(() => user.id),
+  id: text("id")
+    .$defaultFn(() => nanoid())
+    .primaryKey(),
+  userOneId: text("userOneId").references(() => user.id),
+  userTwoId: text("userTwoId").references(() => user.id),
 });
 
 export const camp = pgTable("camp", {
-  id: uuid("id").defaultRandom().primaryKey(),
+  id: text("id")
+    .$defaultFn(() => nanoid())
+    .primaryKey(),
   name: text("name").notNull(),
   createdAt: timestamp("createdAt", { mode: "string", withTimezone: true })
     .$defaultFn(() => new Date().toISOString())
     .notNull(),
   updatedAt: timestamp("updated_at", { mode: "string" }),
-  createdBy: uuid("createdBy")
+  createdBy: text("createdBy")
     .references(() => user.id)
     .notNull(),
 });
@@ -89,11 +95,13 @@ export const campSchema = createInsertSchema(camp);
 //   return sql<string>`TO_CHAR(${dateTimeColumn}, 'YYYY-MM-DD"T"HH24:MI:SSTZ')`;
 // }
 export const campMessage = pgTable("campMessage", {
-  id: uuid("id").defaultRandom().primaryKey(),
-  userId: uuid("userId")
+  id: text("id")
+    .$defaultFn(() => nanoid())
+    .primaryKey(),
+  userId: text("userId")
     .notNull()
     .references(() => user.id),
-  campId: uuid("campId")
+  campId: text("campId")
     .notNull()
     .references(() => camp.id),
   message: text("message").notNull(),
@@ -103,11 +111,13 @@ export const campMessage = pgTable("campMessage", {
 });
 
 export const campThread = pgTable("campThread", {
-  id: uuid("id").defaultRandom().primaryKey(),
-  createdBy: uuid("createdBy")
+  id: text("id")
+    .$defaultFn(() => nanoid())
+    .primaryKey(),
+  createdBy: text("createdBy")
     .notNull()
     .references(() => user.id),
-  parentMessageId: uuid("campMessage")
+  parentMessageId: text("campMessage")
     .notNull()
     .references(() => campMessage.id),
   createdAt: timestamp("createdAt", { mode: "string", withTimezone: true })
@@ -126,11 +136,13 @@ export const requiredThreadInsertSchema = t.Intersect([
 ]);
 
 export const campThreadMessage = pgTable("campThreadMessage", {
-  id: uuid("id").defaultRandom().primaryKey(),
-  userId: uuid("userId")
+  id: text("id")
+    .$defaultFn(() => nanoid())
+    .primaryKey(),
+  userId: text("userId")
     .notNull()
     .references(() => user.id),
-  threadId: uuid("threadId")
+  threadId: text("threadId")
     .notNull()
     .references(() => campThread.id),
   message: text("message").notNull(),
@@ -158,11 +170,13 @@ export const requiredCampMessageInsertSchema = t.Intersect([
 ]);
 
 export const campMember = pgTable("campMember", {
-  id: uuid("id").defaultRandom().primaryKey(),
-  campId: uuid("camp_id")
+  id: text("id")
+    .$defaultFn(() => nanoid())
+    .primaryKey(),
+  campId: text("camp_id")
     .references(() => camp.id)
     .notNull(),
-  userId: uuid("user_id")
+  userId: text("user_id")
     .references(() => user.id)
     .notNull(),
 });
@@ -179,8 +193,10 @@ export const campMembersWithoutUserInsertSchema = createInsertSchema(
 );
 
 export const bonfire = pgTable("bonfire", {
-  id: uuid("id").defaultRandom().primaryKey(),
-  campId: uuid("camp_id")
+  id: text("id")
+    .$defaultFn(() => nanoid())
+    .primaryKey(),
+  campId: text("camp_id")
     .references(() => camp.id)
     .notNull(),
   name: text("name").notNull(),
@@ -193,11 +209,13 @@ export const bonfire = pgTable("bonfire", {
 export const bonfireInsertSchema = createInsertSchema(bonfire);
 
 export const userToBonfire = pgTable("userToBonfire", {
-  id: uuid("id").defaultRandom().primaryKey(),
-  userId: uuid("userId")
+  id: text("id")
+    .$defaultFn(() => nanoid())
+    .primaryKey(),
+  userId: text("userId")
     .references(() => user.id)
     .notNull(),
-  bonfireId: uuid("bonfireId")
+  bonfireId: text("bonfireId")
     .references(() => bonfire.id)
     .notNull(),
   joinedAt: timestamp("createdAt", { mode: "string", withTimezone: true })
@@ -206,11 +224,13 @@ export const userToBonfire = pgTable("userToBonfire", {
 });
 
 export const friendRequest = pgTable("friendRequest", {
-  id: uuid("id").defaultRandom().primaryKey(),
-  fromUserId: uuid("fromUserId")
+  id: text("id")
+    .$defaultFn(() => nanoid())
+    .primaryKey(),
+  fromUserId: text("fromUserId")
     .references(() => user.id)
     .notNull(),
-  toUserId: uuid("toUserId")
+  toUserId: text("toUserId")
     .references(() => user.id)
     .notNull(),
   deleted: boolean("deleted").default(false),
@@ -221,11 +241,13 @@ export const friendRequest = pgTable("friendRequest", {
 export type FriendRequest = InferSelectModel<typeof friendRequest>;
 
 export const friend = pgTable("friend", {
-  id: uuid("id").defaultRandom().primaryKey(),
-  userOneId: uuid("userOneId")
+  id: text("id")
+    .$defaultFn(() => nanoid())
+    .primaryKey(),
+  userOneId: text("userOneId")
     .references(() => user.id)
     .notNull(),
-  userTwoId: uuid("userTwoId")
+  userTwoId: text("userTwoId")
     .references(() => user.id)
     .notNull(),
   // problem for later
@@ -237,17 +259,19 @@ export const friend = pgTable("friend", {
 export type Friend = InferSelectModel<typeof friend>;
 
 export const userMessageReaction = pgTable("userMessageReaction", {
-  id: uuid("id").defaultRandom().primaryKey(),
-  userId: uuid("userId")
+  id: text("id")
+    .$defaultFn(() => nanoid())
+    .primaryKey(),
+  userId: text("userId")
     .references(() => user.id)
     .notNull(),
-  messageId: uuid("messageId")
+  messageId: text("messageId")
     .references(() => campMessage.id)
     .notNull(),
   createdAt: timestamp("createdAt", { mode: "string", withTimezone: true })
     .$defaultFn(() => new Date().toISOString())
     .notNull(),
-  reactionAssetId: uuid("reactionAssetId")
+  reactionAssetId: text("reactionAssetId")
     .references(() => reactionAsset.id)
     .notNull(),
 });
@@ -260,7 +284,9 @@ export const userMessageReactionInsertSchema = createInsertSchema(
 );
 
 export const reactionAsset = pgTable("reactionAsset", {
-  id: uuid("id").defaultRandom().primaryKey(),
+  id: text("id")
+    .$defaultFn(() => nanoid())
+    .primaryKey(),
   imgSrc: text("imgSrc").notNull(),
   alt: text("alt").notNull(),
 });
@@ -348,21 +374,22 @@ export const emojis = [
   },
 ];
 
-export const genWhiteBoardPointId = () =>
-  "white_board_point_" + crypto.randomUUID();
+export const genWhiteBoardPointId = () => "white_board_point_" + nanoid();
 export const genWhiteBoardPointGroupId = () =>
-  "white_board_point_group_" + crypto.randomUUID();
+  "white_board_point_group_" + nanoid();
 
-export const genWhiteBoardId = () => "white_board_point_" + crypto.randomUUID();
+export const genWhiteBoardId = () => "white_board_point_" + nanoid();
 
 export const whiteBoard = pgTable("whiteBoard", {
-  id: uuid("id").defaultRandom().primaryKey(),
+  id: text("id")
+    .$defaultFn(() => nanoid())
+    .primaryKey(),
 });
 export const whiteBoardInsertSchema = createInsertSchema(whiteBoard);
 export const whiteBoardPointGroup = pgTable("whiteBoardPointGroup", {
   id: text("id").$defaultFn(genWhiteBoardPointGroupId).primaryKey(),
   color: text("color").$type<(typeof whiteBoardColors)[number]>().notNull(),
-  whiteBoardId: uuid("whiteBoardId").references(() => whiteBoard.id, {
+  whiteBoardId: text("whiteBoardId").references(() => whiteBoard.id, {
     onDelete: "cascade",
   }),
 });
@@ -396,21 +423,20 @@ export const whiteBoardColors = [
 
 export type WhiteBoardColor = (typeof whiteBoardColors)[number];
 
-export const getWhiteBoardMouseId = () =>
-  "white_board_mouse_" + crypto.randomUUID();
+export const getWhiteBoardMouseId = () => "white_board_mouse_" + nanoid();
 
 export const whiteBoardMouse = pgTable("whiteBoardMouseSchema", {
   id: text("id").$defaultFn(getWhiteBoardMouseId).primaryKey(),
   x: doublePrecision("x").notNull(),
   y: doublePrecision("y").notNull(),
-  whiteBoardId: uuid("whiteBoardId").references(() => whiteBoard.id, {
+  whiteBoardId: text("whiteBoardId").references(() => whiteBoard.id, {
     onDelete: "cascade",
   }),
   kind: text("kind")
     .$type<"mouse">()
     .$defaultFn(() => "mouse")
     .notNull(),
-  userId: uuid("userId")
+  userId: text("userId")
     .notNull()
     .references(() => user.id),
   createdAt: text("createdAt"),
@@ -441,14 +467,14 @@ export const whiteBoardEraser = pgTable("whiteBoardErased", {
   id: text("id").$defaultFn(getWhiteBoardMouseId).primaryKey(),
   x: doublePrecision("x").notNull(),
   y: doublePrecision("y").notNull(),
-  whiteBoardId: uuid("whiteBoardId").references(() => whiteBoard.id, {
+  whiteBoardId: text("whiteBoardId").references(() => whiteBoard.id, {
     onDelete: "cascade",
   }),
   kind: text("kind")
     .$type<"eraser">()
     .$defaultFn(() => "eraser")
     .notNull(),
-  userId: uuid("userId")
+  userId: text("userId")
     .notNull()
     .references(() => user.id),
   createdAt: timestamp("createdAt", {
@@ -480,15 +506,17 @@ export const requiredWhiteBoardEraserInsertSchema = t.Required(
 export type WhiteBoardErased = Static<typeof whiteBoardEraserInsertSchema>;
 
 export const connectedToCamp = pgTable("connectToCamp", {
-  id: uuid("id").defaultRandom().primaryKey(),
+  id: text("id")
+    .$defaultFn(() => nanoid())
+    .primaryKey(),
 });
 
 export const messageWhiteBoard = pgTable("messageWhiteBoard", {
   id: text("id").$defaultFn(genWhiteBoardId).primaryKey(),
-  messageId: uuid("messageId")
+  messageId: text("messageId")
     .references(() => campMessage.id)
     .notNull(),
-  whiteBoardId: uuid("whiteBoardId")
+  whiteBoardId: text("whiteBoardId")
     .references(() => whiteBoard.id)
     .notNull(),
 });
@@ -501,9 +529,9 @@ export type MessageWhiteBoardInsertSchema = Static<
 
 export const whiteBoardImg = pgTable("whiteBoardImg", {
   id: text("id")
-    .$defaultFn(() => crypto.randomUUID())
+    .$defaultFn(() => nanoid())
     .primaryKey(),
-  whiteBoardId: uuid("whiteBoardId").references(() => whiteBoard.id, {
+  whiteBoardId: text("whiteBoardId").references(() => whiteBoard.id, {
     onDelete: "cascade",
   }),
   imgUrl: text("imgUrl").notNull(),
@@ -514,29 +542,29 @@ export const whiteBoardImg = pgTable("whiteBoardImg", {
 export type WhiteBoardImgSelect = InferSelectModel<typeof whiteBoardImg>;
 
 export const transcribeGroup = pgTable("transcribeGroup", {
-  id: uuid("id")
-    .$defaultFn(() => crypto.randomUUID())
+  id: text("id")
+    .$defaultFn(() => nanoid())
     .primaryKey(),
   createdAt: doublePrecision("createdAt")
     .$defaultFn(() => Date.now())
     .notNull(),
-  campId: uuid("campID").references(() => camp.id),
+  campId: text("campID").references(() => camp.id),
 });
 
 export const transcribeJob = pgTable("job", {
-  id: uuid("id")
-    .$defaultFn(() => crypto.randomUUID())
+  id: text("id")
+    .$defaultFn(() => nanoid())
     .primaryKey(),
-  transcribeGroupId: uuid("transcribeGroupId").references(
+  transcribeGroupId: text("transcribeGroupId").references(
     () => transcribeGroup.id
   ),
 });
 
 export const transcription = pgTable("transcription", {
-  id: uuid("id")
-    .$defaultFn(() => crypto.randomUUID())
+  id: text("id")
+    .$defaultFn(() => nanoid())
     .primaryKey(),
-  jobId: uuid("transcribeJobId").references(() => transcribeJob.id),
+  jobId: text("transcribeJobId").references(() => transcribeJob.id),
   text: text("text").notNull(),
   createdAt: doublePrecision("createdAt")
     .$defaultFn(() => Date.now())

@@ -1,3 +1,4 @@
+import { nanoid } from "nanoid";
 import {
   eq,
   whiteBoard,
@@ -332,7 +333,7 @@ export const uploadFile = async (
   file: File,
   options?: Partial<{ onlyImage: boolean }>
 ) => {
-  const fileId = crypto.randomUUID();
+  const fileId = nanoid();
   const extension = extensionMapping[file.type];
   const targetFile = Bun.file(`./upload/${fileId}${extension}`);
 

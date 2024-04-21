@@ -1,3 +1,4 @@
+import { nanoid } from "nanoid";
 import { Camp } from "@/components/camps/Camp";
 import { Explore } from "@/components/camps/Explore";
 import { Friends } from "@/components/camps/Friends";
@@ -124,7 +125,7 @@ export const campRoute = createRoute({
     const transcriber = useTranscriber({
       onTranscribe: ({ text, lastTimeStamp }) => {
         transcriptionSubscriptionRef.current?.send({
-          jobId: crypto.randomUUID(), // useful if we take the chunks that come in
+          jobId: nanoid(), // useful if we take the chunks that come in
           text,
         });
       },

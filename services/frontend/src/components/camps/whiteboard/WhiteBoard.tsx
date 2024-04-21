@@ -1,3 +1,4 @@
+import { nanoid } from "nanoid";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { LoadingSection, LoadingSpinner } from "@/components/ui/loading";
 import { client, promiseDataOrThrow } from "@/edenClient";
@@ -9,8 +10,7 @@ import {
 } from "@fireside/backend/src/whiteboard-endpoints";
 import { WhiteBoardImgSelect, WhiteBoardMouse } from "@fireside/db";
 
-export const genWhiteBoardPointId = () =>
-  "white_board_point_" + crypto.randomUUID();
+export const genWhiteBoardPointId = () => "white_board_point_" + nanoid();
 export const whiteBoardColors = [
   "blue",
   "red",
@@ -638,7 +638,7 @@ const WhiteBoard = ({
           };
           subscription?.send({
             ...newMouse,
-            id: crypto.randomUUID(),
+            id: nanoid(),
             kind: "mouse",
             whiteBoardId,
             userId: user.id,
@@ -668,7 +668,7 @@ const WhiteBoard = ({
 
     subscription?.send({
       ...newMouse,
-      id: crypto.randomUUID(),
+      id: nanoid(),
       kind: "mouse",
       whiteBoardId,
       userId: user.id,
@@ -712,7 +712,7 @@ const WhiteBoard = ({
       case "eraser": {
         const newEraserPoint = {
           ...newMouse,
-          id: crypto.randomUUID(),
+          id: nanoid(),
           kind: "eraser" as const,
           userId: user.id,
           whiteBoardId,
@@ -724,7 +724,7 @@ const WhiteBoard = ({
           ...(prev ?? []),
           {
             ...newMouse,
-            id: crypto.randomUUID(),
+            id: nanoid(),
             kind: "eraser" as const,
             userId: user.id,
             whiteBoardId,
@@ -824,7 +824,7 @@ const WhiteBoard = ({
         }}
         onMouseMove={handleMouseInteraction}
         onMouseDown={(e) => {
-          newGroupIdRef.current = crypto.randomUUID();
+          newGroupIdRef.current = nanoid();
           setIsMouseDown(true);
 
           handleMouseInteraction(e, true);

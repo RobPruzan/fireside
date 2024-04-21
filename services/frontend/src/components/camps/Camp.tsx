@@ -1,3 +1,4 @@
+import { nanoid } from "nanoid";
 import {
   Link,
   Outlet,
@@ -688,7 +689,7 @@ const MessageSection = memo(({ campId }: { campId: string }) => {
               }
 
               if (e.key === "Enter" && !e.shiftKey) {
-                const parentMessageId = crypto.randomUUID();
+                const parentMessageId = nanoid();
 
                 const newMessage = {
                   campId,
@@ -699,7 +700,7 @@ const MessageSection = memo(({ campId }: { campId: string }) => {
                 };
                 const newThread = {
                   createdAt: new Date().toISOString(),
-                  id: crypto.randomUUID(),
+                  id: nanoid(),
                   parentMessageId: parentMessageId,
                 };
 
@@ -723,7 +724,7 @@ const MessageSection = memo(({ campId }: { campId: string }) => {
                   createWhiteBoardMessageMutation.mutate({
                     messageId: parentMessageId,
                     whiteBoardId: nonCreatedMessageWhiteBoardInfo.whiteBoardId,
-                    id: crypto.randomUUID(),
+                    id: nanoid(),
                   });
                 }
 
@@ -755,7 +756,7 @@ const MessageSection = memo(({ campId }: { campId: string }) => {
                   if (nonCreatedMessageWhiteBoardInfo) {
                     return;
                   }
-                  const whiteBoardId = crypto.randomUUID();
+                  const whiteBoardId = nanoid();
                   createWhiteBoardMutation.mutate({
                     whiteBoardId,
                   });
@@ -873,7 +874,7 @@ const ReactionMenuContent = memo(
             reactMutation.mutate({
               messageId,
               reactionAssetId: asset.id,
-              id: crypto.randomUUID(),
+              id: nanoid(),
             });
           }}
           variant={"ghost"}
@@ -1132,7 +1133,7 @@ const ReactionBox = memo(
               reactMutation.mutate({
                 messageId: messageId,
                 reactionAssetId: asset.id,
-                id: crypto.randomUUID(),
+                id: nanoid(),
               });
             }}
             className={cn(["h-9 w-9 p-1 ", existingReaction && "bg-muted/50"])}

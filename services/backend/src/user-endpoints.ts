@@ -8,6 +8,7 @@ import {
   db,
   // alias,
 } from "@fireside/db";
+import { nanoid } from "nanoid";
 
 import { Elysia, t, type CookieOptions } from "elysia";
 import { ProtectedElysia, getDeleteAuthCookie } from "./lib";
@@ -102,7 +103,7 @@ export const userRoute = new Elysia({
 
       const passwordHash = await getHash({ str: ctx.body.password });
 
-      const originalToken = crypto.randomUUID();
+      const originalToken = nanoid();
 
       const hashedToken = await getHash({ str: originalToken });
 
@@ -177,7 +178,7 @@ export const userRoute = new Elysia({
         ctx.set.status = 401;
         throw new Error(`Invalid password for ${ctx.body.username}`);
       }
-      const originalToken = crypto.randomUUID();
+      const originalToken = nanoid();
       const hashedToken = await getHash({ str: originalToken });
 
       const insertedToken = (
