@@ -563,18 +563,26 @@ const WhiteBoard = ({
 
     whiteBoardImages.forEach((whiteBoardImg) => {
       if (whiteBoardImg.image.complete) {
-        ctx.drawImage(
-          whiteBoardImg.image,
-          whiteBoardImg.x,
-          whiteBoardImg.y,
-          200,
-          200
-        );
+        try {
+          ctx.drawImage(
+            whiteBoardImg.image,
+            whiteBoardImg.x,
+            whiteBoardImg.y,
+            200,
+            200
+          );
+        } catch (e) {
+          console.warn(e);
+        }
       }
     });
     whiteBoardMousePoints?.forEach((mousePoint) => {
       if (pencilImage.complete) {
-        ctx.drawImage(pencilImage, mousePoint.x, mousePoint.y, 20, 20);
+        try {
+          ctx.drawImage(pencilImage, mousePoint.x, mousePoint.y, 20, 20);
+        } catch (e) {
+          console.warn(e);
+        }
       }
       ctx.fillStyle = "black";
       ctx.font = "10px";
