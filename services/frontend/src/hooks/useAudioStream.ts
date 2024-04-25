@@ -522,38 +522,12 @@ export const useWebRTCConnection = ({
       setMediaRecorder(new MediaRecorder(mediaStream));
     };
 
-    // if (mediaRecorder.state === '')
-
     mediaRecorder.start();
-    // mediaRecorder.onstop = () => {
-
-    // }
 
     setTimeout(() => {
       mediaRecorder.stop();
     }, 6000);
   }, [mediaRecorder, mediaStream]);
-  //     let recorder = new MediaRecorder(stream);
-  // let audioChunks = [];
-
-  // recorder.ondataavailable = event => {
-  //   audioChunks.push(event.data);
-  // };
-
-  // recorder.onstop = () => {
-  //   let audioBlob = new Blob(audioChunks);
-  //   let audioUrl = URL.createObjectURL(audioBlob);
-  //   let audio = new Audio(audioUrl);
-  //   audio.play();
-  // };
-
-  // recorder.start();
-
-  // // Stop recording after 5 seconds
-  // setTimeout(() => {
-  //   recorder.stop();
-  // }, 5000);
-
   const listenForAudio = async () => {
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
     setMediaRecorder(new MediaRecorder(stream));

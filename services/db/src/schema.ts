@@ -570,3 +570,18 @@ export const transcription = pgTable("transcription", {
     .$defaultFn(() => Date.now())
     .notNull(),
 });
+
+export const aiMessageBoardAnswers = pgTable("aiMessageBoardAnswers", {
+  id: text("id")
+    .$defaultFn(() => nanoid())
+    .primaryKey(),
+  threadId: text("threadId")
+    .references(() => campThread.id)
+    .notNull(),
+  transcriptGroupId: text("transcriptId")
+    .references(() => transcribeGroup.id)
+    .notNull(),
+  relevantTranscript: text("relevantTranscript"),
+  attemptedAnswer: text("attemptedAnswer").notNull(),
+  createdAt: doublePrecision("createdAt").$defaultFn(() => Date.now()),
+});

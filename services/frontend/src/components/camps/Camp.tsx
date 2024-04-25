@@ -84,10 +84,12 @@ import {
   useReactToMessageMutation,
   useRemoveReactionMutation,
   useGetCamp,
+  useGetAIMessageBoardAnswer,
 } from "./message-state";
 import {
   useCreateTranscriptionGroup,
   useDefinedUser,
+  useGetTranscription,
   useGetTranscriptionGroup,
 } from "./camps-state";
 import { Setter } from "@/types/utils";
@@ -480,10 +482,11 @@ export const Camp = () => {
                     return (
                       <>
                         <ResizablePanel>
-                          <div className="h-full border-l w-full text-xs overflow-y-auto">
+                          <div className="h-full w-full text-xs overflow-y-auto">
                             <Transcribe
                               slot={
                                 <Button
+                                  variant={"ghost"}
                                   className="absolute top-3 right-3"
                                   onClick={() => {
                                     navigate({
@@ -903,6 +906,18 @@ const Message = memo(
     campId: string;
     messageWhiteBoardId: Nullish<string>;
   }) => {
+    const { transcriptionGroup } = useGetTranscriptionGroup({ campId });
+    const { transcription } = useGetTranscription({
+      groupId: transcriptionGroup?.id!,
+      enabled: !!transcriptionGroup?.id,
+    });
+
+    // const aiMessageBoardAnswerQuery = useGetAIMessageBoardAnswer({
+    //   transcriptGroupId: transcriptionGroup?.id,
+    //   messageId: messageObj.id,
+    // });
+
+    // console.log({ d: aiMessageBoardAnswerQuery.data });
     const { threads } = useGetThreads({ campId });
     const navigate = useNavigate({ from: "/camp/$campId" });
     const thread = threads.find(
@@ -917,84 +932,89 @@ const Message = memo(
 
     const [whiteBoardLocked, setWhiteBoardLocked] = useState(false);
     return (
-      <div
-        className={cn([
-          "w-full flex ",
-          order === "last" && "pb-4",
-          order === "first" && "pt-4",
-        ])}
-      >
-        <ContextMenu
-          onOpenChange={(v) => {
-            if (v) {
-              setMessageWithContextMenuId(messageObj.id);
-              return;
-            }
-
-            setMessageWithContextMenuId(null);
-          }}
+      <>
+        <div
+          className={cn([
+            "w-full flex ",
+            order === "last" && "pb-4",
+            order === "first" && "pt-4",
+          ])}
         >
-          <ContextMenuTrigger asChild>
-            <div
-              className={cn([
-                "space-y-4 border-2 border-accent/50 w-full p-3 rounded-md",
-                messageWithContextMenuId === messageObj.id && "bg-muted",
-              ])}
-            >
-              <div className="flex items-center space-x-4">
-                <div className="flex items-start space-x-2 w-full">
-                  <Avatar className="w-10 h-10 grid place-content-center border">
-                    <Image size={20} />
-                  </Avatar>
-                  <div className="text-sm font-medium leading-none">
-                    <h3 className="text-base">{messageObj.user.username}</h3>
-                    <span className="text-sm text-gray-500 dark:text-gray-400">
-                      <div className="flex gap-x-1">
-                        <span>
-                          {new Date(messageObj.createdAt).toLocaleDateString()}
-                        </span>
-                        <span>
-                          {new Date(messageObj.createdAt).toLocaleTimeString()}
-                        </span>
-                      </div>
-                    </span>
-                    <div className="flex gap-x-1 items-center">
-                      {thread?.id ? (
-                        <Button
-                          onClick={() => {
-                            navigate({
-                              search: (prev) => ({
-                                ...prev,
-                                threadId: thread.id,
-                              }),
-                            });
-                          }}
-                          variant={"ghost"}
-                          className="  h-fit py-1 pl-1 px-1 pb-1 pt-1 pr-1  "
-                        >
-                          <MessageCircleIcon
-                            className="text-primary"
-                            size={20}
-                          />
-                        </Button>
-                      ) : (
-                        <Button
-                          onClick={() => {
-                            toast({
-                              title: "Thread not available yet",
-                              description: "Try again in a few seconds",
-                            });
-                          }}
-                          variant={"ghost"}
-                          className="  h-fit py-1 pl-1 px-1 pb-1 pt-1 pr-1  "
-                        >
-                          <MessageCircleIcon
-                            className="text-primary"
-                            size={20}
-                          />
-                        </Button>
-                      )}
-                      {/* <Button
+          <ContextMenu
+            onOpenChange={(v) => {
+              if (v) {
+                setMessageWithContextMenuId(messageObj.id);
+                return;
+              }
+
+              setMessageWithContextMenuId(null);
+            }}
+          >
+            <ContextMenuTrigger asChild>
+              <div
+                className={cn([
+                  "space-y-4 border-2 border-accent/50 w-full p-3 rounded-md",
+                  messageWithContextMenuId === messageObj.id && "bg-muted",
+                ])}
+              >
+                <div className="flex items-center space-x-4">
+                  <div className="flex items-start space-x-2 w-full">
+                    <Avatar className="w-10 h-10 grid place-content-center border">
+                      <Image size={20} />
+                    </Avatar>
+                    <div className="text-sm font-medium leading-none">
+                      <h3 className="text-base">{messageObj.user.username}</h3>
+                      <span className="text-sm text-gray-500 dark:text-gray-400">
+                        <div className="flex gap-x-1">
+                          <span>
+                            {new Date(
+                              messageObj.createdAt
+                            ).toLocaleDateString()}
+                          </span>
+                          <span>
+                            {new Date(
+                              messageObj.createdAt
+                            ).toLocaleTimeString()}
+                          </span>
+                        </div>
+                      </span>
+                      <div className="flex gap-x-1 items-center">
+                        {thread?.id ? (
+                          <Button
+                            onClick={() => {
+                              navigate({
+                                search: (prev) => ({
+                                  ...prev,
+                                  threadId: thread.id,
+                                }),
+                              });
+                            }}
+                            variant={"ghost"}
+                            className="  h-fit py-1 pl-1 px-1 pb-1 pt-1 pr-1  "
+                          >
+                            <MessageCircleIcon
+                              className="text-primary"
+                              size={20}
+                            />
+                          </Button>
+                        ) : (
+                          <Button
+                            onClick={() => {
+                              toast({
+                                title: "Thread not available yet",
+                                description: "Try again in a few seconds",
+                              });
+                            }}
+                            variant={"ghost"}
+                            className="  h-fit py-1 pl-1 px-1 pb-1 pt-1 pr-1  "
+                          >
+                            <MessageCircleIcon
+                              className="text-primary"
+                              size={20}
+                            />
+                          </Button>
+                        )}
+                        {/* <Button
                         variant={"ghost"}
                         onClick={async () => {
                           await createWhiteBoardMutation.mutateAsync({
@@ -1015,77 +1035,100 @@ const Message = memo(
                         <Pencil className="text-primary" size={20} />
                       </Button> */}
 
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button className="h-7 w-7 p-1" variant={"ghost"}>
-                            <SmilePlus className="text-primary" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent className="w-48 flex flex-wrap gap-2 items-center">
-                          <ReactionMenuContent
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button className="h-7 w-7 p-1" variant={"ghost"}>
+                              <SmilePlus className="text-primary" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent className="w-48 flex flex-wrap gap-2 items-center">
+                            <ReactionMenuContent
+                              campId={campId}
+                              messageId={messageObj.id}
+                            />
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                        <div className="flex flex-wrap gap-x-2">
+                          <ReactionBox
                             campId={campId}
                             messageId={messageObj.id}
                           />
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                      <div className="flex flex-wrap gap-x-2">
-                        <ReactionBox
-                          campId={campId}
-                          messageId={messageObj.id}
-                        />
+                        </div>
                       </div>
                     </div>
                   </div>
                 </div>
-              </div>
-              <div className="max-w-none break-words max-h-[700px]">
-                {messageObj.message}
+                <div className="max-w-none break-words max-h-[700px]">
+                  {messageObj.message}
 
-                {messageWhiteBoardId && (
-                  <WhiteBoardLoader
-                    options={{
-                      canPan: whiteBoardLocked,
-                      readOnly: !whiteBoardLocked,
-                      slot: (
-                        <Button
-                          onClick={() => {
-                            setWhiteBoardLocked((prev) => !prev);
-                          }}
-                          className="absolute top-5 right-5"
-                        >
-                          {/* <Lock /> */}
-                          {whiteBoardLocked ? <Unlock /> : <Lock />}
-                        </Button>
-                      ),
-                    }}
-                    whiteBoardId={messageWhiteBoardId}
+                  {messageWhiteBoardId && (
+                    <WhiteBoardLoader
+                      options={{
+                        canPan: whiteBoardLocked,
+                        readOnly: !whiteBoardLocked,
+                        slot: (
+                          <Button
+                            onClick={() => {
+                              setWhiteBoardLocked((prev) => !prev);
+                            }}
+                            className="absolute top-5 right-5"
+                          >
+                            {/* <Lock /> */}
+                            {whiteBoardLocked ? <Unlock /> : <Lock />}
+                          </Button>
+                        ),
+                      }}
+                      whiteBoardId={messageWhiteBoardId}
+                    />
+                  )}
+                </div>
+              </div>
+            </ContextMenuTrigger>
+            <ContextMenuContent>
+              <ContextMenuItem className="flex gap-x-2">
+                <Edit size={17} /> Edit
+              </ContextMenuItem>
+
+              <ContextMenuSub>
+                <ContextMenuSubTrigger className="flex gap-x-2 ">
+                  <SmilePlus size={17} /> Reactions
+                </ContextMenuSubTrigger>
+                <ContextMenuSubContent className="w-48 flex flex-wrap gap-2 items-center">
+                  <ReactionMenuContent
+                    campId={campId}
+                    messageId={messageObj.id}
                   />
-                )}
-              </div>
-            </div>
-          </ContextMenuTrigger>
-          <ContextMenuContent>
-            <ContextMenuItem className="flex gap-x-2">
-              <Edit size={17} /> Edit
-            </ContextMenuItem>
+                </ContextMenuSubContent>
+              </ContextMenuSub>
+              <ContextMenuItem className="flex gap-x-2 text-destructive">
+                <Trash size={17} /> Delete
+              </ContextMenuItem>
+            </ContextMenuContent>
+          </ContextMenu>
+        </div>
+        {/* <div className="text-xs text-muted-foreground">
+          {run(() => {
+            switch (aiMessageBoardAnswerQuery.data?.kind) {
+              case "success": {
+                return (
+                  <div className="flex flex-col gap-y-3">
+                    <div>
+                      {aiMessageBoardAnswerQuery.data.relevantTranscript &&
+                        "Transcription: "}
+                      {aiMessageBoardAnswerQuery.data.relevantTranscript}
+                    </div>
 
-            <ContextMenuSub>
-              <ContextMenuSubTrigger className="flex gap-x-2 ">
-                <SmilePlus size={17} /> Reactions
-              </ContextMenuSubTrigger>
-              <ContextMenuSubContent className="w-48 flex flex-wrap gap-2 items-center">
-                <ReactionMenuContent
-                  campId={campId}
-                  messageId={messageObj.id}
-                />
-              </ContextMenuSubContent>
-            </ContextMenuSub>
-            <ContextMenuItem className="flex gap-x-2 text-destructive">
-              <Trash size={17} /> Delete
-            </ContextMenuItem>
-          </ContextMenuContent>
-        </ContextMenu>
-      </div>
+                    <div>
+                      Attempted Answer:{" "}
+                      {aiMessageBoardAnswerQuery.data.attemptedAnswer}
+                    </div>
+                  </div>
+                );
+              }
+            }
+          })}
+        </div> */}
+      </>
     );
   }
 );

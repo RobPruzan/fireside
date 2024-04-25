@@ -87,27 +87,21 @@ export const Thread = ({ threadId }: { threadId: string }) => {
           .map((threadMessage, index) => (
             <div
               className={cn([
-                " w-fit p-2 flex items-start flex-col",
-                threadMessage.userId === user.id ? "ml-auto" : "mr-auto",
+                " w-fit p-2 flex items-start flex-col max-w-[75%]",
+                threadMessage.userId === user.id ? "ml-auto " : "mr-auto ",
                 index === threadMessages.length - 1 && "pb-4",
                 index === 0 && "pt-4",
               ])}
             >
               {threadMessage.user.username}
-              <div className="flex">
-                <div
-                  className={cn([
-                    "border rounded-md  p-2",
-                    threadMessage.userId === user.id && "bg-primary",
-                  ])}
-                >
-                  {threadMessage.message}
-                </div>
-
-                {/* <div className="text-xs flex items-center">
-                {new Date(threadMessage.createdAt).toLocaleTimeString()}
-              </div> */}
-              </div>
+              <pre
+                className={cn([
+                  "border rounded-md  p-2 font-sans w-full text-wrap text-sm",
+                  threadMessage.userId === user.id && "bg-primary",
+                ])}
+              >
+                {threadMessage.message}
+              </pre>
             </div>
           ))}
       </div>
@@ -132,7 +126,7 @@ export const Thread = ({ threadId }: { threadId: string }) => {
             e.preventDefault();
           }
         }}
-        className="h-[50px]"
+        className="h-[50px] mb-1 border-2 border-accent/50"
       />
     </div>
   );

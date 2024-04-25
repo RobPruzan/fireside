@@ -1,5 +1,10 @@
 import { cn } from "@/lib/utils";
-import { Link, useMatchRoute, useSearch } from "@tanstack/react-router";
+import {
+  Link,
+  useMatchRoute,
+  useNavigate,
+  useSearch,
+} from "@tanstack/react-router";
 import {
   AudioLines,
   ChevronLeft,
@@ -35,13 +40,10 @@ import { CreateCampDialog } from "./CreateCampDialog";
 
 export const CampDynamicSideBar = () => {
   const [sideBarOpen, setSideBarOpen] = useAtom(dynamicSideBarOpen);
-  const [modalOpen, setModalOpen] = useAtom(createCampModalOpen);
   const [campSearch, setCampSearch] = useState("");
-  const [newCampRoomName, setNewCampRoomName] = useState("");
   const { camps } = useUserCamps();
   const match = useMatchRoute();
-  const search = useSearch({ from: "/root-auth/camp-layout" });
-  const createCampMutation = useCreateCampMutation();
+  const navigate = useNavigate();
 
   // useScreenSize({ // need to think of a better api, when should it fire
   //   width: {
@@ -104,22 +106,23 @@ export const CampDynamicSideBar = () => {
             )
             .map((camp) => (
               <div className="flex w-full items-center gap-x-2" key={camp.id}>
-                <Link
-                  // search={(prev) => {}}
-                  to="/camp/$campId"
-                  params={{
-                    campId: camp.id,
+                <Button
+                  onClick={() => {
+                    navigate({
+                      to: "/camp/$campId",
+                      params: {
+                        campId: camp.id,
+                      },
+                    });
                   }}
-                  className={buttonVariants({
-                    className: cn([
-                      "py-7 w-full flex justify-between",
-                      match({
-                        to: "/camp/$campId",
-                        params: { campId: camp.id },
-                      }) && "bg-accent",
-                    ]),
-                    variant: "ghost",
-                  })}
+                  variant={"ghost"}
+                  className={cn([
+                    "py-7 w-full flex justify-between",
+                    match({
+                      to: "/camp/$campId",
+                      params: { campId: camp.id },
+                    }) && "bg-accent",
+                  ])}
                 >
                   <div>
                     {/* <div className="rounded-full bg-green-200 border-green-100 border h-5 w-5"></div> */}
@@ -132,7 +135,7 @@ export const CampDynamicSideBar = () => {
                     </div>
                   </div>
                   <div className="relative w-1/4 flex items-center justify-end"></div>
-                </Link>
+                </Button>
                 {/* <Button className="h-full p-0" variant={"ghost"}>
                   <AudioLines />
                 </Button> */}

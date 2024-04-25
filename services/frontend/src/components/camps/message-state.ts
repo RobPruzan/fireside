@@ -5,6 +5,7 @@ import {
   useQueryClient,
   useMutation,
   queryOptions,
+  useQuery,
 } from "@tanstack/react-query";
 import { useToast } from "../ui/use-toast";
 import { useDefinedUser } from "./camps-state";
@@ -257,4 +258,30 @@ export const useRemoveReactionMutation = ({ campId }: { campId: string }) => {
   });
 
   return removeReactionMutation;
+};
+
+export const useGetAIMessageBoardAnswer = ({
+  messageId,
+  transcriptGroupId,
+}: {
+  transcriptGroupId: null | string | undefined;
+  messageId: string;
+}) => {
+  return useQuery({
+    queryKey: ["ai-message-board-answer", messageId, transcriptGroupId],
+    enabled: !!transcriptGroupId,
+    queryFn: () => {
+      if (!transcriptGroupId) {
+        throw new Error("Transcript id cant be nullish");
+      }
+
+      return promiseDataOrThrow(
+        client.api.protected.mistral
+          .question({ messageId })({
+            transcriptGroupId,
+          })
+          .get()
+      );
+    },
+  });
 };

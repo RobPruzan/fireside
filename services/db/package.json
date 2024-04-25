@@ -8,6 +8,7 @@
     "migrate:generate": "drizzle-kit generate:pg --schema=./src/schema.ts",
     "migrate:run": "bun run src/migrate.ts",
     "seed:emoji": "bun run src/seed-emoji.ts",
+    "seed:ai": "bun run src/seed-ai.ts",
     "build": "tsc",
     "studio": "drizzle-kit studio"
   },
@@ -16,6 +17,7 @@
   "license": "ISC",
   "dependencies": {
     "@fireside/utils": "*",
+    "@fireside/backend": "*",
     "@sinclair/typebox": "^0.32.14",
     "dotenv": "^16.4.5",
     "drizzle-orm": "^0.29.3",

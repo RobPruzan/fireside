@@ -12,6 +12,8 @@ if (process.env.NODE_ENV === "production") {
   config({ path: join(__dirname, "..", ".env.production") });
   config({ path: join(__dirname, ".env.production") });
 } else {
+  config({ path: join(__dirname, "..", ".env.local") });
+  config({ path: join(__dirname, ".env.local") });
   config({ path: join(__dirname, "..", ".env") });
   config({ path: join(__dirname, ".env") });
   config({ path: join(__dirname, "..", ".env.development") });

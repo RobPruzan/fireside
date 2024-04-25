@@ -14,12 +14,21 @@ import {
   requiredThreadInsertSchema,
   db,
   safeUserSelectSchema,
+  transcribeGroup,
+  transcribeJob,
+  desc,
+  transcription,
+  aiMessageBoardAnswers,
+  campThreadMessage,
 } from "@fireside/db";
 import { t, type Static } from "elysia";
 
 import { cleanedUserCols } from "./camp-endpoints";
 import { ProtectedElysia } from "./lib";
 import { createSelectSchema } from "drizzle-typebox";
+import { createChatConfig, mistralClient } from "./mistral";
+import { TypeCompiler } from "@sinclair/typebox/compiler";
+import { run } from "@fireside/utils";
 const publishMessageSchema = t.Object({
   message: requiredCampMessageInsertSchema,
   thread: requiredThreadInsertSchema,
@@ -131,13 +140,134 @@ export const messageRouter = ProtectedElysia({ prefix: "/message" })
     },
     message: async (ws, data) => {
       // message must exist before the thread is created
-      await db
+      const messageObj = await db
         .insert(campMessage)
-        .values({ ...data.message, userId: ws.data.user.id });
+        .values({ ...data.message, userId: ws.data.user.id })
+        .returning()
+        .then((data) => data[0]);
 
-      await db
+      const threadObj = await db
         .insert(campThread)
-        .values({ ...data.thread, createdBy: ws.data.user.id });
+        .values({ ...data.thread, createdBy: ws.data.user.id })
+        .returning()
+        .then((data) => data[0]);
+
+      Promise.resolve().then(async () => {
+        console.log("CALLING PROMISE RESOLVE");
+        const transcriptionGroupRes = (
+          await db
+            .select()
+            .from(transcribeGroup)
+            .where(eq(transcribeGroup.campId, ws.data.params.campId))
+            .orderBy(desc(transcribeGroup.createdAt))
+            .limit(1)
+        ).at(0);
+
+        if (!transcriptionGroupRes) {
+          return;
+        }
+
+        const transcriptRes = await db
+          .select()
+          .from(transcribeGroup)
+          .innerJoin(
+            transcribeJob,
+            eq(transcribeJob.transcribeGroupId, transcribeGroup.id)
+          )
+          .innerJoin(transcription, eq(transcription.jobId, transcribeJob.id))
+          .where(eq(transcribeGroup.id, transcriptionGroupRes.id));
+
+        const retryCall = async (retries = 5) => {
+          try {
+            const transcriptionText = transcriptRes
+              .map(({ transcription }) => transcription.text)
+              .join("\n");
+
+            const chatConfig = createChatConfig({
+              question: messageObj.message,
+              transcript: transcriptionText,
+            });
+
+            let responseJsonString = (await mistralClient.chat(chatConfig))
+              .choices[0].message.content;
+            const json = JSON.parse(responseJsonString);
+            console.log("GOT MISTRAL RESPONSE ->", responseJsonString);
+            const jsonSchema = t.Union([
+              t.Object({
+                relevantTranscript: t.String(),
+                attemptedAnswer: t.String(),
+                kind: t.Literal("found"),
+              }),
+              t.Object({
+                kind: t.Literal("not-found"),
+                attemptedAnswer: t.String(),
+              }),
+            ]);
+
+            const compiler = TypeCompiler.Compile(jsonSchema);
+
+            const isValid = compiler.Check(json);
+
+            if (!isValid) {
+              console.log("gg");
+              throw compiler.Errors;
+            }
+
+            const aiMessageBoardAnswerRes = await db
+              .insert(aiMessageBoardAnswers)
+              .values({
+                threadId: threadObj.id,
+                transcriptGroupId: transcriptionGroupRes.id,
+                attemptedAnswer: json.attemptedAnswer,
+                ...("relevantTranscript" in json
+                  ? { relevantTranscript: json.relevantTranscript }
+                  : {}),
+              })
+              .returning()
+              .then((data) => data[0]);
+
+            const existingThread = await db
+              .select()
+              .from(campThread)
+              .where(eq(campThread.parentMessageId, messageObj.id))
+              .then((data) => data[0]);
+            const newThreadMessage = run(() => {
+              switch (json.kind) {
+                case "found": {
+                  return `Relevant Transcript: ${json.relevantTranscript} \n\nAttempted Answer: ${json.attemptedAnswer}`;
+                }
+                case "not-found": {
+                  return `Attempted Answer: ${json.attemptedAnswer}`;
+                }
+              }
+            });
+
+            console.log("new thread message", newThreadMessage);
+            await db.insert(campThreadMessage).values({
+              threadId: existingThread.id,
+              message: newThreadMessage,
+              userId: "ai-corbin",
+            });
+            //   const newThread = db.insert(campThread).values({
+
+            // })
+            console.log("CREATED OBJECT", aiMessageBoardAnswerRes);
+            // return {
+            //   kind: "success" as const,
+            //   ...aiMessageBoardAnswerRes,
+            // };
+          } catch (e) {
+            console.log(e);
+            if (retries === 0) {
+              return null;
+            } else {
+              retryCall(retries - 1);
+            }
+          }
+        };
+
+        retryCall();
+      });
 
       ws.publish(`camp-${ws.data.params.campId}`, data);
     },

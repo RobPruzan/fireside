@@ -15,7 +15,7 @@ import { ProtectedElysia, getDeleteAuthCookie } from "./lib";
 
 import { cleanedUserCols } from "./camp-endpoints";
 
-const getHash = ({ str }: { str: string }) =>
+export const getHash = ({ str }: { str: string }) =>
   Bun.password.hash(str, {
     algorithm: "argon2id",
     memoryCost: 4,

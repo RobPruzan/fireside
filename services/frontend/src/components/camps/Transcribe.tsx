@@ -79,6 +79,7 @@ export const Transcribe = ({
     " (static)",
     " (buzzing)",
     " (whistles)",
+    " [",
   ];
 
   const [_, updateIsActive] = useState(false);
@@ -95,7 +96,9 @@ export const Transcribe = ({
 
   const isActive =
     Date.now() - (transcription?.at(-1)?.createdAt ?? -1) < 10000;
-
+  const filteredTokens = transcription?.filter(
+    ({ text }) => !skipTokens.includes(text)
+  );
   return (
     <div className="p-3">
       <div>
@@ -105,11 +108,26 @@ export const Transcribe = ({
         {isActive && <Radio className="animate-pulse text-red-500" />}
       </div>
       {slot}
-      {transcription
-        ?.filter(({ text }) => !skipTokens.includes(text))
-        .map((transcription) => (
-          <div key={transcription.id}>{transcription.text}</div>
-        ))}
+      {filteredTokens?.map((transcription) => (
+        <div className="flex items-center gap-x-2">
+          <span className="text-muted-foreground">
+            {new Date(transcription.createdAt).toLocaleTimeString()}
+          </span>
+
+          <div
+            className="my-2 border-l-2 pl-3 flex items-center py-2"
+            key={transcription.id}
+          >
+            {transcription.text}
+          </div>
+        </div>
+      ))}
+
+      {filteredTokens?.length === 0 && (
+        <div className="text-lg font-bold text-muted-foreground">
+          Nothing transcribed yet
+        </div>
+      )}
     </div>
   );
 };

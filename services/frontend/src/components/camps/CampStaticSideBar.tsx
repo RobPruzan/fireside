@@ -44,7 +44,7 @@ export const CampStaticSideBar = () => {
         )}
       </div>
       <div className="flex flex-col items-center justify-start gap-y-2 w-full h-[75%] relative">
-        <Link
+        {/* <Link
           to="/camp/friends"
           className={buttonVariants({
             className: cn([
@@ -57,7 +57,7 @@ export const CampStaticSideBar = () => {
           <div className="flex items-center gap-x-4">
             <User />
           </div>
-        </Link>
+        </Link> */}
 
         <Link
           to="/camp/inbox"
