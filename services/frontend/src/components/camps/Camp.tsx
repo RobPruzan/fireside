@@ -84,7 +84,7 @@ import {
   useReactToMessageMutation,
   useRemoveReactionMutation,
   useGetCamp,
-  useGetAIMessageBoardAnswer,
+  // useGetAIMessageBoardAnswer,
 } from "./message-state";
 import {
   useCreateTranscriptionGroup,
