@@ -1,8 +1,13 @@
 # Features
 - Live audio streaming to an arbitrary number of users through WebRTC
-- Collaborative canvas with media upload ability
+- Live transcription running on client through a WASM'd version of (distilled) whisper when audio streaming
+- Leverage LLM's to answer student questions (output is provided in a thread of the question)
+  - Automatically find the part of the transcript a student's question is referring to
+  - Automatically attempt to answer students question
+  - Uses open-mixtral-8x7b
+- Collaborative real-time whiteboard with media upload and panning ability
 - Live messaging and reactions
-- General social media features (friends/friend requests, DMs, threads)
+
 
  
 
