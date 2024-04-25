@@ -39,5 +39,6 @@
 
 ## Website Preview
 
-![image](https://github.com/RobPruzan/fireside/assets/97781863/19cc59e0-92ee-4ffe-b51f-6e67c0fcec19)
+![image](https://github.com/RobPruzan/fireside/assets/97781863/db8c08ce-8aba-4126-9424-55f14fcaf300)
+
 
