@@ -270,9 +270,11 @@ export const userProtectedRoute = ProtectedElysia({
       const userId = ws.data.user.username;
   
       if (activeUsers.has(campId)) {
+        console.log("Got into removing current user, ", userId);
         const currentUsers = activeUsers.get(campId) || [];
         const updatedUsers = currentUsers.filter((id) => id !== userId);
         activeUsers.set(campId, updatedUsers);
+        console.log("Results after filtering, ",activeUsers.get(campId));
       }
   
       ws.publish(`connected-users-${campId}`, {
