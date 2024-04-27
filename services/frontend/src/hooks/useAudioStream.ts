@@ -42,6 +42,7 @@ type WebRTCSignal =
   | { kind: "webRTC-answer"; answer: RTCSessionDescriptionInit; userId: string }
   | { kind: "user-joined"; userId: string }
   | { kind: "user-left"; userId: string }
+  // | { kind: "active-users"; users: []; userId: string}
   | {
       kind: "join-channel-request";
       broadcasterId: string;

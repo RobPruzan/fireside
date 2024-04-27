@@ -19,9 +19,11 @@ import {
 } from "@fireside/db";
 import { ProtectedElysia } from "./lib";
 
-import { t, type Static } from "elysia";
+import { t, type MergeSchema, type TSchema, type UnwrapRoute, type Static } from "elysia";
 import type { ElysiaWS } from "elysia/ws";
 import type { ServerWebSocket } from "bun";
+import type { TObject, TString, TUnknown } from "@sinclair/typebox";
+import type { TypeCheck } from "elysia/type-system";
 
 export const getAudioRoom = ({
   broadcasterId,
@@ -41,7 +43,6 @@ const transcribeMessageSchema = t.Object({
 });
 
 export type TranscribeMessageSchema = Static<typeof transcribeMessageSchema>;
-
 export const campRouter = ProtectedElysia({ prefix: "/camp" })
   .get(
     "/retrieve/:campId",
@@ -148,6 +149,7 @@ export const campRouter = ProtectedElysia({ prefix: "/camp" })
 
     return res;
   })
+
   .ws("/audio/:campId", {
     message: async (ws, data) => {
       if ((data as { kind: string }).kind === "user-joined") {
@@ -238,11 +240,6 @@ export const campRouter = ProtectedElysia({ prefix: "/camp" })
     },
     open: (ws) => {
       ws.subscribe(`audio-${ws.data.params.campId}`);
-
-      // ws.publish(`audio-${ws.data.params.campId}`, {
-      //   kind: "user-joined",
-      //   userId: ws.data.user.id,
-      // });
     },
     close: (ws) => {
       ws.publish(`audio-${ws.data.params.campId}`, {
@@ -365,14 +362,13 @@ export const campRouter = ProtectedElysia({ prefix: "/camp" })
     { params: t.Object({ groupId: t.String() }) }
   );
 
+  
+
 export const {
   token: tk,
   password: pwd,
   ...cleanedUserCols
 } = getTableColumns(user);
-// const getCampsWithCount = ({}:{campId:string,camMember}) => {}
-//
-
 // .derive(async ({ params }) => {
 //   const currCamp = await db
 //     .select()

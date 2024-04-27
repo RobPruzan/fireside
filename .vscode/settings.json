@@ -11,5 +11,7 @@
     "Peeky",
     "tanjiro",
     "tanstack"
-  ]
+  ],
+  "accessibility.signals.sounds.volume": 0,
+  "editor.accessibilitySupport": "off"
 }

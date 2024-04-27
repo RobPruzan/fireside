@@ -71,6 +71,7 @@ import {
   Trash,
   Unlock,
   XIcon,
+  Users,
 } from "lucide-react";
 import { Button, buttonVariants } from "../ui/button";
 import { Avatar } from "../ui/avatar";
@@ -99,7 +100,7 @@ import { Thread } from "./Thread";
 import { useGetThreads } from "./thread-state";
 import { toast, useToast } from "../ui/use-toast";
 import { Textarea } from "../ui/textarea";
-import { client } from "@/edenClient";
+import { client, dataOrThrow } from "@/edenClient";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { PublishedMessage } from "@fireside/backend/src/message-endpoints";
 import { threadId } from "worker_threads";
@@ -121,21 +122,24 @@ const subscribeFn = client.api.protected.message.ws({
   campId: "anything",
 }).subscribe;
 
+
 type Subscription = null | ReturnType<typeof subscribeFn>;
 const SocketMessageContext = createContext<{
   subscription: Subscription | null;
 }>({
   subscription: null,
 });
+
 export const Camp = () => {
   const { campId } = useParams({ from: "/root-auth/camp-layout/camp/$campId" });
+  const subscribeUserFn = client.api.protected.user.connectedusers({campId}).subscribe();
   const { messages } = useGetMessages({ campId });
   const { camp } = useGetCamp({ campId });
   const scrollRef = useRef<HTMLInputElement | null>(null);
   const user = useDefinedUser();
   const [listeningToAudio, setListeningToAudio] = useState(false);
   const [broadcastingAudio, setBroadcastingAudio] = useState(false);
-
+  const [showUsers, setShowUsers] = useState(false);
   // const { transcriber } = useContext(TranscriberContext);
   const {
     createWebRTCOffer,
@@ -167,6 +171,64 @@ export const Camp = () => {
       });
     }
   }, [messages.length]);
+  const subscriptionRef = useRef<null | ReturnType<typeof subscribeUserFn>>(null);
+  useEffect(() => {
+    const newSubscription = client.api.protected.user.connectedusers({campId}).subscribe();
+
+    const handleMessage = (event: { data: { type: string; payload: any; }; }) => {
+      const data = event.data as { type: string; payload: any };
+      console.log("Event happened: ", data);
+      const data2 = JSON.parse(event.data);
+      console.log("Parsed data: ", data2);
+      if (data2['type'] === "connected-users") {
+        console.log("Users were set");
+        setActiveUsers(data2['payload']);
+        console.log("New Actvie User List",activeUsers);
+      }
+    };
+    
+    newSubscription.ws.addEventListener('message',handleMessage);
+ 
+    subscriptionRef.current = newSubscription;
+  
+    return () => {
+      newSubscription.close();
+    };
+  }, [campId]);
+
+  /*
+  const handleMessage = (event: { data: { type: string; payload: any; }; }) => {
+      const data = event.data as { type: string; payload: any };
+      console.log("Event happened: ", data);
+      // const data2 = JSON.parse(event.data);
+      if (data2['type'] === "connected-users") {
+        console.log("Users were set");
+        setActiveUsers(data2['payload']);
+        console.log("New Actvie User List",activeUsers);
+      }
+    };
+    
+    // newSubscription.ws.addEventListener('message',handleMessage);
+  */
+
+
+  const [activeUsers, setActiveUsers] = useState<string[] | undefined | null>([]);
+  useEffect(() => {
+    client.api.protected.user.connectedusers({campId}).get()
+      .then(res => {
+        if(res.data){
+          const activeUsers = res.data[campId].sort() ;
+          setActiveUsers(activeUsers);
+        }
+      })
+      .catch(error => {
+        console.error('Error fetching active users:', error);
+      });
+  }, [campId]);
+  console.log("Res",activeUsers);
+  const toggleUsers = () => {
+    setShowUsers((prev) => !prev);
+  };
   const createWhiteBoardMutation = useCreateWhiteBoardMutation();
   const search = useSearch({ from: "/root-auth/camp-layout/camp/$campId" });
   const createTranscriptionGroupMutation = useCreateTranscriptionGroup();
@@ -281,7 +343,9 @@ export const Camp = () => {
                           />
                         )}
                       </Button>
-
+                      <Button variant="ghost" onClick={toggleUsers}>
+                       <Users />
+                      </Button>
                       {/* <Button variant={"ghost"}>
                         <BookCheck />
                       </Button> */}
@@ -364,6 +428,9 @@ export const Camp = () => {
                         className={cn([listeningToAudio && "text-green-500"])}
                       />
                     </Button>
+                    <Button variant="ghost" onClick={toggleUsers}>
+                      <Users />
+                    </Button>
                   </div>
                 ))}
 
@@ -377,8 +444,25 @@ export const Camp = () => {
               {/* <div>
 
               </div> */}
-            </div>
 
+                
+
+            </div>
+            {showUsers && activeUsers && (
+                <div className="absolute top-0 right-0 mr-4 mt-2">
+                  <div className="flex flex-col">
+                    <h4 className="font-bold text-xs">Active Users</h4>
+                    <div className="flex items-center gap-2 overflow-auto">
+                      {activeUsers.map((userId, index) => (
+                        <span key={index} className="rounded-full px-3 py-1 text-sm">
+                          {userId}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+            
             {transcriber.progressItems.length > 0 && (
               <>
                 <div className=" p-4 w-full flex rounded-t-none border-t-0 flex-col border rounded-md bg-background z-40 bg-yellow-600">
@@ -527,7 +611,6 @@ export const Camp = () => {
     </div>
   );
 };
-
 const MessageSection = memo(({ campId }: { campId: string }) => {
   const [userMessage, setUserMessage] = useState("");
 
@@ -616,7 +699,7 @@ const MessageSection = memo(({ campId }: { campId: string }) => {
     const newSubscription = client.api.protected.message
       .ws({ campId })
       .subscribe();
-
+    
     const handleClose = () => {
       retryConnect(() => {
         const res = client.api.protected.message.ws({ campId }).subscribe();

@@ -74,7 +74,7 @@ export const getSession = async ({ authToken }: { authToken: string }) => {
     user: cleanUser(authUser),
   };
 };
-
+const activeUsers: Map<string, Array<string>> = new Map();
 export const userRoute = new Elysia({
   prefix: "/user",
 })
@@ -228,7 +228,7 @@ export const userRoute = new Elysia({
     const isAuthResult = await getSession({ authToken: auth.value });
     set.status = 200;
     return isAuthResult;
-  });
+  })
 
 export const userProtectedRoute = ProtectedElysia({
   prefix: "/user",
@@ -242,4 +242,53 @@ export const userProtectedRoute = ProtectedElysia({
       .where(eq(user.id, ctx.user.id));
     ctx.cookie.auth.set(getDeleteAuthCookie());
   })
-  .get("/get-all", () => db.select(cleanedUserCols).from(user));
+  .get("/get-all", () => db.select(cleanedUserCols).from(user))
+
+  .ws("/connectedusers/:campId", {
+    open: (ws) => {
+      console.log("Opening Socket");
+      const { campId } = ws.data.params;
+      ws.subscribe(`connected-users-${campId}`);
+  
+      const users = activeUsers.get(campId) || [];
+      const userId = ws.data.user.username;
+  
+      if (!users.includes(userId)) {
+        users.push(userId);
+        activeUsers.set(campId, users);
+      }
+  
+      console.log("Updated Active Users: ", activeUsers.get(campId));
+      ws.publish(`connected-users-${campId}`, {
+        type: 'connected-users',
+        payload: activeUsers.get(campId),
+      });
+    },
+    close: (ws) => {
+      console.log("Closing Socket");
+      const { campId } = ws.data.params;
+      const userId = ws.data.user.username;
+  
+      if (activeUsers.has(campId)) {
+        console.log("Got into removing current user, ", userId);
+        const currentUsers = activeUsers.get(campId) || [];
+        const updatedUsers = currentUsers.filter((id) => id !== userId);
+        activeUsers.set(campId, updatedUsers);
+        console.log("Results after filtering, ",activeUsers.get(campId));
+      }
+  
+      ws.publish(`connected-users-${campId}`, {
+        type: 'connected-users',
+        payload: activeUsers.get(campId),
+      });
+    },
+    params: t.Object({ campId: t.String() }),
+    body: t.Unknown(),
+  })
+
+  .get("/connectedusers/:campId", (ctx) => {
+    const campId = ctx.params.campId; // Access the campId directly from ctx.data.params
+    console.log("Camp ID from backend: ",campId);
+    const activeUsersForCamp = activeUsers.get(campId) || [];
+    return { [campId]: activeUsersForCamp };
+  })
