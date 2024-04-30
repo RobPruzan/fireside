@@ -99,8 +99,12 @@ import { Thread } from "./Thread";
 import { useGetThreads } from "./thread-state";
 import { toast, useToast } from "../ui/use-toast";
 import { Textarea } from "../ui/textarea";
-import { client } from "@/edenClient";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { client, promiseDataOrThrow } from "@/edenClient";
+import {
+  useMutation,
+  useQueryClient,
+  useSuspenseQuery,
+} from "@tanstack/react-query";
 import { PublishedMessage } from "@fireside/backend/src/message-endpoints";
 import { threadId } from "worker_threads";
 import { WhiteBoardLoader } from "./whiteboard/WhiteBoard";
@@ -293,7 +297,9 @@ export const Camp = () => {
                             key={userId}
                             className="border  p-3 text-xs rounded-full"
                           >
-                            {userId.slice(1, 5)}
+                            {/* {userId.slice(1, 5)} */}
+
+                            <DisplayedAudioUserNames userId={userId} />
                           </div>
                         ))}
                       </div>
@@ -931,6 +937,7 @@ const Message = memo(
     // });
 
     const [whiteBoardLocked, setWhiteBoardLocked] = useState(false);
+
     return (
       <>
         <div
@@ -1058,7 +1065,7 @@ const Message = memo(
                     </div>
                   </div>
                 </div>
-                <div className="max-w-none break-words max-h-[700px]">
+                <pre className="max-w-none break-words max-h-[700px] font-sans text-wrap">
                   {messageObj.message}
 
                   {messageWhiteBoardId && (
@@ -1081,7 +1088,7 @@ const Message = memo(
                       whiteBoardId={messageWhiteBoardId}
                     />
                   )}
-                </div>
+                </pre>
               </div>
             </ContextMenuTrigger>
             <ContextMenuContent>
@@ -1190,3 +1197,15 @@ const ReactionBox = memo(
     });
   }
 );
+
+const DisplayedAudioUserNames = ({ userId }: { userId: string }) => {
+  const { data } = useSuspenseQuery({
+    queryKey: ["user-name", userId],
+    queryFn: () =>
+      promiseDataOrThrow(
+        client.api.protected.user["user-name"]({ userId }).get()
+      ),
+  });
+
+  return data.username;
+};

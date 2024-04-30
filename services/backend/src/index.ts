@@ -23,8 +23,37 @@ const authRoutes = new Elysia()
   .use(whiteboardRoute);
 const noAuthRoutes = new Elysia().use(userRoute);
 
+const rateLimitMap = new Map<string, Array<number>>();
+
 const app = new Elysia()
-  .onBeforeHandle(({ set }) => {
+  // .derive(({ request, set, error }) => {
+  //   const ip = app.server?.requestIP(request)?.address;
+  //   console.log("hi", ip);
+  //   if (!ip) {
+  //     error(429);
+  //     return {};
+  //   }
+  //   console.log("MY IP", ip);
+  //   // const visits = rateLimitMap.get(ip) ?? 0
+  //   const currentVisits = rateLimitMap.get(ip) ?? [];
+
+  //   const visits = [...currentVisits, Date.now()];
+  //   rateLimitMap.set(ip, visits);
+
+  //   console.log("VISITS OVER TIME", visits.length);
+
+  //   const filteredVisits = visits.filter(
+  //     (prevDate) => Date.now() - prevDate < 1000 * 50
+  //   );
+  //   if (filteredVisits.length > 3) {
+  //     set.status = 429;
+  //     throw new Error("Rate limited");
+  //     return {};
+  //   }
+
+  //   return {};
+  // })
+  .onBeforeHandle(({ set, request }) => {
     set.headers["X-Content-Type-Options"] = "nosniff";
   })
   // .use(
@@ -48,6 +77,7 @@ const app = new Elysia()
       .use(authRoutes)
   )
   .get("/*", async ({ path, set }) => {
+    console.log("dont care requesting");
     const assetFile = Bun.file(
       `./node_modules/@fireside/frontend/dist/assets/${path
         .replaceAll("/", "")

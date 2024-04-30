@@ -38,6 +38,7 @@ export const user = pgTable("user", {
     .$defaultFn(() => new Date().toISOString())
     .notNull(),
   updatedAt: timestamp("updated_at", { mode: "string" }),
+  // profilePictureSrc: text("imgSrc"),
 });
 
 export const userSelectSchema = createSelectSchema(user);

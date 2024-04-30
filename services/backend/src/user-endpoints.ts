@@ -242,4 +242,20 @@ export const userProtectedRoute = ProtectedElysia({
       .where(eq(user.id, ctx.user.id));
     ctx.cookie.auth.set(getDeleteAuthCookie());
   })
-  .get("/get-all", () => db.select(cleanedUserCols).from(user));
+  .get("/get-all", () => db.select(cleanedUserCols).from(user))
+  .get(
+    "/user-name/:userId",
+    ({ params }) =>
+      db
+        .select({
+          username: user.username,
+        })
+        .from(user)
+        .where(eq(user.id, params.userId))
+        .then((data) => data.at(0)),
+    {
+      params: t.Object({
+        userId: t.String(),
+      }),
+    }
+  );
