@@ -276,7 +276,7 @@ export const userProtectedRoute = ProtectedElysia({
         activeUsers.set(campId, updatedUsers);
         console.log("Results after filtering, ",activeUsers.get(campId));
       }
-  
+      console.log("PENIS: ", activeUsers.get(campId));
       ws.publish(`connected-users-${campId}`, {
         type: 'connected-users',
         payload: activeUsers.get(campId),
@@ -290,5 +290,6 @@ export const userProtectedRoute = ProtectedElysia({
     const campId = ctx.params.campId; // Access the campId directly from ctx.data.params
     console.log("Camp ID from backend: ",campId);
     const activeUsersForCamp = activeUsers.get(campId) || [];
+    console.log(activeUsersForCamp)
     return { [campId]: activeUsersForCamp };
   })
