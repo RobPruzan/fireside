@@ -7,7 +7,7 @@ import {
   useSuspenseQuery,
 } from "@tanstack/react-query";
 import { client, promiseDataOrThrow } from "@/edenClient";
-import { useToast } from "../ui/use-toast";
+import { toast, useToast } from "../ui/use-toast";
 
 import {
   FiresideUser,
@@ -17,6 +17,33 @@ import {
 import { useSetAtom } from "jotai";
 import { Nullish } from "@fireside/utils";
 import { redirect } from "@tanstack/react-router";
+import { Question, question} from "@fireside/db";
+import { CreateQuestionBodyOpts, CreateAnswerBodyOpts } from "@fireside/backend/src/camp-endpoints";
+
+
+export const getPollData = ({ campId }: { campId: string }) =>
+  queryOptions({
+    queryKey: ["poll-information", campId],
+    queryFn: async () => {
+      const questionInfo =  client.api.protected.camp["question-information"]({
+        campId,
+      }).get();
+      
+      return promiseDataOrThrow(questionInfo);
+    },
+  });
+
+
+export const useGetPollData = ({ campId }: { campId: string }) => {
+  const options = getPollData({ campId });
+  const pollData = useSuspenseQuery(options); 
+  return {
+    pollData,
+    pollDataInfo: pollData.data,
+    pollDataQuery: options.queryKey
+  
+  };
+};
 
 export const dynamicSideBarOpen = atom(
   visualViewport && visualViewport.width > 900
@@ -37,6 +64,58 @@ export const useDefinedUser = (opts?: Opts) => {
 };
 
 type Opts = { user?: FiresideUser };
+
+export const useCreateAnswerMutation = () => {
+  
+  const createAnswerMutation = useMutation({
+    mutationKey: ["create-answer"],
+    mutationFn: async (createOpts: CreateAnswerBodyOpts) => {
+
+      if (createOpts.answer === null) {
+        toast({
+          title: "Error:",
+          description: "Must select answer before submitting.",
+        });
+        throw Error("Must select answer.");
+      }
+
+      const res = await client.api.protected.camp["question-answer"].post(createOpts);
+
+      if (res.error) {
+        toast({
+          title: "Error:",
+          description: "Can only answer question once.",
+        });
+        throw Error(JSON.stringify(res.error.value));
+      }
+      toast({
+        title: "Answer Submitted",
+      });
+      return res.data;
+    }
+
+  })
+  return createAnswerMutation;
+}
+
+export const useCreateQuestionMutation = () => {
+  
+  const createQuestionMutation = useMutation({
+    mutationKey: ["create-question"],
+    mutationFn: async (createOpts: CreateQuestionBodyOpts) => {
+      const res = await client.api.protected.camp["create-question"].post(createOpts);
+
+      if (res.error) {
+        throw Error(JSON.stringify(res.error.value));
+      }
+      
+      return res.data;
+    }
+
+  })
+  return createQuestionMutation;
+}
+
 
 export const useCreateCampMutation = () => {
   const { toast } = useToast();

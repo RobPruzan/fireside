@@ -8,15 +8,7 @@ import {
   useParams,
   useSearch,
 } from "@tanstack/react-router";
-import {
-  Dialog,
-  DialogTrigger,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-} from "../ui/dialog";
+import { DialogFooter } from "../ui/dialog";
 import { Input } from "../ui/input";
 import {
   DropdownMenu,
@@ -49,7 +41,6 @@ import {
   ContextMenuSubTrigger,
   ContextMenuTrigger,
 } from "@/components/ui/context-menu";
-import { cn, retryConnect } from "@/lib/utils";
 import {
   ArrowLeft,
   AudioLines,
@@ -59,6 +50,7 @@ import {
   ChevronRight,
   Edit,
   Image,
+  Menu,
   Info,
   Lock,
   Megaphone,
@@ -66,16 +58,21 @@ import {
   MessageCircleIcon,
   Move,
   Pencil,
+  PlusCircle,
   Presentation,
   SmilePlus,
   Trash,
   Unlock,
   XIcon,
 } from "lucide-react";
-import { Button, buttonVariants } from "../ui/button";
 import { Avatar } from "../ui/avatar";
 import { Nullish, hasKey, run } from "@fireside/utils";
-import { CampMessage } from "@fireside/db";
+import {
+  CampMessage,
+  Question,
+  QuestionAnswer,
+  QuestionOption,
+} from "@fireside/db";
 import {
   useGetMessages,
   // useCreateMessageMutation,
@@ -87,6 +84,12 @@ import {
   // useGetAIMessageBoardAnswer,
 } from "./message-state";
 import {
+  useCreateAnswerMutation,
+  useCreateCampMutation,
+  useCreateQuestionMutation,
+  useUserCamps,
+} from "./camps-state";
+import {
   useCreateTranscriptionGroup,
   useDefinedUser,
   useGetTranscription,
@@ -97,17 +100,76 @@ import { FiresideUser } from "@/lib/useUserQuery";
 import { ThreadIcon } from "../ui/icons/thread";
 import { Thread } from "./Thread";
 import { useGetThreads } from "./thread-state";
-import { toast, useToast } from "../ui/use-toast";
+import { useToast } from "../ui/use-toast";
 import { Textarea } from "../ui/textarea";
 import { client, promiseDataOrThrow } from "@/edenClient";
 import {
+  queryOptions,
   useMutation,
+  useQuery,
   useQueryClient,
   useSuspenseQuery,
 } from "@tanstack/react-query";
 import { PublishedMessage } from "@fireside/backend/src/message-endpoints";
 import { threadId } from "worker_threads";
 import { WhiteBoardLoader } from "./whiteboard/WhiteBoard";
+import {
+  Menubar,
+  MenubarContent,
+  MenubarItem,
+  MenubarMenu,
+  MenubarSeparator,
+  MenubarShortcut,
+  MenubarTrigger,
+} from "@/components/ui/menubar";
+import { Calendar } from "@/components/ui/calendar";
+import { Form } from "../ui/form";
+
+import {
+  format,
+  parse,
+  parseISO,
+  setHours,
+  setMinutes,
+  formatISO,
+} from "date-fns";
+import { CalendarIcon } from "lucide-react";
+import { nullable, z } from "zod";
+
+import { cn, retryConnect } from "@/lib/utils";
+import { Button, buttonVariants } from "@/components/ui/button";
+
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { toast } from "@/components/ui/use-toast";
+
+import { useGetPollData } from "./camps-state";
+
+import {
+  Dialog,
+  DialogTitle,
+  DialogDescription,
+  DialogClose,
+  DialogTrigger,
+  DialogContent,
+  DialogHeader,
+} from "../ui/dialog";
+
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  CreateAnswerBodyOpts,
+  CreateQuestionBodyOpts,
+} from "@fireside/backend/src/camp-endpoints";
+
 import {
   getWhiteBoardImagesOptions,
   useCreateWhiteBoardMessageMutation,
@@ -127,14 +189,55 @@ const subscribeFn = client.api.protected.message.ws({
   campId: "anything",
 }).subscribe;
 
-type Subscription = null | ReturnType<typeof subscribeFn>;
+type Lol = {
+  hour: number;
+  minute: number;
+  id: string;
+};
+export const toDateBalls = ({
+  pollDate,
+  time,
+}: {
+  pollDate: Date;
+  time: Lol;
+}) => {
+  const newDate = new Date(pollDate);
+  newDate.setMinutes(time.minute);
+  newDate.setHours(time.hour);
+  return newDate;
+};
+
+const timeOptions: Array<{ id: string; hour: number; minute: number }> = [];
+for (let hour = 0; hour < 24; hour++) {
+  for (let minute = 0; minute < 60; minute += 15) {
+    timeOptions.push({
+      id: crypto.randomUUID(),
+      hour,
+      minute,
+    });
+  }
+}
+
+const formatHourMinTime = ({
+  hour,
+  minute,
+}: {
+  hour: number;
+  minute: number;
+}) => {
+  const suffix = hour >= 12 ? "PM" : "AM";
+  const formattedHour = hour % 12 || 12;
+  return `${formattedHour}:${minute.toString().padStart(2, "0")} ${suffix}`;
+};
+// type Subscription = null | ReturnType<typeof subscribeFn>;
 const SocketMessageContext = createContext<{
-  subscription: Subscription | null;
+  subscription: any | null;
 }>({
   subscription: null,
 });
 export const Camp = () => {
   const { campId } = useParams({ from: "/root-auth/camp-layout/camp/$campId" });
+
   const { messages } = useGetMessages({ campId });
   const { camp } = useGetCamp({ campId });
   const scrollRef = useRef<HTMLInputElement | null>(null);
@@ -554,8 +657,13 @@ export const Camp = () => {
 };
 
 const MessageSection = memo(({ campId }: { campId: string }) => {
+  type Answer = {
+    answer: string | null;
+    questionId: string | null;
+  };
   const [userMessage, setUserMessage] = useState("");
-
+  const { camps } = useUserCamps();
+  const user = useDefinedUser();
   const { messages } = useGetMessages({ campId });
   const scrollRef = useRef<HTMLInputElement | null>(null);
   const queryClient = useQueryClient();
@@ -568,7 +676,63 @@ const MessageSection = memo(({ campId }: { campId: string }) => {
   });
   const createWhiteBoardMutation = useCreateWhiteBoardMutation();
   const [whiteBoardDialogOpen, setWhiteBoardDialogOpen] = useState(false);
-  const user = useDefinedUser();
+  const [showPoll, setShowPoll] = useState<boolean>(false);
+  const [showQuestion, setShowQuestion] = useState<boolean>(false);
+  const [options, setOptions] = useState<string[]>(["", ""]);
+  const [pollDate, setPollDate] = useState<Date | undefined>();
+  const [isHost, setIsHost] = useState<boolean>(false);
+  const [startTime, setStartTime] = useState<null | Lol>(null);
+  const [endTime, setEndTime] = useState<null | Lol>(null);
+  const [pollQuestion, setPollQuestion] = useState("");
+  const createQuestionMutation = useCreateQuestionMutation();
+  const createAnswerMutation = useCreateAnswerMutation();
+  const [question, setQuestion] = useState<Question | null>(null);
+  const [questionOptions, setQuestionOptions] = useState<QuestionOption[]>([]);
+  const [showPollData, setShowPollData] = useState<boolean>(false);
+  const [currentAnswer, setCurrentAnswer] = useState<Answer>({
+    answer: null,
+    questionId: null,
+  });
+
+  const { pollDataInfo } = useGetPollData({ campId });
+
+  const subscribeFn2 = client.api.protected.camp["retrieve-questions"]({
+    campId: 2 as unknown as string,
+  }).subscribe;
+
+  // const questionsQuery = useSuspenseQuery({
+  //   queryKey: ["questions", campId],
+  //   queryFn: () =>
+  //     client.api.protected.camp["retrieve-questions"]({
+  //       campId: campId,
+  //     })
+  //       .get()
+  //       .then((json) => {
+  //         if (!json.data) {
+  //           setQuestion(null);
+  //           setQuestionOptions([]);
+  //           throw new Error("bad data");
+  //         }
+  //         setQuestion(json.data.question!);
+  //         setQuestionOptions(json.data?.questionOptions);
+  //         return json.data;
+  //       })
+  //       .catch((error) => console.log("Error: ", error)),
+  // });
+
+  const addOption = () => {
+    if (options.length < 5) {
+      setOptions([...options, ""]);
+    }
+  };
+
+  const handleOptionChange = (index: number, value: string) => {
+    const updatedOptions = options.map((option, i) =>
+      i === index ? value : option
+    );
+    setOptions(updatedOptions);
+  };
+
   const [nonCreatedMessageWhiteBoardInfo, setNonCreatedMessageWhiteBoardInfo] =
     useState<null | { whiteBoardId: string; attach: boolean }>(null);
 
@@ -579,9 +743,20 @@ const MessageSection = memo(({ campId }: { campId: string }) => {
       lastChild.scrollIntoView({
         behavior: "instant",
         block: "end",
+        inline: "nearest",
       });
     }
   }, [messages.length, whiteBoardMessages.length]);
+
+  // determine if user is host
+  useEffect(() => {
+    setIsHost(false);
+
+    const camp = camps.filter((camp) => camp.id == campId)[0];
+    const is_host = camp.createdBy == user.id;
+
+    setIsHost(is_host);
+  }, [campId]);
 
   const updateMessageCache = (publishedMessage: PublishedMessage) => {
     queryClient.setQueryData(messagesQueryKey, (prev) => [
@@ -612,6 +787,86 @@ const MessageSection = memo(({ campId }: { campId: string }) => {
   const [subscription, setSubscription] = useState<null | ReturnType<
     typeof subscribeFn
   >>(null);
+
+  const [subscription2, setSubscription2] = useState<null | ReturnType<
+    typeof subscribeFn2
+  >>(null);
+
+  useEffect(() => {
+    console.log("ASDF1");
+    if (!subscription2) {
+      return;
+    }
+    const handleMessage = async (event: { data: string }) => {
+      console.log({ event });
+
+      const typedData:
+        | {
+            kind: "exists";
+            questionOptions: Array<QuestionOption>;
+            validQuestion: Question;
+          }
+        | {
+            kind: "not-exists";
+          } = JSON.parse(event.data);
+
+      switch (typedData.kind) {
+        case "exists": {
+          console.log("YESSS");
+          setQuestion(typedData.validQuestion);
+          setQuestionOptions(typedData.questionOptions);
+          return;
+        }
+        case "not-exists": {
+          setQuestion(null);
+          setQuestionOptions([]);
+          return;
+        }
+      }
+
+      typedData satisfies never;
+    };
+    subscription2.ws.addEventListener("message", handleMessage);
+
+    return () => {
+      if (!subscription2) {
+        return;
+      }
+      subscription2.ws.removeEventListener("message", handleMessage);
+    };
+  }, [subscription2]);
+
+  useEffect(() => {
+    const newSubscription2 = client.api.protected.camp["retrieve-questions"]({
+      campId,
+    }).subscribe();
+
+    const handleOpen = () => {
+      setSubscription2(newSubscription2);
+
+      // ....
+    };
+    newSubscription2.ws.addEventListener("open", handleOpen);
+
+    const handleClose = () => {
+      retryConnect(() => {
+        const res = client.api.protected.camp["retrieve-questions"]({
+          campId,
+        }).subscribe();
+
+        return res;
+      }, setSubscription2);
+
+      newSubscription2.ws.addEventListener("close", handleClose);
+      setSubscription2(newSubscription2);
+    };
+    return () => {
+      newSubscription2.ws.removeEventListener("close", handleClose);
+
+      newSubscription2.ws.removeEventListener("open", handleOpen); // probably dont need this since its gonna close
+      newSubscription2.close();
+    };
+  }, [campId]);
 
   useEffect(() => {
     if (!subscription) {
@@ -665,14 +920,347 @@ const MessageSection = memo(({ campId }: { campId: string }) => {
     null | string
   >(null);
 
+  function handlePollCreation() {
+    if (
+      !pollDate ||
+      !startTime ||
+      !endTime ||
+      options.some((option) => option.trim() === "") ||
+      pollQuestion.trim() === ""
+    ) {
+      toast({
+        title: "Error",
+        description: "All fields must be filled, and options cannot be empty.",
+      });
+      return;
+    }
+
+    if (endTime.hour < startTime.hour) {
+      toast({
+        title: "Error",
+        description: "End time must be after start time.",
+      });
+      return;
+    }
+
+    if (endTime.hour === startTime.hour && endTime.minute < startTime.minute) {
+      toast({
+        title: "Error",
+        description: "End time must be after start time.",
+      });
+      return;
+    }
+
+    // console.log(
+    //   "STARTING TIME SENDING",
+    //   toDateBalls({ pollDate, time: startTime }).toString().toLocaleString()
+    // );
+
+    // console.log(
+    //   "ENDING TIME SENDING",
+    //   toDateBalls({ pollDate, time: endTime }).toString().toLocaleString()
+    // );
+
+    const pollData = {
+      questionText: pollQuestion,
+      dateOfCreation: pollDate.toString(),
+      startTime: toDateBalls({ pollDate, time: startTime }).toString(),
+      endTime: toDateBalls({ pollDate, time: endTime }).toString(),
+      campId: campId,
+    };
+
+    const questionOptions = {
+      options: options.filter((option) => option.trim() !== ""),
+    };
+
+    console.log("Submitting poll creation data:", pollData);
+
+    toast({
+      title: "Success",
+      description: "Poll created successfully.",
+    });
+
+    createQuestionMutation.mutate({
+      question: pollData,
+      questionOptions: questionOptions.options,
+    });
+
+    setPollDate(undefined);
+    setStartTime(null);
+    setEndTime(null);
+    setOptions(["", ""]);
+    setPollQuestion("");
+  }
+
+  const countUniqueAnswers = (answers: QuestionAnswer[]) => {
+    const countMap = new Map();
+
+    answers.forEach(({ answer }) => {
+      countMap.set(answer, (countMap.get(answer) || 0) + 1);
+    });
+
+    return countMap;
+  };
+
   return (
     <SocketMessageContext.Provider
       value={{
         subscription,
       }}
     >
-      <div className="p-1  flex flex-col h-full  w-full px-2">
-        <div className="flex w-full h-[calc(100%-85px)] ">
+      <Menubar className="flex w-full h-70px bg-opacity-20 backdrop-blur-md">
+        <MenubarMenu>
+          {isHost && (
+            <Button size={"sm"} onClick={() => setShowPoll(true)}>
+              Create Poll
+            </Button>
+          )}
+
+          {isHost && (
+            <Button
+              size={"sm"}
+              onClick={async () => {
+                setShowPollData(true);
+                await queryClient.refetchQueries({
+                  queryKey: ["poll-information"],
+                });
+              }}
+            >
+              View Poll Details
+            </Button>
+          )}
+
+          {question ? (
+            <Button
+              size={"sm"}
+              onClick={() => {
+                setShowQuestion(true);
+                setCurrentAnswer({ answer: null, questionId: null }); // set both to null on question
+              }}
+            >
+              View Question
+            </Button>
+          ) : null}
+        </MenubarMenu>
+      </Menubar>
+
+      <Dialog
+        open={showPollData}
+        onOpenChange={(isOpen) => setShowPollData(isOpen)}
+      >
+        <DialogTrigger asChild></DialogTrigger>
+        <DialogContent className="overflow-y-scroll h-3/4 w-1/2">
+          <DialogHeader>Question Statistics:</DialogHeader>
+
+          {pollDataInfo.map((pollData, index) => (
+            <div key={index}>
+              <hr></hr>
+              Question:
+              <h3 className="font-bold text-lg mt-4 mb-2">
+                {pollData.question.questionText}?
+              </h3>
+              <ul>
+                {(() => {
+                  const counts: { [key: string]: number } = {};
+                  pollData.answers.forEach((answer) => {
+                    counts[answer.answer] = (counts[answer.answer] || 0) + 1;
+                  });
+                  return Object.entries(counts).map(([answer, count], idx) => (
+                    <li key={idx} className="ml-4">
+                      {answer}:{" "}
+                      {((count / pollData.answers.length) * 100).toFixed(2)}
+                      {"% "}
+                      of all answers {`(${count}/${pollData.answers.length})`}
+                    </li>
+                  ));
+                })()}
+              </ul>
+            </div>
+          ))}
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={showQuestion}
+        onOpenChange={(isOpen) => setShowQuestion(isOpen)}
+      >
+        <DialogTrigger asChild></DialogTrigger>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{question?.questionText}?</DialogTitle>
+            <hr></hr>
+          </DialogHeader>
+          {questionOptions.map((option, index) => (
+            <label key={option.id} className="block mb-3">
+              <div className="text-[16px] font-semibold mb-1">
+                Option {index + 1}:
+              </div>
+              <input
+                type="radio"
+                value={option.optionText}
+                name="question"
+                className="mr-2"
+                onChange={() =>
+                  setCurrentAnswer({
+                    answer: option.optionText,
+                    questionId: option.questionId,
+                  })
+                }
+              />
+              {option.optionText}
+            </label>
+          ))}
+          <Button
+            size={"sm"}
+            onClick={() =>
+              createAnswerMutation.mutate({
+                answer: currentAnswer.answer!,
+                questionId: currentAnswer.questionId!,
+                userId: user.id,
+              })
+            }
+          >
+            Submit
+          </Button>
+          <hr></hr>
+          <div>
+            <strong>Start Time:</strong>{" "}
+            {new Date(question?.startTime!).toLocaleTimeString()}
+          </div>
+          <div>
+            <strong>End Time:</strong>{" "}
+            {new Date(question?.endTime!).toLocaleTimeString()}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={showPoll}
+        onOpenChange={(isOpen) => {
+          if (!isOpen) {
+            setOptions(["", ""]);
+            setPollQuestion("");
+            setPollDate(undefined);
+            setStartTime(null);
+            setEndTime(null);
+          }
+          setShowPoll(false);
+        }}
+      >
+        <DialogContent className="fixed left-[50%] top-[50%] z-50 grid max-w-xl translate-x-[-50%] translate-y-[-50%] gap-4 border bg-background p-8 shadow-lg duration-200">
+          <DialogTitle className="text-center">
+            Create a new Question
+          </DialogTitle>
+          <DialogDescription>
+            Enter your question and provide options for users to choose from
+          </DialogDescription>
+          <Input
+            id="pollQuestion"
+            type="text"
+            placeholder="Enter question..."
+            required
+            autoFocus
+            className="mt-1"
+            onChange={(e) => setPollQuestion(e.target.value)}
+            value={pollQuestion}
+          />
+
+          {options.map((option, index) => (
+            <div key={index} className="flex items-center space-x-2">
+              <Input
+                type="text"
+                placeholder={`Option ${index + 1}`}
+                value={option}
+                onChange={(e) => handleOptionChange(index, e.target.value)}
+              />
+            </div>
+          ))}
+
+          {options.length < 5 && (
+            <button
+              onClick={addOption}
+              className="flex items-center mt-2 text-primary"
+            >
+              <PlusCircle className="icon-class mr-2" /> Add Option
+            </button>
+          )}
+
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant={"outline"} className={cn("w-[175px] text-left")}>
+                {pollDate ? format(pollDate, "PPP") : "Choose Date"}
+                <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start">
+              <Calendar
+                mode="single"
+                selected={pollDate}
+                onSelect={setPollDate}
+                initialFocus
+              />
+            </PopoverContent>
+          </Popover>
+
+          <div className="flex justify-evenly items-start ">
+            <DialogDescription>Start Time:</DialogDescription>
+            <Select
+              value={startTime?.id}
+              onValueChange={(timeId) => {
+                const time = timeOptions.find(
+                  ({ id: searchId }) => searchId === timeId
+                )!;
+                setStartTime(time);
+              }}
+            >
+              <SelectTrigger className="w-[120px]">
+                <SelectValue placeholder="Start Time" />
+              </SelectTrigger>
+              <SelectContent>
+                {timeOptions.map((option) => (
+                  <SelectItem key={option.id} value={option.id}>
+                    {formatHourMinTime(option)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            <DialogDescription>End Time:</DialogDescription>
+            <Select
+              value={endTime?.id}
+              onValueChange={(timeId) => {
+                const time = timeOptions.find(
+                  ({ id: searchId }) => searchId === timeId
+                )!;
+
+                setEndTime(time);
+              }}
+            >
+              <SelectTrigger className="w-[120px]">
+                <SelectValue placeholder="End Time" />
+              </SelectTrigger>
+              <SelectContent>
+                {timeOptions.map((option) => (
+                  <SelectItem key={option.id} value={option.id}>
+                    {formatHourMinTime(option)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <Button
+            onClick={() => {
+              handlePollCreation();
+            }}
+          >
+            Create Poll
+          </Button>
+        </DialogContent>
+      </Dialog>
+
+      <div className="p-1 flex flex-col h-full w-full px-2">
+        <div className="flex w-full h-[calc(100%-125px)] ">
           <div
             ref={scrollRef}
             className="flex flex-col w-full h-full overflow-y-auto gap-y-3"

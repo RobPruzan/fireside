@@ -10,6 +10,13 @@ import {
   and,
   campMessageInsertSchema,
   campMessage,
+  questionSchema,
+  question,
+  questionOption,
+  asc,
+  questionAnswer,
+  type QuestionAnswer,
+  questionAnswerSchema,
   db,
   transcribeJob,
   transcription,
@@ -21,6 +28,40 @@ import { ProtectedElysia } from "./lib";
 
 import { t, type Static } from "elysia";
 import type { ElysiaWS } from "elysia/ws";
+
+const createQuestionBodySchema = t.Object({
+  question: questionSchema,
+  questionOptions: t.Array(t.String()),
+});
+
+const questionSchema2 = t.Object({
+  questionText: t.String(),
+  dateOfCreation: t.String(),
+  startTime: t.String(),
+  endTime: t.String(),
+  campId: t.String(),
+});
+
+const createQuestionBodySchema2 = t.Object({
+  question: questionSchema2,
+  questionOptions: t.Array(t.String()),
+});
+
+type Socket = { id: string; send: (...args: unknown[]) => void };
+type CampId = string;
+
+const pollSocketsRef: { current: Record<CampId, Array<Socket>> } = {
+  current: {},
+};
+
+export type CreateQuestionBodyOpts = Static<typeof createQuestionBodySchema2>;
+
+const createQuestionAnswerSchema = t.Object({
+  answer: t.String(),
+  questionId: t.String(),
+  userId: t.String(),
+});
+export type CreateAnswerBodyOpts = Static<typeof createQuestionAnswerSchema>;
 import type { ServerWebSocket } from "bun";
 
 export const getAudioRoom = ({
@@ -43,6 +84,188 @@ const transcribeMessageSchema = t.Object({
 export type TranscribeMessageSchema = Static<typeof transcribeMessageSchema>;
 
 export const campRouter = ProtectedElysia({ prefix: "/camp" })
+  .get(
+    "/question-information/:campId",
+    async ({ params }) => {
+      // retrieve questions for current camp
+      const campQuestions = await db
+        .select()
+        .from(question)
+        .where(eq(question.campId, params.campId));
+
+      // retrieve answers for each question
+      const questionsWithAnswers = await Promise.all(
+        campQuestions.map(async (question) => {
+          const answers = await db
+            .select()
+            .from(questionAnswer)
+            .where(eq(questionAnswer.questionId, question.id));
+
+          return {
+            question: question,
+            answers: answers,
+          };
+        })
+      );
+
+      return questionsWithAnswers;
+    },
+    {
+      params: t.Object({
+        campId: t.String(),
+      }),
+    }
+  )
+  // .get("/retrieve-questions/:campId",
+  // async ({params}) => {
+  //   const campsQuestions = (await db
+  //     .select()
+  //     .from(question)
+  //     .where(eq(question.campId, params.campId))
+  //     .orderBy(asc(question.startTime))).filter(({startTime, endTime}) => ((Date.now() - new Date(startTime).getTime()) > 0)
+  //     && (Date.now() - new Date(endTime).getTime() < 0)).at(0)
+
+  //     if (!campsQuestions){
+  //       return { question: null, questionOptions: [] };
+  //     }
+
+  //   const questionOptions = await db
+  //   .select()
+  //   .from(questionOption)
+  //   .where(eq(questionOption.questionId, campsQuestions.id))
+
+  //   return {
+  //     question: campsQuestions,
+  //     questionOptions: questionOptions
+  //   }
+
+  // }, {
+  //   params: t.Object({
+  //   campId: t.String()
+  // })}
+
+  // )
+  .ws("/retrieve-questions/:campId", {
+    idleTimeout: 1000 * 1000,
+
+    params: t.Object({
+      campId: t.String(),
+    }),
+
+    body: t.Union([t.Object({ kind: t.Literal("subscribe-to-events") })]),
+
+    open: (ws) => {
+      console.log("OPEN", ws.id);
+
+      const prev = pollSocketsRef.current[ws.data.params.campId] ?? [];
+
+      pollSocketsRef.current[ws.data.params.campId] = [...prev, ws];
+    },
+    close: (ws) => {
+      console.log("CLOSE", ws.id);
+      // ws.unsubscribe(`retrieve-questions-${ws.data.params.campId}`)
+      // pollSocketsRef.current = pollSocketsRef.current.filter(s => s.id !== ws.id)
+
+      pollSocketsRef.current[ws.data.params.campId] = pollSocketsRef.current[
+        ws.data.params.campId
+      ].filter((socket) => socket.id !== ws.id);
+    },
+    message: async (ws, body) => {
+      // if (body.kind === "subscribe-to-events") {
+      //   ws.subscribe(`retrieve-questions-${ws.data.params.campId}`);
+      //   // return
+      // }
+
+      // while true here :p
+      // while (true) {
+      //   console.log("ASDF3")
+      //   try {
+      // const campsQuestions = await db
+      //   .select()
+      //   .from(question)
+      //   .where(eq(question.campId, ws.data.params.campId))
+      //   .orderBy(asc(question.startTime))
+      //   // .execute();
+
+      // const validQuestion = campsQuestions.filter(({ startTime, endTime }) =>
+      //   (Date.now() - new Date(startTime).getTime()) > 0 &&
+      //   (Date.now() - new Date(endTime).getTime()) < 0
+      // ).at(0);
+
+      //     ws.publish(`retrieve-questions-${ws.data.params.campId}`, {johnny: "boy"});
+      //     // if (validQuestion) {
+      //     //   console.log("QUESTION: ", validQuestion)
+            // const questionOptions = await db
+            //   .select()
+            //   .from(questionOption)
+            //   .where(eq(questionOption.questionId, validQuestion.id))
+
+      //       // ws.publish(`retrieve-questions-${ws.data.params.campId}`, {
+      //       //   question: validQuestion,
+      //       //   questionOptions: questionOptions
+      //       // });
+      //     // } else {
+      //     //   console.log('ballsn')
+      //     // }
+
+      //     await new Promise(resolve => setTimeout(resolve, 5000));
+      //   } catch (error) {
+      //     ws.publish(`retrieve-questions-${ws.data.params.campId}`, {billy: "bob"});
+      //     console.error("Error in WebSocket loop:", error);
+      //     break;
+      //   }
+      // }
+    },
+  })
+  .post(
+    "/question-answer",
+    async ({ body }) => {
+      // check if user already answered question
+      const campAnswers = await db
+        .select()
+        .from(questionAnswer)
+        .where(
+          eq(questionAnswer.userId, body.userId) &&
+            eq(questionAnswer.userId, body.userId)
+        );
+
+      if (campAnswers.length > 0) {
+        throw new Error("Already answered question.");
+      }
+
+      const createdAnswer = (
+        await db.insert(questionAnswer).values(body).returning()
+      )[0];
+
+      return { answer: createdAnswer };
+    },
+    {
+      body: questionAnswerSchema,
+    }
+  )
+  .post(
+    "/create-question",
+    async ({ body }) => {
+
+      // console.log("STARTING TIME RECEIVED: ", new Date(body.question.startTime).toLocaleTimeString())
+      // console.log("ENDING TIME RECEIVED: ", new Date(body.question.endTime).toLocaleTimeString())
+
+      const createdQuestion = (
+        await db.insert(question).values(body.question).returning()
+      )[0];
+      return Promise.all(
+        body.questionOptions.map((answer) =>
+          db.insert(questionOption).values({
+            questionId: createdQuestion.id,
+            optionText: answer,
+          })
+        )
+      );
+    },
+    {
+      body: createQuestionBodySchema,
+    }
+  )
   .get(
     "/retrieve/:campId",
     async ({ params }) =>
@@ -84,7 +307,7 @@ export const campRouter = ProtectedElysia({ prefix: "/camp" })
       };
     },
     {
-      body: campSchema,
+      body: campSchema
     }
   )
   .post(
@@ -371,13 +594,70 @@ export const {
   ...cleanedUserCols
 } = getTableColumns(user);
 // const getCampsWithCount = ({}:{campId:string,camMember}) => {}
-//
 
-// .derive(async ({ params }) => {
-//   const currCamp = await db
-//     .select()
-//     .from(camp)
-//     .where(eq(camp.id, params.campId));
+(async () => {
+  while (true) {
+    await new Promise((res) => {
+      setTimeout(() => {
+        res(null);
+      }, 1000);
+    });
 
-//     return {camp: currCamp[0]}
-// })
+    // console.log("sending");
+    const campsThatNeedInfo = Object.keys(pollSocketsRef.current);
+
+    campsThatNeedInfo.forEach(async (campId) => {
+      const campsQuestions = await db
+        .select()
+        .from(question)
+        .where(eq(question.campId, campId))
+        .orderBy(asc(question.startTime));
+      // .execute();
+
+      const validQuestion = campsQuestions
+        .filter(
+          ({ startTime, endTime }) =>
+          {
+            return Date.now() - new Date(startTime).getTime() > 0 &&
+            Date.now() - new Date(endTime).getTime() < 0}
+        )
+        .at(0);
+
+        // console.log("VALID QUESTIONS: ", validQuestion)
+       
+        const questionOptions = validQuestion ? await db
+        .select()
+        .from(questionOption)
+        .where(eq(questionOption.questionId, validQuestion.id)) : null
+      pollSocketsRef.current[campId].forEach((socket) => {
+          
+        if (questionOptions) {
+          console.log("===========================================")
+          
+          socket.send({
+            kind: 'exists',
+            questionOptions,
+            validQuestion,
+          });
+        } else {
+
+          socket.send({
+            kind: 'not-exists',
+          });
+        }
+     
+
+      });
+    });
+
+    // pollSocketsRef[campId]
+    // pollSocketsRef.current.forEach(socket => {
+    //   // db queries
+    //   socket.send({
+    //     lol: 'bro'
+    //   })
+    // })
+  }
+})();
+
+// has it come out yet?
