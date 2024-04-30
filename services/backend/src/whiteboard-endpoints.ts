@@ -206,6 +206,9 @@ export const whiteboardRoute = ProtectedElysia({ prefix: "/whiteboard" })
     body: messageBodySchema,
     open: (ws) => {
       ws.subscribe(`white-board-${ws.data.params.whiteBoardId}`);
+
+
+
     },
     message: async (ws, data) => {
       switch (data.kind) {

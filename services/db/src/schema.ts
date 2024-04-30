@@ -4,7 +4,7 @@ import {
   serial,
   timestamp,
   pgTable,
-  uuid,
+
   boolean,
   alias,
   integer,
@@ -78,7 +78,7 @@ export const camp = pgTable("camp", {
     .$defaultFn(() => nanoid())
     .primaryKey(),
   name: text("name").notNull(),
-  createdAt: timestamp("createdAt", { mode: "string", withTimezone: true })
+  createdAt: timestamp("createdAt", { mode: "string" })
     .$defaultFn(() => new Date().toISOString())
     .notNull(),
   updatedAt: timestamp("updated_at", { mode: "string" }),
@@ -87,9 +87,52 @@ export const camp = pgTable("camp", {
     .notNull(),
 });
 
+
+
 export type FiresideCamp = InferSelectModel<typeof camp>;
 
+
+
+export const question = pgTable("question", {
+  id: text("id") .$defaultFn(() => nanoid()).primaryKey(),
+  questionText: text("questionText").notNull(),
+  dateOfCreation: timestamp("dateOfCreation", { mode: "string" ,withTimezone:true}).$defaultFn(() => new Date().toISOString()).notNull(),
+  startTime: timestamp("startTime", { mode: "string" ,withTimezone:true}).notNull(),
+  endTime: timestamp("endTime", { mode: "string",withTimezone:true }).notNull(),
+  campId: text("campId").notNull().references(() => camp.id),
+  createdAt: timestamp("createdAt", { mode: "string" }).$defaultFn(() => new Date().toISOString()).notNull(),
+})
+
+export type QuestionTable = InferSelectModel<typeof question>;
+export type Question = Omit<QuestionTable, 'id' | 'createdAt' >;
+
+export const questionOption = pgTable("questionOption", {
+  id: text("id") .$defaultFn(() => nanoid()).primaryKey(),
+  questionId: text("questionId").notNull().references(() => question.id),
+  optionText: text("optionText").notNull(),
+  createdAt: timestamp("createdAt", { mode: "string" }).$defaultFn(() => new Date().toISOString()).notNull(),
+})
+
+export const questionAnswer = pgTable("questionAnswer", {
+  id: text("id") .$defaultFn(() => nanoid()).primaryKey(),
+  answer: text("optionText").notNull(),
+  questionId: text("questionId").notNull().references(() => question.id),
+  userId: text("userId").notNull().references(() => user.id)
+})
+
+export type QuestionAnswer = Omit<InferSelectModel<typeof questionAnswer>, 'id'>;
+
+
+export const questionAnswerSchema = createInsertSchema(questionAnswer)
+
+export type QuestionOption = InferSelectModel<typeof questionOption>
+
+export const questionSchema = createInsertSchema(question)
+export const questionOptionSchema = createInsertSchema(questionOption)
+
 export const campSchema = createInsertSchema(camp);
+// export const campSchema2 = createInsertSchema(camp2);
+
 
 // export function getISOFormatDateQuery(dateTimeColumn: PgColumn): SQL<string> {
 //   // Using TO_CHAR in PostgreSQL to format the date in ISO 8601 format

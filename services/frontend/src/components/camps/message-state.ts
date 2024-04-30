@@ -9,8 +9,6 @@ import {
 } from "@tanstack/react-query";
 import { useToast } from "../ui/use-toast";
 import { useDefinedUser } from "./camps-state";
-import { queryClient } from "@/query";
-import { useGetThreads } from "./thread-state";
 
 export const getMessagesOptions = ({ campId }: { campId: string }) =>
   queryOptions({
@@ -29,7 +27,6 @@ export const getMessagesOptions = ({ campId }: { campId: string }) =>
           .get()
       );
     },
-    // refetchInterval: 1500,
   });
 
 export const useGetMessages = ({ campId }: { campId: string }) => {
