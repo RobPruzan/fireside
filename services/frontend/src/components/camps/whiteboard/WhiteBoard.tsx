@@ -22,12 +22,13 @@ import { ErrorBoundary, FallbackProps } from "react-error-boundary";
 import { queryOptions, useMutation, useQuery } from "@tanstack/react-query";
 import { Link, useMatchRoute } from "@tanstack/react-router";
 import { Eraser, XIcon, ZoomIn, ZoomOut } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { startTransition, useEffect, useRef, useState } from "react";
 import { render } from "react-dom";
 import { useDefinedUser } from "../camps-state";
 import { Input } from "@/components/ui/input";
 import { run } from "@fireside/utils";
 import { getWhiteBoardImagesOptions } from "./white-board-state";
+import { useToast } from "@/components/ui/use-toast";
 
 const pencilImage = new Image(15, 15);
 pencilImage.src = "/pencil-mouse.png";
@@ -319,35 +320,40 @@ const WhiteBoard = ({
 
       switch (publishedData.kind) {
         case "point": {
-          queryClient.setQueryData(whiteBoardQueryKey, (prev) => {
-            const someGroupExists = prev?.some(
-              (points) =>
-                points.at(0)?.whiteBoardPointGroupId ===
-                publishedData.whiteBoardPointGroupId
-            );
-
-            if (someGroupExists) {
-              return prev?.map((points) =>
-                points.at(0)?.whiteBoardPointGroupId ===
-                publishedData.whiteBoardPointGroupId
-                  ? [...points, publishedData]
-                  : points
+          startTransition(() => {
+            queryClient.setQueryData(whiteBoardQueryKey, (prev) => {
+              const someGroupExists = prev?.some(
+                (points) =>
+                  points.at(0)?.whiteBoardPointGroupId ===
+                  publishedData.whiteBoardPointGroupId
               );
-            }
 
-            return [...(prev ?? []), [publishedData]];
+              if (someGroupExists) {
+                return prev?.map((points) =>
+                  points.at(0)?.whiteBoardPointGroupId ===
+                  publishedData.whiteBoardPointGroupId
+                    ? [...points, publishedData]
+                    : points
+                );
+              }
+
+              return [...(prev ?? []), [publishedData]];
+            });
           });
+
           return;
         }
 
         case "mouse": {
-          queryClient.setQueryData(whiteBoardPointsQueryKey, (prev) => {
-            const withoutCurrentMousePosition =
-              prev?.filter(({ userId }) => {
-                return userId !== publishedData.userId;
-              }) ?? [];
+          startTransition(() => {
+            queryClient.setQueryData(whiteBoardPointsQueryKey, (prev) => {
+              const withoutCurrentMousePosition =
+                prev?.filter(({ userId }) => {
+                  return userId !== publishedData.userId;
+                }) ?? [];
 
-            return [...withoutCurrentMousePosition, publishedData];
+              return [...withoutCurrentMousePosition, publishedData];
+            });
           });
 
           return;
@@ -385,6 +391,9 @@ const WhiteBoard = ({
       return;
     }
 
+    // console.log("OOGA", navigator.userAgent, navigator.vendor);
+
+    // if (navigator.userAgent.toLowerCase().includes("windows")) {
     const dpr = window.devicePixelRatio;
     const rect = parentEl.getBoundingClientRect();
 
@@ -395,6 +404,7 @@ const WhiteBoard = ({
     canvasEl.style.height = `${rect.height}px`;
 
     ctx.scale(dpr, dpr);
+    // }
 
     if (options?.scale) {
       ctx.scale(options.scale, options.scale);
@@ -710,9 +720,11 @@ const WhiteBoard = ({
           kind: "point" as const,
           createdAt: new Date().getTime(),
         };
-        setDrawingPoints((prev) => [...prev, newPoint]);
+        startTransition(() => {
+          setDrawingPoints((prev) => [...prev, newPoint]);
 
-        subscription?.send({ ...newPoint, kind: "point" });
+          subscription?.send({ ...newPoint, kind: "point" });
+        });
 
         return;
       }
@@ -768,7 +780,7 @@ const WhiteBoard = ({
               ])}
             />
           ))}
-          <Button
+          {/* <Button
             onClick={() => setSelectedTool({ kind: "eraser" })}
             variant={"ghost"}
             className={cn([
@@ -777,7 +789,7 @@ const WhiteBoard = ({
             ])}
           >
             <Eraser className="text-black" />
-          </Button>
+          </Button> */}
           <div className="text-black w-[50px]">
             {!options?.readOnly && (
               <Input

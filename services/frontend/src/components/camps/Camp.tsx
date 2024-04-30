@@ -120,6 +120,8 @@ import { TranscriberContext } from "@/lib/transcription/hooks/useTranscriber";
 import { Transcribe } from "./Transcribe";
 import { Progress } from "@/lib/transcription/components/Progress";
 
+const hasAlertedRef = { current: false };
+
 // import { useAudioStream } from "@/hooks/useAudioStream";
 const subscribeFn = client.api.protected.message.ws({
   campId: "anything",
@@ -171,12 +173,28 @@ export const Camp = () => {
       });
     }
   }, [messages.length]);
+
+  const { toast } = useToast();
+
+  useEffect(() => {
+    if (
+      navigator.userAgent.toLowerCase().includes("windows") &&
+      !hasAlertedRef.current
+    ) {
+      toast({
+        variant: "destructive",
+        title: "Awful operating system detected",
+        description: "Performance may be impacted.",
+      });
+      hasAlertedRef.current = true;
+    }
+  }, []);
   const createWhiteBoardMutation = useCreateWhiteBoardMutation();
   const search = useSearch({ from: "/root-auth/camp-layout/camp/$campId" });
   const createTranscriptionGroupMutation = useCreateTranscriptionGroup();
   const { transcriptionGroupQuery, transcriptionGroup } =
     useGetTranscriptionGroup({ campId });
-  const { toast } = useToast();
+
   const navigate = useNavigate({ from: "/root-auth/camp-layout/camp/$campId" });
   const searchEntries = Object.entries(search);
   const [toolbarOpen, setToolBarOpen] = useState(false);
