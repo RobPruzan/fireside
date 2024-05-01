@@ -316,7 +316,7 @@ export const Camp = () => {
                             className="border  p-3 text-xs rounded-full"
                           >
                             {/* {userId.slice(1, 5)} */}
-                            <Suspense fallback={LoadingSpinner}>
+                            <Suspense fallback={<LoadingSpinner />}>
                               <DisplayedAudioUserNames userId={userId} />
                             </Suspense>
                           </div>
