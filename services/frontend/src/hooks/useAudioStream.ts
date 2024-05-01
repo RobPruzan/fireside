@@ -227,7 +227,7 @@ export const useWebRTCConnection = ({
       subscription.close();
       setSignalingServerSubscription(null);
     };
-  }, []);
+  }, [campId]);
 
   useEffect(() => {
     if (!signalingServerSubscription) {
