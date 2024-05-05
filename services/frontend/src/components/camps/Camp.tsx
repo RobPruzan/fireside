@@ -64,6 +64,9 @@ import {
   Trash,
   Unlock,
   XIcon,
+  PlusIcon,
+  InfoIcon,
+  MessageCircleQuestionIcon,
 } from "lucide-react";
 import { Avatar } from "../ui/avatar";
 import { Nullish, hasKey, run } from "@fireside/utils";
@@ -72,6 +75,7 @@ import {
   Question,
   QuestionAnswer,
   QuestionOption,
+  camp,
 } from "@fireside/db";
 import {
   useGetMessages,
@@ -680,7 +684,7 @@ const MessageSection = memo(({ campId }: { campId: string }) => {
   const [showQuestion, setShowQuestion] = useState<boolean>(false);
   const [options, setOptions] = useState<string[]>(["", ""]);
   const [pollDate, setPollDate] = useState<Date | undefined>();
-  const [isHost, setIsHost] = useState<boolean>(false);
+  // const [isHost, setIsHost] = useState<boolean>(false);
   const [startTime, setStartTime] = useState<null | Lol>(null);
   const [endTime, setEndTime] = useState<null | Lol>(null);
   const [pollQuestion, setPollQuestion] = useState("");
@@ -720,6 +724,7 @@ const MessageSection = memo(({ campId }: { campId: string }) => {
   //       .catch((error) => console.log("Error: ", error)),
   // });
 
+  const { camp } = useGetCamp({ campId });
   const addOption = () => {
     if (options.length < 5) {
       setOptions([...options, ""]);
@@ -748,15 +753,15 @@ const MessageSection = memo(({ campId }: { campId: string }) => {
     }
   }, [messages.length, whiteBoardMessages.length]);
 
-  // determine if user is host
-  useEffect(() => {
-    setIsHost(false);
+  // // determine if user is host
+  // useEffect(() => {
+  //   setIsHost(false);
 
-    const camp = camps.filter((camp) => camp.id == campId)[0];
-    const is_host = camp.createdBy == user.id;
+  //   const camp = camps.filter((camp) => camp.id == campId)[0];
+  //   const is_host = camp.createdBy == user.id;
 
-    setIsHost(is_host);
-  }, [campId]);
+  //   setIsHost(is_host);
+  // }, [campId]);
 
   const updateMessageCache = (publishedMessage: PublishedMessage) => {
     queryClient.setQueryData(messagesQueryKey, (prev) => [
@@ -812,7 +817,6 @@ const MessageSection = memo(({ campId }: { campId: string }) => {
 
       switch (typedData.kind) {
         case "exists": {
-          console.log("YESSS");
           setQuestion(typedData.validQuestion);
           setQuestionOptions(typedData.questionOptions);
           return;
@@ -992,53 +996,50 @@ const MessageSection = memo(({ campId }: { campId: string }) => {
     setPollQuestion("");
   }
 
-  const countUniqueAnswers = (answers: QuestionAnswer[]) => {
-    const countMap = new Map();
-
-    answers.forEach(({ answer }) => {
-      countMap.set(answer, (countMap.get(answer) || 0) + 1);
-    });
-
-    return countMap;
-  };
-
   return (
     <SocketMessageContext.Provider
       value={{
         subscription,
       }}
     >
-      <Menubar className="flex w-full h-70px bg-opacity-20 backdrop-blur-md">
+      <Menubar className="flex flex-col items-start bg-opacity-20 backdrop-blur-md w-fit flex-wrap h-fit gap-2">
         <MenubarMenu>
-          {isHost && (
-            <Button size={"sm"} onClick={() => setShowPoll(true)}>
-              Create Poll
-            </Button>
-          )}
+          {camp.createdBy === user.id && (
+            <>
+              <Button
+                className="flex items-center gap-x-2 w-[200px]"
+                size={"sm"}
+                onClick={() => setShowPoll(true)}
+              >
+                Create Poll <PlusIcon />
+              </Button>
+              <Button
+                className="flex items-center gap-x-2 w-[200px]"
+                size={"sm"}
+                onClick={async () => {
+                  setShowPollData(true);
+                  await queryClient.refetchQueries({
+                    queryKey: ["poll-information"],
+                  });
+                }}
+              >
+                View Poll Details <InfoIcon />
+              </Button>
 
-          {isHost && (
-            <Button
-              size={"sm"}
-              onClick={async () => {
-                setShowPollData(true);
-                await queryClient.refetchQueries({
-                  queryKey: ["poll-information"],
-                });
-              }}
-            >
-              View Poll Details
-            </Button>
+              <MenubarSeparator className="border-b-2 border-muted w-full" />
+            </>
           )}
 
           {question ? (
             <Button
+              className="flex items-center gap-x-2 w-[200px]"
               size={"sm"}
               onClick={() => {
                 setShowQuestion(true);
-                setCurrentAnswer({ answer: null, questionId: null }); // set both to null on question
+                setCurrentAnswer({ answer: null, questionId: null });
               }}
             >
-              View Question
+              View Question <MessageCircleQuestionIcon />
             </Button>
           ) : null}
         </MenubarMenu>
