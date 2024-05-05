@@ -24,35 +24,47 @@ const authRoutes = new Elysia()
 const noAuthRoutes = new Elysia().use(userRoute);
 
 const rateLimitMap = new Map<string, Array<number>>();
+const blockedIpsMap = new Map<string, number>();
 
 const app = new Elysia()
-  // .derive(({ request, set, error }) => {
-  //   const ip = app.server?.requestIP(request)?.address;
-  //   console.log("hi", ip);
-  //   if (!ip) {
-  //     error(429);
-  //     return {};
-  //   }
-  //   console.log("MY IP", ip);
-  //   // const visits = rateLimitMap.get(ip) ?? 0
-  //   const currentVisits = rateLimitMap.get(ip) ?? [];
+  .derive(({ request, set }) => {
+    const ip = request.headers.get("X-Forwarded-For");
+    if (!ip && process.env.NODE_ENV !== "production") {
+      return {};
+    }
 
-  //   const visits = [...currentVisits, Date.now()];
-  //   rateLimitMap.set(ip, visits);
+    if (!ip) {
+      set.status = 500;
+      throw new Error("Couldn't find client ip address");
+    }
 
-  //   console.log("VISITS OVER TIME", visits.length);
+    const blockedIpTiming = blockedIpsMap.get(ip);
 
-  //   const filteredVisits = visits.filter(
-  //     (prevDate) => Date.now() - prevDate < 1000 * 50
-  //   );
-  //   if (filteredVisits.length > 3) {
-  //     set.status = 429;
-  //     throw new Error("Rate limited");
-  //     return {};
-  //   }
+    if (blockedIpTiming && Date.now() - blockedIpTiming < 1000 * 30) {
+      set.status = 429;
+      console.log("BLOCKED CAUSE HERE");
+      throw new Error("Too Many Requests");
+    }
 
-  //   return {};
-  // })
+    const currentVisits = rateLimitMap.get(ip) ?? [];
+
+    const visits = [...currentVisits, Date.now()];
+    rateLimitMap.set(ip, visits);
+
+    const filteredVisits = visits.filter(
+      (prevDate) => Date.now() - prevDate < 1000 * 10
+    );
+
+    rateLimitMap.set(ip, filteredVisits);
+
+    if (filteredVisits.length > 50) {
+      blockedIpsMap.set(ip, Date.now());
+      set.status = 429;
+      throw new Error("Too Many Requests");
+    }
+
+    return {};
+  })
   .onBeforeHandle(({ set, request }) => {
     set.headers["X-Content-Type-Options"] = "nosniff";
   })
@@ -99,14 +111,8 @@ const app = new Elysia()
       .replaceAll("..", "");
     const uploadFIle = uploadPath ? Bun.file(`./upload/${uploadPath}`) : null;
 
-    // const splitPath =  path.split("/")
-
     set.headers["Cache-Control"] =
       "public, max-age=31536000, s-maxage=31536000, immutable";
-
-    // if ("/api" in path) {
-    //   return;
-    // }
 
     console.log(
       "attempting to read",
