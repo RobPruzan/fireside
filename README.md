@@ -43,21 +43,10 @@ To install Fireside, follow these steps:
 
 
 
-## Setting up the database
+## Setting the Web App
+  docker-compose up
 
-docker-compose -f docker-compose.dev.yaml up db --build
 
-cd services/db
-
-pnpm migrate:generate && pnpm migrate:run && pnpm seed:emoji
-
-## Setting up the Backend
-docker-compose -f docker-compose.dev.yaml up --build --force-recreate
-
-## Setting up the Frontend
-services/frontend
-
-pnpm run dev
 
 ## Usage
 To use Fireside, simply sign up for an account and start exploring the available features. Here are some key actions you can take:
