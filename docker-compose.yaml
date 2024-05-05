@@ -4,6 +4,7 @@ services:
     image: postgres:latest
     container_name: fireside_db_prod
     environment:
+      POSTGRES_MAX_CONNECTIONS: 500
       POSTGRES_DB: test_db
       POSTGRES_USER: test_user
       POSTGRES_PASSWORD: test_password
