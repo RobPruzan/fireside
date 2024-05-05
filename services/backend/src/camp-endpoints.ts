@@ -116,35 +116,7 @@ export const campRouter = ProtectedElysia({ prefix: "/camp" })
       }),
     }
   )
-  // .get("/retrieve-questions/:campId",
-  // async ({params}) => {
-  //   const campsQuestions = (await db
-  //     .select()
-  //     .from(question)
-  //     .where(eq(question.campId, params.campId))
-  //     .orderBy(asc(question.startTime))).filter(({startTime, endTime}) => ((Date.now() - new Date(startTime).getTime()) > 0)
-  //     && (Date.now() - new Date(endTime).getTime() < 0)).at(0)
 
-  //     if (!campsQuestions){
-  //       return { question: null, questionOptions: [] };
-  //     }
-
-  //   const questionOptions = await db
-  //   .select()
-  //   .from(questionOption)
-  //   .where(eq(questionOption.questionId, campsQuestions.id))
-
-  //   return {
-  //     question: campsQuestions,
-  //     questionOptions: questionOptions
-  //   }
-
-  // }, {
-  //   params: t.Object({
-  //   campId: t.String()
-  // })}
-
-  // )
   .ws("/retrieve-questions/:campId", {
     idleTimeout: 1000 * 1000,
 
@@ -170,52 +142,7 @@ export const campRouter = ProtectedElysia({ prefix: "/camp" })
         ws.data.params.campId
       ].filter((socket) => socket.id !== ws.id);
     },
-    message: async (ws, body) => {
-      // if (body.kind === "subscribe-to-events") {
-      //   ws.subscribe(`retrieve-questions-${ws.data.params.campId}`);
-      //   // return
-      // }
-
-      // while true here :p
-      // while (true) {
-      //   console.log("ASDF3")
-      //   try {
-      // const campsQuestions = await db
-      //   .select()
-      //   .from(question)
-      //   .where(eq(question.campId, ws.data.params.campId))
-      //   .orderBy(asc(question.startTime))
-      //   // .execute();
-
-      // const validQuestion = campsQuestions.filter(({ startTime, endTime }) =>
-      //   (Date.now() - new Date(startTime).getTime()) > 0 &&
-      //   (Date.now() - new Date(endTime).getTime()) < 0
-      // ).at(0);
-
-      //     ws.publish(`retrieve-questions-${ws.data.params.campId}`, {johnny: "boy"});
-      //     // if (validQuestion) {
-      //     //   console.log("QUESTION: ", validQuestion)
-            // const questionOptions = await db
-            //   .select()
-            //   .from(questionOption)
-            //   .where(eq(questionOption.questionId, validQuestion.id))
-
-      //       // ws.publish(`retrieve-questions-${ws.data.params.campId}`, {
-      //       //   question: validQuestion,
-      //       //   questionOptions: questionOptions
-      //       // });
-      //     // } else {
-      //     //   console.log('ballsn')
-      //     // }
-
-      //     await new Promise(resolve => setTimeout(resolve, 5000));
-      //   } catch (error) {
-      //     ws.publish(`retrieve-questions-${ws.data.params.campId}`, {billy: "bob"});
-      //     console.error("Error in WebSocket loop:", error);
-      //     break;
-      //   }
-      // }
-    },
+    message: async (ws, body) => {},
   })
   .post(
     "/question-answer",
@@ -246,7 +173,6 @@ export const campRouter = ProtectedElysia({ prefix: "/camp" })
   .post(
     "/create-question",
     async ({ body }) => {
-
       // console.log("STARTING TIME RECEIVED: ", new Date(body.question.startTime).toLocaleTimeString())
       // console.log("ENDING TIME RECEIVED: ", new Date(body.question.endTime).toLocaleTimeString())
 
@@ -307,7 +233,7 @@ export const campRouter = ProtectedElysia({ prefix: "/camp" })
       };
     },
     {
-      body: campSchema
+      body: campSchema,
     }
   )
   .post(
@@ -600,10 +526,9 @@ export const {
     await new Promise((res) => {
       setTimeout(() => {
         res(null);
-      }, 1000);
+      }, 500);
     });
 
-    // console.log("sending");
     const campsThatNeedInfo = Object.keys(pollSocketsRef.current);
 
     campsThatNeedInfo.forEach(async (campId) => {
@@ -612,51 +537,36 @@ export const {
         .from(question)
         .where(eq(question.campId, campId))
         .orderBy(asc(question.startTime));
-      // .execute();
 
       const validQuestion = campsQuestions
-        .filter(
-          ({ startTime, endTime }) =>
-          {
-            return Date.now() - new Date(startTime).getTime() > 0 &&
-            Date.now() - new Date(endTime).getTime() < 0}
-        )
+        .filter(({ startTime, endTime }) => {
+          return (
+            Date.now() - new Date(startTime).getTime() > 0 &&
+            Date.now() - new Date(endTime).getTime() < 0
+          );
+        })
         .at(0);
 
-        // console.log("VALID QUESTIONS: ", validQuestion)
-       
-        const questionOptions = validQuestion ? await db
-        .select()
-        .from(questionOption)
-        .where(eq(questionOption.questionId, validQuestion.id)) : null
+      const questionOptions = validQuestion
+        ? await db
+            .select()
+            .from(questionOption)
+            .where(eq(questionOption.questionId, validQuestion.id))
+        : null;
       pollSocketsRef.current[campId].forEach((socket) => {
-          
         if (questionOptions) {
-          console.log("===========================================")
-          
           socket.send({
-            kind: 'exists',
+            kind: "exists",
             questionOptions,
             validQuestion,
           });
         } else {
-
           socket.send({
-            kind: 'not-exists',
+            kind: "not-exists",
           });
         }
-     
-
       });
     });
-
-    // pollSocketsRef[campId]
-    // pollSocketsRef.current.forEach(socket => {
-    //   // db queries
-    //   socket.send({
-    //     lol: 'bro'
-    //   })
-    // })
   }
 })();
 
