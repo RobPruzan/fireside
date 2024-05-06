@@ -46,7 +46,7 @@ To use Fireside, simply sign up for an account and start exploring the available
   - Send a question alongside the whiteboard
   - When sent you will see a whiteboard appear in the chat. Anyone can see this and augment the whiteboard. You can see their mouse cursors and usernames in real time
 
-- LLM Q&A: Post your questions in a camp and get answers on-the-fly
+- LLM Q&A: Post your questions in a camp and get answers on-the-fly (requires valid MISTRAL_API_KEY in services/backend/.env)
 
   - Send any message in any camp
   - View the thread by clicking the message icon on the message
