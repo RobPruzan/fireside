@@ -1,7 +1,8 @@
 import { eq } from "drizzle-orm";
 
 import { emojis, reactionAsset } from "./schema";
-import { db, drizzleSql } from "./db";
+import { db, drizzleSql, migratingFlag } from "./db";
+migratingFlag.current = true;
 
 (async () => {
   await Promise.all(
@@ -14,6 +15,7 @@ import { db, drizzleSql } from "./db";
       ).at(0);
 
       if (hasEmoji) {
+        await drizzleSql.end();
         return;
       }
 
@@ -24,5 +26,5 @@ import { db, drizzleSql } from "./db";
     })
   );
 
-  drizzleSql.end();
+  await drizzleSql.end();
 })();

@@ -1,7 +1,8 @@
 import { eq } from "drizzle-orm";
 
 import { emojis, reactionAsset, token, user } from "./schema";
-import { db, drizzleSql } from "./db";
+import { db, drizzleSql, migratingFlag } from "./db";
+migratingFlag.current = true;
 import { getHash } from "@fireside/backend/src/user-endpoints";
 
 (async () => {
@@ -12,6 +13,8 @@ import { getHash } from "@fireside/backend/src/user-endpoints";
     .then((data) => data.at(0));
 
   if (corbinExists) {
+    await drizzleSql.end();
+    console.log("die");
     return;
   }
   const tokenRes = await db
@@ -28,6 +31,6 @@ import { getHash } from "@fireside/backend/src/user-endpoints";
     token: tokenRes.value,
     id: "ai-corbin",
   });
-
-  drizzleSql.end();
+  console.log("die");
+  await drizzleSql.end();
 })();

@@ -28,6 +28,7 @@ const connectDB = ({ connString }: { connString: string }) => {
   drizzleSql = postgres(connString, {
     onnotice: (notice) => {},
     onclose: () => {
+      console.log("RAHHHH", migratingFlag);
       if (migratingFlag.current) {
         return;
       }
