@@ -203,9 +203,11 @@ export const useWebRTCConnection = ({
     }
 
     const createSubscription = () =>
-      new WebSocket(
-        (import.meta.env.PROD ? "wss://" : "ws://") +
-          (import.meta.env.PROD ? "fireside.ninja" : "localhost:8080") +
+      new WebSocket( // fix this
+        (import.meta.env.VITE_API_URL.includes("https") ? "wss://" : "ws://") +
+          (import.meta.env.VITE_API_URL.includes("https")
+            ? "fireside.ninja"
+            : "localhost:8080") +
           `/api/protected/camp/audio/${campId}`
       );
 

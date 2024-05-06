@@ -29,7 +29,7 @@ const blockedIpsMap = new Map<string, number>();
 const app = new Elysia()
   .derive(({ request, set }) => {
     const ip = request.headers.get("X-Forwarded-For");
-    if (!ip && process.env.NODE_ENV !== "production") {
+    if (!ip && !process.env.API_URL?.includes("https")) {
       return {};
     }
 

@@ -22,13 +22,19 @@ if (process.env.NODE_ENV === "production") {
 
 export let drizzleSql: ReturnType<typeof postgres>;
 export let db: ReturnType<typeof drizzle>;
+export const migratingFlag = { current: false };
 
 const connectDB = ({ connString }: { connString: string }) => {
   drizzleSql = postgres(connString, {
     onnotice: (notice) => {},
     onclose: () => {
+      if (migratingFlag.current) {
+        return;
+      }
       console.log("Connection closed, attempting to reconnect...");
-      setTimeout(() => connectDB({ connString }), 3000);
+      setTimeout(() => {
+        connectDB({ connString });
+      }, 3000);
     },
     onparameter: (key, value) => {
       // console.log("PARAM CHANGE", key, value);

@@ -4,7 +4,7 @@ enum ResponseFormats {
   text = "text",
   json_object = "json_object",
 }
-
+console.log("mistral connect");
 export const mistralClient = new MistralClient(process.env.MISTRAL_API_KEY);
 
 export const createChatConfig = ({

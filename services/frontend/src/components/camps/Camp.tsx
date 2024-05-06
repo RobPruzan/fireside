@@ -67,6 +67,10 @@ import {
   PlusIcon,
   InfoIcon,
   MessageCircleQuestionIcon,
+  ArrowDown,
+  ChevronDown,
+  ChevronUp,
+  LucideFileSpreadsheet,
 } from "lucide-react";
 import { Avatar } from "../ui/avatar";
 import { Nullish, hasKey, run } from "@fireside/utils";
@@ -308,7 +312,7 @@ export const Camp = () => {
   const { transcriber } = useContext(TranscriberContext);
   // console.log({ transcriptionGroupQuery });
   return (
-    <div className="flex  w-full h-full  pb-5 relative">
+    <div className="flex  w-full h-full  relative">
       <ResizablePanelGroup direction="horizontal">
         <ResizablePanel className="h-full w-full relative">
           <div className="w-full flex flex-col justify-center items-center absolute top-0">
@@ -996,52 +1000,80 @@ const MessageSection = memo(({ campId }: { campId: string }) => {
     setPollQuestion("");
   }
 
+  const [menuBarCollapsed, setMenuBarCollapsed] = useState(true);
   return (
     <SocketMessageContext.Provider
       value={{
         subscription,
       }}
     >
-      <Menubar className="flex flex-col items-start bg-opacity-20 backdrop-blur-md w-fit flex-wrap h-fit gap-2">
+      <Menubar className="flex flex-col items-start bg-opacity-20 backdrop-blur-md w-fit flex-wrap h-fit gap-2 absolute z-20 top-right-0">
         <MenubarMenu>
-          {camp.createdBy === user.id && (
+          {menuBarCollapsed ? null : (
             <>
-              <Button
-                className="flex items-center gap-x-2 w-[200px]"
-                size={"sm"}
-                onClick={() => setShowPoll(true)}
-              >
-                Create Poll <PlusIcon />
-              </Button>
-              <Button
-                className="flex items-center gap-x-2 w-[200px]"
-                size={"sm"}
-                onClick={async () => {
-                  setShowPollData(true);
-                  await queryClient.refetchQueries({
-                    queryKey: ["poll-information"],
-                  });
-                }}
-              >
-                View Poll Details <InfoIcon />
-              </Button>
+              {camp.createdBy !== user.id && !question && (
+                <span className="text-lg font-bold text-muted-foreground p-2">
+                  Poll questions will appear here
+                </span>
+              )}
+              {camp.createdBy === user.id && (
+                <>
+                  <Button
+                    className="flex items-center gap-x-2 w-[200px]"
+                    size={"sm"}
+                    onClick={() => setShowPoll(true)}
+                  >
+                    Create Poll <PlusIcon />
+                  </Button>
+                  <Button
+                    className="flex items-center gap-x-2 w-[200px]"
+                    size={"sm"}
+                    onClick={async () => {
+                      setShowPollData(true);
+                      await queryClient.refetchQueries({
+                        queryKey: ["poll-information"],
+                      });
+                    }}
+                  >
+                    View Poll Details <InfoIcon />
+                  </Button>
 
-              <MenubarSeparator className="border-b-2 border-muted w-full" />
+                  <MenubarSeparator className="border-b-2 border-muted w-full" />
+                </>
+              )}
+
+              {question ? (
+                <Button
+                  className="flex items-center gap-x-2 w-[200px]"
+                  size={"sm"}
+                  onClick={() => {
+                    setShowQuestion(true);
+                    setCurrentAnswer({ answer: null, questionId: null });
+                  }}
+                >
+                  View Question <MessageCircleQuestionIcon />
+                </Button>
+              ) : null}
             </>
           )}
 
-          {question ? (
+          {menuBarCollapsed ? (
             <Button
-              className="flex items-center gap-x-2 w-[200px]"
-              size={"sm"}
               onClick={() => {
-                setShowQuestion(true);
-                setCurrentAnswer({ answer: null, questionId: null });
+                setMenuBarCollapsed(false);
               }}
             >
-              View Question <MessageCircleQuestionIcon />
+              <ChevronDown />
             </Button>
-          ) : null}
+          ) : (
+            <Button
+              onClick={() => {
+                setMenuBarCollapsed(true);
+              }}
+            >
+              <ChevronUp />
+            </Button>
+          )}
         </MenubarMenu>
       </Menubar>
 
@@ -1153,7 +1185,8 @@ const MessageSection = memo(({ campId }: { campId: string }) => {
             Create a new Question
           </DialogTitle>
           <DialogDescription>
-            Enter your question and provide options for users to choose from
+            Enter your question and provide options for users to choose from.
+            You may only schedule one question per 15 minute window.
           </DialogDescription>
           <Input
             id="pollQuestion"
@@ -1261,7 +1294,7 @@ const MessageSection = memo(({ campId }: { campId: string }) => {
       </Dialog>
 
       <div className="p-1 flex flex-col h-full w-full px-2">
-        <div className="flex w-full h-[calc(100%-125px)] ">
+        <div className="flex w-full h-[calc(100%-100px)] ">
           <div
             ref={scrollRef}
             className="flex flex-col w-full h-full overflow-y-auto gap-y-3"

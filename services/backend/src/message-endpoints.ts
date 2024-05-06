@@ -266,7 +266,9 @@ export const messageRouter = ProtectedElysia({ prefix: "/message" })
           }
         };
 
-        retryCall();
+        if (process.env.MISTRAL_API_KEY) {
+          retryCall();
+        }
       });
 
       ws.publish(`camp-${ws.data.params.campId}`, data);

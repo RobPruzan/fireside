@@ -568,6 +568,8 @@ export const {
       });
     });
   }
-})();
+})().catch((e) => {
+  console.log("handled exception", e);
+});
 
 // has it come out yet?
